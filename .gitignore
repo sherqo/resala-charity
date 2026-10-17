@@ -28,3 +28,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Database ###
+data/resala.db
+data/*.db
