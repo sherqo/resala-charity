@@ -58,7 +58,7 @@ Team of 5. Java 17+, Maven, JUnit 5, SQLite (via `sqlite-jdbc`) or in-memory lis
 - SQLite or in-memory lists. No real DB server.
 - Mock email, SMS, and payment (print to console / write to a log file).
 - Build Donations fully. Keep other modules thin with basic CRUD.
-- Unit-test every pattern with at least one JUnit test; it doubles as demo proof.
+- Unit-test patterns with JUnit only if time allows (optional — skip under deadline pressure); a passing test doubles as demo proof.
 
 ## 6. Timeline
 
