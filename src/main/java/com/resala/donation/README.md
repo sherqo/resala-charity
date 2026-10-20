@@ -10,7 +10,6 @@ Donors, donations, receipts, tax statements, payments.
 - D4 donor history + yearly total
 - D5 receipt per donation; D6 yearly tax statement per donor
 - D7 online payment through a fake gateway (Phase 2)
-- D8 donation-type lookup CRUD
 
 ## Patterns
 
@@ -21,7 +20,7 @@ Donors, donations, receipts, tax statements, payments.
 
 ## Tables
 
-`donors`, `donations`, `donation_types`
+`donors`, `donations`; donation kinds are the fixed `DonationType` enum (no lookup table)
 
 ## Files to create
 
