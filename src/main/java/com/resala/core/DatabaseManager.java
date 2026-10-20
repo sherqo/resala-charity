@@ -38,7 +38,8 @@ public class DatabaseManager {
       }
 
       runScript("/schema.sql");
-      if (isEmpty("users")) {
+      if (isEmpty("need_types")) {
+        // or use anything from seed.sql
         runScript("/seed.sql");
       }
     } catch (SQLException e) {

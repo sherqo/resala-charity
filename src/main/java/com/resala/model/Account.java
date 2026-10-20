@@ -3,6 +3,7 @@ package com.resala.model;
 /**
  * A login account.
  */
+// TODO: enforce volunteerId for VOLUNTEER only
 public class Account {
 
   private long id;

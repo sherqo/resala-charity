@@ -1,6 +1,7 @@
 package com.resala.model;
 
 /** A person or family receiving support. Beneficiaries do not log in. */
+// TODO: Reject negative household sizes.
 public class Beneficiary {
 
   public enum Status {
