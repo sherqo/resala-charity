@@ -1,2 +1,0 @@
--- Resala Charity System: sample data for demo
--- Owner: P1

@@ -32,3 +32,8 @@ bin/
 ### Database ###
 data/resala.db
 data/*.db
+
+### Build output ###
+target/
+out/
+*.iml
