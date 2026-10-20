@@ -1,17 +1,17 @@
 # Resala Charity System
 
-Java console app for managing donations, volunteers, events, and beneficiaries.
+Java app for managing donations, volunteers, events, and beneficiaries.
 
 ## Requirements
 
 - JDK 17+
 - Maven 3.9+
 
-## Run
+## Compile & Run
 
 ```bash
 mvn compile
-mvn exec:java
+mvn -q exec:java
 ```
 
 The SQLite database is created at `data/resala.db` on first run. Delete it to reset.

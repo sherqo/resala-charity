@@ -83,33 +83,33 @@ Consider using the following design patterns to achieve the project objectives:
 
 ### Phase 1 — Last lecture before the midterm
 
-| Item                | Marks |
-| ------------------- | ----- |
-| Class diagram       | 2     |
-| Strategy Pattern    | 1     |
-| Observer Pattern    | 1     |
-| Decorator Pattern   | 1     |
-| Factory Pattern     | 0.5   |
-| Singleton Pattern   | 0.5   |
-| MVC                 | 2     |
-| User Control Panel  | 1     |
-| Client requirements | 0.5   |
-| CRUD lookup tables  | 0.5   |
-| **Total**           | **10**|
+| Item                | Marks  |
+| ------------------- | ------ |
+| Class diagram       | 2      |
+| Strategy Pattern    | 1      |
+| Observer Pattern    | 1      |
+| Decorator Pattern   | 1      |
+| Factory Pattern     | 0.5    |
+| Singleton Pattern   | 0.5    |
+| MVC                 | 2      |
+| User Control Panel  | 1      |
+| Client requirements | 0.5    |
+| CRUD lookup tables  | 0.5    |
+| **Total**           | **10** |
 
 ### Phase 2 — Last lecture before the final exam
 
-| Item                      | Marks |
-| ------------------------- | ----- |
-| Command Pattern           | 1     |
-| Adapter Pattern           | 1     |
-| Façade Pattern            | 1     |
-| Template Method Pattern   | 1     |
-| Iterator Pattern          | 1     |
-| State Pattern             | 1     |
-| Proxy Pattern             | 1     |
-| Admin Pages               | 1     |
-| Payment Module            | 2     |
-| Core module management    | 2     |
-| All system working        | 3     |
-| **Total**                 | **15**|
+| Item                    | Marks  |
+| ----------------------- | ------ |
+| Command Pattern         | 1      |
+| Adapter Pattern         | 1      |
+| Façade Pattern          | 1      |
+| Template Method Pattern | 1      |
+| Iterator Pattern        | 1      |
+| State Pattern           | 1      |
+| Proxy Pattern           | 1      |
+| Admin Pages             | 1      |
+| Payment Module          | 2      |
+| Core module management  | 2      |
+| All system working      | 3      |
+| **Total**               | **15** |
