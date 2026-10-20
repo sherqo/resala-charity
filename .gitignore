@@ -32,8 +32,7 @@ bin/
 .DS_Store
 
 ### Database ###
-data/resala.db
-data/*.db
+data/
 
 ### Build output ###
 target/
