@@ -10,10 +10,13 @@ Shared nouns. Plain data + validation, no SQL, no printing.
 - `Volunteer` — contact, availability
 - `Event` — title, type, date, capacity, status
 - `Beneficiary` — contact, household size, need type, status
+- `Permission` — actions granted to roles and checked by `Session`
+- `DonationType` — fixed enum ONLINE / CHECK / IN_KIND (behavior per type,
+  so admin must not edit it — lookup tables are for editable lists)
 
 ## To create
 
-- `Permission` — enum used by `Role` and `Session`
+- Nothing yet.
 
 ## Rules
 
