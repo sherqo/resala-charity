@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -38,10 +37,6 @@ public class DatabaseManager {
       }
 
       runScript("/schema.sql");
-      if (isEmpty("need_types")) {
-        // or use anything from seed.sql
-        runScript("/seed.sql");
-      }
     } catch (SQLException e) {
       throw new IllegalStateException("Failed to open database: " + url, e);
     }
@@ -68,8 +63,10 @@ public class DatabaseManager {
 
   /** Executes every statement of a classpath SQL file (statements separated by ';'). */
   private void runScript(String resourcePath) {
-    for (String sql : readResource(resourcePath).split(";")) {
-      String statement = sql.replaceAll("(?m)--.*$", "").trim(); // drop -- comments
+    String script = readResource(resourcePath).replaceAll("(?m)--.*$", "").trim();
+    // fixed: remove comments before splitting commands, not vice versa
+    for (String sql : script.split(";")) {
+      String statement = sql.trim();
       if (statement.isEmpty()) {
         continue;
       }
@@ -78,15 +75,6 @@ public class DatabaseManager {
       } catch (SQLException e) {
         throw new IllegalStateException("Failed to run " + resourcePath + " -> " + statement, e);
       }
-    }
-  }
-
-  /** True when the table is missing or empty, i.e. nothing to keep. */
-  private boolean isEmpty(String table) {
-    try (Statement st = connection.createStatement(); ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM " + table)) {
-      return rs.next() && rs.getInt(1) == 0;
-    } catch (SQLException e) {
-      return true; // table not created yet
     }
   }
 
