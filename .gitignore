@@ -3,6 +3,8 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .kotlin
+.idea/
+*.iml
 
 ### Eclipse ###
 .apt_generated
@@ -30,5 +32,9 @@ bin/
 .DS_Store
 
 ### Database ###
-data/resala.db
-data/*.db
+data/
+
+### Build output ###
+target/
+out/
+*.iml

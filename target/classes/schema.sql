@@ -1,2 +1,0 @@
--- Resala Charity System: database schema (SQLite)
--- Owner: P1
