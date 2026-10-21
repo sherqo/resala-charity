@@ -13,18 +13,22 @@ public class Donor {
   private Type type;
   private String email;
   private String phone;
-  private String taxId;
+  private boolean active;
 
   // constructors
   public Donor() {}
 
-  public Donor(long id, String name, Type type, String email, String phone, String taxId) {
+  public Donor(long id, String name, Type type, String email, String phone) {
+    this(id, name, type, email, phone, true);
+  }
+
+  public Donor(long id, String name, Type type, String email, String phone, boolean active) {
     this.id = id;
     this.name = name;
     this.type = type;
     this.email = email;
     this.phone = phone;
-    this.taxId = taxId;
+    this.active = active;
   }
 
   // getters & setters
@@ -68,11 +72,11 @@ public class Donor {
     this.phone = phone;
   }
 
-  public String getTaxId() {
-    return taxId;
+  public boolean isActive() {
+    return active;
   }
 
-  public void setTaxId(String taxId) {
-    this.taxId = taxId;
+  public void setActive(boolean active) {
+    this.active = active;
   }
 }

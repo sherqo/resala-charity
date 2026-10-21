@@ -17,6 +17,29 @@ CREATE TABLE IF NOT EXISTS need_types (
   name TEXT NOT NULL UNIQUE
 );
 
+-- Donation module
+CREATE TABLE IF NOT EXISTS donors (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS donations (
+  id INTEGER PRIMARY KEY,
+  donor_id INTEGER NOT NULL REFERENCES donors(id),
+  donation_type TEXT NOT NULL,
+  amount_minor INTEGER,
+  item_description TEXT,
+  quantity INTEGER,
+  estimated_value_minor INTEGER,
+  reference_number TEXT,
+  donation_date TEXT NOT NULL,
+  notes TEXT
+);
+
 -- admin deletions/edits of lookup rows survive restarts.
 CREATE TABLE IF NOT EXISTS seed_history (
   name TEXT PRIMARY KEY,
