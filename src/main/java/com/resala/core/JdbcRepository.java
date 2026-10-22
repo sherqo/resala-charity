@@ -3,15 +3,12 @@ package com.resala.core;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-//Java Database Connectivity
-public abstract class JdbcRepository {
+public abstract class JdbcRepository<T> implements CrudRepository<T> {
     protected final Connection conn;
 
     protected JdbcRepository(Connection c) {
@@ -30,12 +27,12 @@ public abstract class JdbcRepository {
         } catch (SQLException e) {
             throw dbError(sql, e);
         }
-    } // PreparedStatement + bind + UPDATE/INSERT/DELETE
-    protected <T> List<T> query(String sql, RowMapper<T> mapper, Object... params){
+    }
+    protected <R> List<R> query(String sql, RowMapper<R> mapper, Object... params){
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             bind(ps, params);
             try (ResultSet rs = ps.executeQuery()){
-                List<T> out = new ArrayList<>();
+                List<R> out = new ArrayList<>();
                 while (rs.next()){
                     out.add(mapper.map(rs));
                 }
@@ -45,8 +42,8 @@ public abstract class JdbcRepository {
             throw dbError(sql, e);
         }
     }
-    protected <T> Optional<T> queryOne(String sql, RowMapper<T> mapper, Object... params) {
-        List<T> rows = query(sql, mapper, params);
+    protected <R> Optional<R> queryOne(String sql, RowMapper<R> mapper, Object... params) {
+        List<R> rows = query(sql, mapper, params);
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
     }
     protected long insertReturnKey(String sql, Object... params){
