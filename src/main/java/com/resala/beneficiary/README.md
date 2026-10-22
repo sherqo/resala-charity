@@ -22,7 +22,26 @@ None required. Optional second **Strategy**: `DistributionPolicy`
 
 `beneficiaries`, `need_types`, `distributions`
 
+## Done
+
+- `beneficiaries` table (`src/main/resources/schema.sql`) — `name`, `phone`,
+  `household_size` (>= 0), `need_type_id` FK to `need_types`, `status`
+  (`ACTIVE`/`CLOSED`), `notes`
+- `BeneficiaryRepository` — extends `JdbcRepository<Beneficiary>`, so it inherits
+  the `CrudRepository` contract: `insert`, `update`, `deleteById`, `findById`,
+  `findAll`. Adds the entity-specific filters `findByNeedType`, `findByStatus`,
+  `searchByName` and `count`.
+
 ## Files to create
 
-`BeneficiaryRepository`, `BeneficiaryService` (distribution logic lives here;
-do not create a separate `DistributionService`).
+`BeneficiaryService` (distribution logic lives here;
+do not create a separate `DistributionService`), plus the `distributions` table
+and a `Distribution` model.
+
+## Notes
+
+- The repository only persists rows; validation belongs in the model.
+- Failures come back as unchecked `IllegalStateException` carrying the SQLite
+  message (FK violation, CHECK violation, NOT NULL violation).
+- `deleteById` will start failing with a FK error once `distributions` rows
+  reference a beneficiary.

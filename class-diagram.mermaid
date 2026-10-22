@@ -1,0 +1,575 @@
+classDiagram
+direction TB
+
+%% ===================== MODELS =====================
+class Role {
+    <<enumeration>>
+    ADMIN
+    STAFF
+    VOLUNTEER
+    +can(Permission permission) boolean
+}
+class Permission {
+    <<enumeration>>
+    DONATION_MANAGE
+    VOLUNTEER_MANAGE
+    EVENT_MANAGE
+    BENEFICIARY_MANAGE
+    DISTRIBUTION_MANAGE
+    COMMUNICATION_SEND
+    REPORT_VIEW
+    LOOKUP_MANAGE
+    ACCOUNT_MANAGE
+    SELF_SERVICE_VIEW
+}
+class Account {
+    -long id
+    -String username
+    -String passwordHash
+    -String fullName
+    -String email
+    -Role role
+    -Long volunteerId
+}
+class Donor {
+    -long id
+    -String name
+    -Donor.Type type
+    -String email
+    -String phone
+    -boolean active
+}
+class Donor.Type {
+    <<enumeration>>
+    INDIVIDUAL
+    ORGANIZATION
+}
+class Volunteer {
+    -long id
+    -String name
+    -String email
+    -String phone
+    -boolean available
+    -double hours
+}
+class Beneficiary {
+    -long id
+    -String name
+    -String phone
+    -int householdSize
+    -int needTypeId
+    -Beneficiary.Status status
+    -String notes
+}
+class Beneficiary.Status {
+    <<enumeration>>
+    ACTIVE
+    CLOSED
+}
+class Event {
+    -long id
+    -String title
+    -int eventTypeId
+    -LocalDate date
+    -int capacity
+    -Event.Status status
+    -String description
+    -EventState state
+    +setState(EventState s) void
+    +next() void
+}
+class Event.Status {
+    <<enumeration>>
+    DRAFT
+    OPEN
+    CLOSED
+}
+class EventRegistration {
+    -long id
+    -long eventId
+    -long volunteerId
+    -String ticketCode
+    -LocalDateTime registeredAt
+    -LocalDateTime attendedAt
+}
+class DonationType {
+    <<enumeration>>
+    ONLINE
+    CHECK
+    IN_KIND
+}
+
+Account --> Role
+Role o-- Permission : permissions
+Donor --> Donor.Type : type
+Donor "1" --> "*" Donation : makes
+Beneficiary --> Beneficiary.Status : status
+Event --> Event.Status : status
+Event "1" --> "*" EventRegistration : has
+Volunteer "1" --> "*" EventRegistration : signs up
+
+%% ===================== SINGLETON (P1, Phase 1) =====================
+class DatabaseManager {
+    -DatabaseManager instance$
+    -Connection conn
+    -DatabaseManager()
+    +getInstance()$ DatabaseManager
+    +getConnection() Connection
+    +close() void
+}
+class ConfigManager {
+    -ConfigManager instance$
+    -Properties props
+    +getInstance()$ ConfigManager
+    +get(String key) String
+    +get(String key, String defaultValue) String
+}
+
+%% ===================== FACTORY + DECORATOR (P2, Phase 1) =====================
+class Donation {
+    <<abstract>>
+    -long id
+    -long donorId
+    -DonationType type
+    -LocalDate donationDate
+    -String referenceNumber
+    -String notes
+    +getId() long
+    +setId(long id) void
+    +getDonorId() long
+    +getType() DonationType
+    +getDonationDate() LocalDate
+    +getReferenceNumber() String
+    +setReferenceNumber(String referenceNumber) void
+    +getNotes() String
+    +getAmountMinor() long*
+    +getItemDescription() String*
+    +getQuantity() Integer*
+    +getEstimatedValueMinor() Long*
+}
+class OnlineDonation
+class CheckDonation
+class InKindDonation
+class DonationRequest {
+    <<record>>
+    +long donorId
+    +DonationType type
+    +Long amountMinor
+    +String itemDescription
+    +Integer quantity
+    +Long estimatedValueMinor
+    +String referenceNumber
+    +LocalDate donationDate
+    +String notes
+}
+class DonationFilter {
+    <<record>>
+    +Long donorId
+    +DonationType type
+    +LocalDate from
+    +LocalDate to
+}
+class DonationFactory {
+    +create(DonationRequest request) Donation
+}
+
+%% Decorators wrap the rendered Receipt, not the Donation itself.
+class Receipt {
+    <<interface>>
+    +render() String
+}
+class BasicReceipt {
+    -Donation donation
+    -Donor donor
+    +render() String
+    +money(long minor)$ String
+}
+class ReceiptDecorator {
+    <<abstract>>
+    #Receipt receipt
+    +render() String
+}
+class TaxReceiptDecorator
+class ThankYouReceiptDecorator
+
+Donation <|-- OnlineDonation
+Donation <|-- CheckDonation
+Donation <|-- InKindDonation
+Donation --> DonationType : type
+DonationFactory ..> Donation : creates
+DonationFactory ..> DonationRequest : reads
+Receipt <|.. BasicReceipt
+Receipt <|.. ReceiptDecorator
+ReceiptDecorator <|-- TaxReceiptDecorator
+ReceiptDecorator <|-- ThankYouReceiptDecorator
+ReceiptDecorator o-- Receipt : wraps
+BasicReceipt --> Donation
+BasicReceipt --> Donor
+
+%% ===================== ADAPTER (P2, Phase 2) =====================
+class PaymentGateway {
+    <<interface>>
+    +charge(long amountMinor) String
+}
+class FakePaymentProvider {
+    +makePayment(long cents) String
+}
+class FakePaymentGatewayAdapter {
+    -FakePaymentProvider provider
+    +charge(long amountMinor) String
+}
+PaymentGateway <|.. FakePaymentGatewayAdapter
+FakePaymentGatewayAdapter --> FakePaymentProvider : adapts
+
+%% ===================== TEMPLATE METHOD (P2, Phase 2 - planned) =====================
+class ReportGenerator {
+    <<abstract>>
+    +generate() String
+    #header() String
+    #body() String*
+    #footer() String
+}
+class ReceiptReport
+class MonthlyReport
+ReportGenerator <|-- ReceiptReport
+ReportGenerator <|-- MonthlyReport
+
+%% ===================== OBSERVER (P4, Phase 1) =====================
+class DonationObserver {
+    <<interface>>
+    +onDonationRecorded(Donation donation, Donor donor) void
+}
+class DonationSubject {
+    <<interface>>
+    +addObserver(DonationObserver observer) void
+    +removeObserver(DonationObserver observer) void
+}
+class ThankYouNotificationObserver {
+    -Notifier notifier
+    +onDonationRecorded(Donation donation, Donor donor) void
+}
+DonationSubject <|.. DonationService
+DonationObserver <|.. ThankYouNotificationObserver
+DonationSubject o-- DonationObserver : notifies
+ThankYouNotificationObserver --> Notifier : sends via
+
+%% ===================== STRATEGY (P4, Phase 1) =====================
+class NotificationStrategy {
+    <<interface>>
+    +send(String recipient, String subject, String body) void
+}
+class EmailStrategy
+class SmsStrategy
+class SocialStrategy
+class Notifier {
+    -NotificationStrategy strategy
+    +Notifier(NotificationStrategy strategy)
+    +setStrategy(NotificationStrategy strategy) void
+    +getStrategy() NotificationStrategy
+    +send(String recipient, String subject, String body) void
+}
+NotificationStrategy <|.. EmailStrategy
+NotificationStrategy <|.. SmsStrategy
+NotificationStrategy <|.. SocialStrategy
+Notifier o-- NotificationStrategy : uses
+
+%% ===================== STATE (P3, Phase 2 - planned) =====================
+class EventState {
+    <<interface>>
+    +getName() String
+    +canRegister() boolean
+    +next(Event e) void
+}
+class DraftState
+class OpenState
+class ClosedState
+EventState <|.. DraftState
+EventState <|.. OpenState
+EventState <|.. ClosedState
+Event --> EventState : current state
+
+%% ===================== ITERATOR (P3, Phase 2 - planned) =====================
+class Iterable {
+    <<interface>>
+    +iterator() Iterator
+}
+class Iterator {
+    <<interface>>
+    +hasNext() boolean
+    +next() Object
+}
+class VolunteerCollection {
+    -List~Volunteer~ items
+    +add(Volunteer v) void
+    +iterator() Iterator
+}
+class VolunteerIterator {
+    -int index
+    +hasNext() boolean
+    +next() Volunteer
+}
+Iterable <|.. VolunteerCollection
+Iterator <|.. VolunteerIterator
+VolunteerCollection ..> VolunteerIterator : creates
+VolunteerCollection o-- Volunteer
+
+%% ===================== COMMAND (P1, Phase 2 - planned) =====================
+class Command {
+    <<interface>>
+    +execute() void
+    +undo() void
+}
+class CommandHistory {
+    -Deque~Command~ undoStack
+    -Deque~Command~ redoStack
+    +run(Command c) void
+    +undo() void
+    +redo() void
+}
+class AddDonationCommand {
+    -DonationService service
+    -Donation donation
+}
+Command <|.. AddDonationCommand
+CommandHistory o-- Command
+AddDonationCommand --> DonationService
+
+%% ===================== PROXY (P1, Phase 2 - planned) =====================
+class AdminService {
+    <<interface>>
+    +manageUsers() void
+    +editLookups() void
+}
+class AdminServiceImpl
+class AdminServiceProxy {
+    -AdminService real
+    -Account currentUser
+    -checkAccess() void
+}
+AdminService <|.. AdminServiceImpl
+AdminService <|.. AdminServiceProxy
+AdminServiceProxy --> AdminService : delegates
+AdminServiceProxy --> Account : checks role
+
+%% ===================== SERVICES + REPOSITORIES =====================
+class DonationService {
+    -DonorRepository donors
+    -DonationRepository donations
+    -PaymentGateway paymentGateway
+    -List~DonationObserver~ observers
+    +saveDonor(Donor donor) Donor
+    +record(DonationRequest request) Donation
+    +findActiveDonors(String query) List
+    +findDonations(DonationFilter filter) List
+    +getDonation(long id) Donation
+    +getDonor(long id) Donor
+    +archiveDonor(long id) void
+    +receipt(long donationId) String
+    +yearlyStatement(long donorId, int year) String
+    +addObserver(DonationObserver observer) void
+    +removeObserver(DonationObserver observer) void
+}
+class VolunteerService
+class EventService
+class BeneficiaryService {
+    -BeneficiaryRepository repo
+    +distributeAid(Beneficiary b, String item) void
+}
+class CertificateGenerator
+
+class CrudRepository~T~ {
+    <<interface>>
+    +insert(T entity) long
+    +update(T entity) boolean
+    +deleteById(long id) boolean
+    +findById(long id) Optional
+    +findAll() List
+}
+
+class JdbcRepository~T~ {
+    <<abstract>>
+    #Connection conn
+    #JdbcRepository()
+    #JdbcRepository(Connection conn)
+    #execute(String sql, Object... params) int
+    #query(String sql, RowMapper, Object... params) List
+    #queryOne(String sql, RowMapper, Object... params) Optional
+    #insertReturnKey(String sql, Object... params) long
+}
+
+%% Donation side uses ports + adapters instead of the JdbcRepository base.
+class DonationRepository {
+    <<interface>>
+    +save(Donation donation) Donation
+    +findById(long id) Optional
+    +find(DonationFilter filter) List
+    +monetaryTotalForDonorYear(long donorId, int year) long
+}
+class DonorRepository {
+    <<interface>>
+    +save(Donor donor) Donor
+    +findById(long id) Optional
+    +findActive(String query) List
+    +archive(long id) void
+}
+class SqliteDonationRepository {
+    -Connection connection
+    +save(Donation donation) Donation
+    +findById(long id) Optional
+    +find(DonationFilter filter) List
+    +monetaryTotalForDonorYear(long donorId, int year) long
+}
+class SqliteDonorRepository {
+    -Connection connection
+    +save(Donor donor) Donor
+    +findById(long id) Optional
+    +findActive(String query) List
+    +archive(long id) void
+}
+
+class VolunteerRepository {
+    +insert(Volunteer) long
+    +update(Volunteer) boolean
+    +deleteById(long id) boolean
+    +findById(long id) Optional
+    +findAll() List
+    +addSkill(long volunteerId, long skillId) boolean
+    +removeSkill(long volunteerId, long skillId) boolean
+    +findSkills(long volunteerId) List
+    +findBySkill(long skillId) List
+    +logHours(long volunteerId, double hours, Long eventId) long
+    +logHours(long volunteerId, double hours, Long eventId, LocalDate loggedOn) long
+    +getTotalHours(long volunteerId) double
+    +getTotalHoursForEvent(long volunteerId, long eventId) double
+    +getTotalHoursInPeriod(long volunteerId, LocalDate from, LocalDate to) double
+    +findByAvailability(boolean available) List
+    +searchByName(String fragment) List
+    +count() long
+}
+class EventRepository {
+    +insert(Event) long
+    +update(Event) boolean
+    +deleteById(long id) boolean
+    +findById(long id) Optional
+    +findAll() List
+    +getRegisteredCount(long eventId) long
+    +register(long eventId, long volunteerId) long
+    +register(long eventId, long volunteerId, String ticketCode) long
+    +cancelRegistration(long eventId, long volunteerId) boolean
+    +markAttended(long eventId, long volunteerId) boolean
+    +registrationsFor(long eventId) List
+    +findRegistration(long eventId, long volunteerId) Optional
+    +findByTicketCode(String ticketCode) Optional
+    +getAttendedCount(long eventId) long
+    +findByType(long eventTypeId) List
+    +findByStatus(Event.Status status) List
+    +findUpcoming(LocalDate from) List
+    +count() long
+}
+class BeneficiaryRepository {
+    +insert(Beneficiary) long
+    +update(Beneficiary) boolean
+    +deleteById(long id) boolean
+    +findById(long id) Optional
+    +findAll() List
+    +findByNeedType(long needTypeId) List
+    +findByStatus(Beneficiary.Status status) List
+    +searchByName(String fragment) List
+    +count() long
+}
+class AccountRepository {
+    +insert(Account) long
+    +update(Account) boolean
+    +deleteById(long id) boolean
+    +findById(long id) Optional
+    +findAll() List
+    +findByUsername(String username) Optional
+    +existsByUsername(String username) boolean
+    +findByRole(Role role) List
+    +findByVolunteerId(long volunteerId) Optional
+    +updatePasswordHash(long id, String passwordHash) boolean
+    +count() long
+}
+
+CrudRepository~T~ <|.. JdbcRepository~T~
+JdbcRepository~T~ <|-- VolunteerRepository
+JdbcRepository~T~ <|-- EventRepository
+JdbcRepository~T~ <|-- BeneficiaryRepository
+JdbcRepository~T~ <|-- AccountRepository
+DonationRepository <|.. SqliteDonationRepository
+DonorRepository <|.. SqliteDonorRepository
+
+DonationService --> DonationRepository
+DonationService --> DonorRepository
+DonationService --> PaymentGateway
+DonationService ..> DonationFactory
+DonationService ..> Receipt : builds
+DonationService ..> ReportGenerator
+VolunteerService --> VolunteerRepository
+VolunteerService ..> CertificateGenerator
+EventService --> EventRepository
+BeneficiaryService --> BeneficiaryRepository
+
+JdbcRepository~T~ ..> DatabaseManager : obtains Connection from
+SqliteDonationRepository ..> DatabaseManager : obtains Connection from
+SqliteDonorRepository ..> DatabaseManager : obtains Connection from
+
+%% ===================== FACADE (P1, Phase 2 - planned) =====================
+class NonProfitFacade {
+    -DonationService donations
+    -VolunteerService volunteers
+    -EventService events
+    -BeneficiaryService beneficiaries
+    -Notifier notifier
+    -CommandHistory history
+    -AdminService admin
+    +donate(String type, double amt, Donor d) void
+    +registerVolunteer(Volunteer v, Event e) void
+    +createEvent(Event e) void
+    +distributeAid(Beneficiary b, String item) void
+    +notify(String to, String subject, String body) void
+    +undo() void
+}
+NonProfitFacade --> DonationService
+NonProfitFacade --> VolunteerService
+NonProfitFacade --> EventService
+NonProfitFacade --> BeneficiaryService
+NonProfitFacade --> Notifier
+NonProfitFacade --> CommandHistory
+NonProfitFacade --> AdminService
+
+%% ===================== VIEW / CONTROLLER (MVC, Phase 1) =====================
+%% Only the Donation module is wired so far; the other
+%% controllers and views arrive with their modules.
+class DonationController {
+    -DonationService service
+    +saveDonor(Donor donor) Donor
+    +archiveDonor(long id) void
+    +getDonor(long id) Donor
+    +findDonors(String query) List
+    +recordDonation(DonationRequest request) Donation
+    +findDonations(DonationFilter filter) List
+    +receipt(long donationId) String
+    +yearlyStatement(long donorId, int year) String
+}
+class DonationView {
+    <<interface>>
+    +start() void
+}
+class ConsoleDonationView {
+    -DonationController controller
+    -Scanner input
+    +start() void
+}
+class UiFactory {
+    <<interface>>
+    +createDonationView(DonationController controller) DonationView
+}
+class ConsoleUiFactory {
+    +createDonationView(DonationController controller) DonationView
+}
+DonationView <|.. ConsoleDonationView
+UiFactory <|.. ConsoleUiFactory
+ConsoleUiFactory ..> ConsoleDonationView : creates
+DonationController --> DonationService
+ConsoleDonationView --> DonationController
