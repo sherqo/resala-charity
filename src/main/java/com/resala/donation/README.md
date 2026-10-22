@@ -13,17 +13,25 @@ Donors, donations, receipts, tax statements, payments.
 
 ## Patterns
 
-- **Factory** — `DonationFactory` creates online / check / in-kind
-- **Decorator** — `decorator/`: tax receipt, thank-you (stackable add-ons)
-- **Observer** — `DonationService` notifies subscribers when a donation is added
-- Phase 2: **Adapter** (`payment/`), **Template Method** (`report/`)
+- **Factory Method** — `DonationFactory` is the Creator; the three
+  concrete factories create `OnlineDonation`, `CheckDonation`, or `InKindDonation`.
+- **Decorator** — `BasicReceipt` is wrapped by `ThankYouReceiptDecorator`
+  and, for money donations, `TaxReceiptDecorator`.
+- **Observer** — `DonationService` is the Subject. The `notification` module
+  provides `ThankYouNotificationObserver` after a save.
+- **Adapter** — the `payment` module's `FakePaymentGatewayAdapter` adapts the fake provider to
+  the app's `PaymentGateway` interface.
+- **MVC + Abstract Factory** — `DonationController` has no console code;
+  `UiFactory` creates a `DonationView`. `ConsoleUiFactory` is the current build.
 
 ## Tables
 
-`donors`, `donations`; donation kinds are the fixed `DonationType` enum (no lookup table)
+`donors`, `donations`; donation kinds are the fixed `DonationType` enum (no lookup table).
+Donors are archived (`active=0`) rather than deleted, so donation history remains valid.
 
-## Files to create
+## Current console features
 
-`Donation` (interface), `OnlineDonation`, `CheckDonation`, `InKindDonation`,
-`DonationFactory`, `DonationRepository`, `DonationService`, then `decorator/*`,
-`payment/*`, `report/*` as their phase starts.
+- add, search, edit, and archive donors
+- record online, check, and in-kind donations
+- list/filter donations by donor, type, and date range
+- print a receipt and a yearly monetary statement
