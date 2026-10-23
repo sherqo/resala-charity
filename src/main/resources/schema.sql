@@ -114,3 +114,29 @@ WHERE NOT EXISTS (SELECT 1 FROM seed_history WHERE name = 'lookup_init');
 INSERT OR IGNORE INTO seed_history (name) VALUES ('lookup_init');
 
 COMMIT;
+
+-- Payment module
+CREATE TABLE IF NOT EXISTS payments (
+  id INTEGER PRIMARY KEY,
+  donor_id INTEGER NOT NULL REFERENCES donors(id),
+  donation_id INTEGER UNIQUE REFERENCES donations(id),
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  currency TEXT NOT NULL DEFAULT 'EGP' CHECK (currency = 'EGP'),
+  payment_method TEXT NOT NULL CHECK (payment_method IN ('CASH', 'CARD', 'WALLET')),
+  status TEXT NOT NULL CHECK (status IN ('PENDING', 'PAID', 'FAILED')),
+  idempotency_key TEXT NOT NULL UNIQUE,
+  failure_code TEXT,
+  failure_message TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  paid_at TEXT,
+  CHECK (status <> 'PAID' OR (donation_id IS NOT NULL AND paid_at IS NOT NULL)),
+  CHECK (status <> 'FAILED' OR failure_code IS NOT NULL),
+  CHECK (status = 'FAILED' OR failure_code IS NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_payments_donor_created
+  ON payments(donor_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_payments_status_created
+  ON payments(status, created_at);
