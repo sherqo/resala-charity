@@ -9,7 +9,7 @@ Events, registration, attendance and reminders.
 - [x] E3 register attendee with capacity check
 - [x] E4 ticket reference code (unique 8-character code)
 - [x] E5 attendance check-in (required)
-- [ ] E6 reminder to attendees (delegated to Communication / Phase 2)
+- [x] E6 attendee notification on updates & closure (Observer pattern via `notification`)
 - [x] E7 attendance report: registered / attended / no-show
 
 ## Patterns
@@ -17,8 +17,8 @@ Events, registration, attendance and reminders.
 - **MVC** — `EventController` handles requests without I/O; `EventView` / `ConsoleEventView` manage UI; `EventService` handles business logic.
 - **Abstract Factory** — `UiFactory` creates `EventView`.
 - **Repository** — `EventRepository` and `EventRegistrationRepository` abstract database operations with SQLite implementations.
+- **Observer** — `EventService` acts as `EventSubject`. Registered attendees are automatically notified via `EventNotificationObserver` whenever an event is updated or closed.
 - **State** (Phase 2) — `state/`: DraftState, OpenState, ClosedState own the rules per status.
-- **Observer** (Phase 2) — event updates notify registered attendees.
 
 ## Tables
 
@@ -30,7 +30,7 @@ Events, registration, attendance and reminders.
 - `EventRegistration` — Entity representing attendee registration and ticket details.
 - `EventRepository` — Contract for event persistence.
 - `EventRegistrationRepository` — Contract for registration and check-in persistence.
-- `EventService` — Core business logic, lifecycle transitions, capacity verification, and attendance reports.
+- `EventService` — Core business logic, implements `EventSubject`, handles lifecycle transitions, capacity verification, and attendance reports.
 - `SqliteEventRepository` & `SqliteEventRegistrationRepository` — SQLite implementations.
 - `EventController` — MVC controller.
 - `EventView` & `ConsoleEventView` — UI boundary and console implementation (inherits `AbstractConsoleView`).
