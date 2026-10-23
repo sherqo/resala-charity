@@ -4,7 +4,9 @@ import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.core.DatabaseManager;
 import com.resala.donation.DonationService;
+import com.resala.event.EventService;
 import com.resala.notification.EmailStrategy;
+import com.resala.notification.EventNotificationObserver;
 import com.resala.notification.Notifier;
 import com.resala.notification.ThankYouNotificationObserver;
 import com.resala.payment.FakePaymentGatewayAdapter;
@@ -22,16 +24,28 @@ public class Main {
 
   public static void main(String[] args) {
     DatabaseManager database = DatabaseManager.getInstance();
+    Connection conn = database.getConnection();
 
-    DonationService service = new DonationService(
-      new SqliteDonorRepository(database.getConnection()),
-      new SqliteDonationRepository(database.getConnection()),
+    // ── Shared Notification System (Strategy Pattern) ──────────────────────
+    Notifier notifier = new Notifier(new EmailStrategy());
+
+    // ── Donation module (Observer: new donation → thank you notification) ──
+    DonationService donationService = new DonationService(
+      new SqliteDonorRepository(conn),
+      new SqliteDonationRepository(conn),
       new FakePaymentGatewayAdapter(new FakePaymentProvider())
     );
+    donationService.addObserver(new ThankYouNotificationObserver(notifier));
+    DonationController donationController = new DonationController(donationService);
 
-    // Observer + Strategy: default channel is Email; swap via notifier.setStrategy(...) at runtime
-    Notifier notifier = new Notifier(new EmailStrategy());
-    service.addObserver(new ThankYouNotificationObserver(notifier));
+    // ── Event module (Observer: event update/close → attendee notification) ─
+    SqliteEventRegistrationRepository eventRegistrationRepo = new SqliteEventRegistrationRepository(conn);
+    EventService eventService = new EventService(
+      new SqliteEventRepository(conn),
+      eventRegistrationRepo
+    );
+    eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
+    EventController eventController = new EventController(eventService);
 
     // ── Top-level module menu ──────────────────────────────────────────────
     UiFactory uiFactory = new ConsoleUiFactory();

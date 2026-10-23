@@ -1,26 +1,50 @@
 package com.resala.event;
 
 import com.resala.model.Event;
+import com.resala.notification.EventObserver;
+import com.resala.notification.EventSubject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * Business logic for the event module.
+ * Implements EventSubject so that observers (such as EventNotificationObserver)
+ * receive notifications when event details change or status transitions occur.
  *
  * Lifecycle rules:
  *   DRAFT → OPEN   (via open)   — allows registrations
  *   OPEN  → CLOSED (via close)  — stops registrations
- *   Only DRAFT events can be edited or deleted.
- *   Only OPEN events accept registrations.
+ *   Events in any status can have their date, title, or capacity updated
+ *   (capacity cannot be reduced below already-registered attendee count).
  */
-public class EventService {
+public class EventService implements EventSubject {
 
   private final EventRepository events;
   private final EventRegistrationRepository registrations;
+  private final List<EventObserver> observers = new ArrayList<>();
 
   public EventService(EventRepository events, EventRegistrationRepository registrations) {
     this.events = events;
     this.registrations = registrations;
+  }
+
+  // ── Observer Registration (EventSubject) ──────────────────────────────────
+
+  @Override
+  public void addObserver(EventObserver observer) {
+    observers.add(observer);
+  }
+
+  @Override
+  public void removeObserver(EventObserver observer) {
+    observers.remove(observer);
+  }
+
+  private void notifyObservers(Event event, String message) {
+    for (EventObserver observer : observers) {
+      observer.onEventUpdated(event, message);
+    }
   }
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
@@ -40,52 +64,72 @@ public class EventService {
   }
 
   /**
-   * Updates a DRAFT event.
-   * Editing an OPEN or CLOSED event is rejected to protect existing registrations.
+   * Updates an event (DRAFT, OPEN, or CLOSED).
+   * Supports changing date (e.g. rescheduling) or increasing capacity.
+   * Ensures capacity cannot be reduced below current registrations.
+   * Registered attendees are notified of any updates via the Observer pattern.
    */
   public Event update(long id, EventRequest request) {
     Event event = getEvent(id);
-    if (event.getStatus() != Event.Status.DRAFT) {
-      throw new IllegalStateException("Only DRAFT events can be edited");
-    }
     validate(request);
+
+    int registered = registrations.countRegistered(id);
+    if (request.capacity() < registered) {
+      throw new IllegalArgumentException(
+        "New capacity (" + request.capacity() + ") cannot be less than existing registrations (" + registered + ")"
+      );
+    }
+
+    boolean dateChanged = !event.getDate().equals(request.date());
     event.setTitle(request.title().trim());
     event.setEventTypeId(request.eventTypeId());
     event.setDate(request.date());
     event.setCapacity(request.capacity());
     event.setDescription(request.description());
-    return events.save(event);
+    Event saved = events.save(event);
+
+    String message = dateChanged
+      ? "Event has been rescheduled. New date: " + saved.getDate()
+      : "Event details have been updated.";
+    notifyObservers(saved, message);
+
+    return saved;
   }
 
-  /** Permanently deletes a DRAFT event. */
+  /** Permanently deletes an event. Only allowed while in DRAFT (no registrations). */
   public void delete(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.DRAFT) {
-      throw new IllegalStateException("Only DRAFT events can be deleted");
+      throw new IllegalStateException("Only DRAFT events with no active history can be deleted");
     }
     events.delete(id);
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
-  /** DRAFT → OPEN: starts accepting registrations. */
+  /** DRAFT / CLOSED → OPEN: starts accepting registrations. */
   public Event open(long id) {
     Event event = getEvent(id);
-    if (event.getStatus() != Event.Status.DRAFT) {
-      throw new IllegalStateException("Only DRAFT events can be opened");
+    if (event.getStatus() == Event.Status.OPEN) {
+      throw new IllegalStateException("Event is already OPEN");
     }
     event.setStatus(Event.Status.OPEN);
-    return events.save(event);
+    Event saved = events.save(event);
+    notifyObservers(saved, "Event registration is now OPEN.");
+    return saved;
   }
 
-  /** OPEN → CLOSED: stops accepting registrations. */
+  /** OPEN → CLOSED: stops accepting registrations and notifies attendees. */
   public Event close(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.OPEN) {
       throw new IllegalStateException("Only OPEN events can be closed");
     }
     event.setStatus(Event.Status.CLOSED);
-    return events.save(event);
+    Event saved = events.save(event);
+
+    notifyObservers(saved, "The event has now been closed for registrations.");
+    return saved;
   }
 
   // ── Registration ───────────────────────────────────────────────────────────

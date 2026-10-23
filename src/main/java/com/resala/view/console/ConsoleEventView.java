@@ -29,7 +29,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       System.out.println("2) Create event");
       System.out.println("3) Edit event");
       System.out.println("4) Delete event");
-      System.out.println("5) Open event (DRAFT → OPEN)");
+      System.out.println("5) Open event (DRAFT / CLOSED → OPEN)");
       System.out.println("6) Close event (OPEN → CLOSED)");
       System.out.println("7) Register attendee");
       System.out.println("8) Check in attendee");
@@ -82,7 +82,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
   }
 
   private void editEvent() {
-    System.out.println("\n--- Edit Event (DRAFT only) ---");
+    System.out.println("\n--- Edit Event ---");
     long id = readLong("Event ID to edit: ");
     Event current = controller.getEvent(id);
     System.out.println("Editing: #" + current.getId() + " — " + current.getTitle()
