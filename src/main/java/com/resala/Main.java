@@ -4,7 +4,6 @@ import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.core.DatabaseManager;
 import com.resala.donation.DonationService;
-import com.resala.event.EventService;
 import com.resala.notification.EmailStrategy;
 import com.resala.notification.Notifier;
 import com.resala.notification.ThankYouNotificationObserver;
@@ -23,25 +22,16 @@ public class Main {
 
   public static void main(String[] args) {
     DatabaseManager database = DatabaseManager.getInstance();
-    Connection conn = database.getConnection();
 
-    // ── Donation module ────────────────────────────────────────────────────
-    DonationService donationService = new DonationService(
-      new SqliteDonorRepository(conn),
-      new SqliteDonationRepository(conn),
+    DonationService service = new DonationService(
+      new SqliteDonorRepository(database.getConnection()),
+      new SqliteDonationRepository(database.getConnection()),
       new FakePaymentGatewayAdapter(new FakePaymentProvider())
     );
-    // Observer + Strategy: default channel is Email; swap via notifier.setStrategy(...)
-    Notifier notifier = new Notifier(new EmailStrategy());
-    donationService.addObserver(new ThankYouNotificationObserver(notifier));
-    DonationController donationController = new DonationController(donationService);
 
-    // ── Event module ───────────────────────────────────────────────────────
-    EventService eventService = new EventService(
-      new SqliteEventRepository(conn),
-      new SqliteEventRegistrationRepository(conn)
-    );
-    EventController eventController = new EventController(eventService);
+    // Observer + Strategy: default channel is Email; swap via notifier.setStrategy(...) at runtime
+    Notifier notifier = new Notifier(new EmailStrategy());
+    service.addObserver(new ThankYouNotificationObserver(notifier));
 
     // ── Top-level module menu ──────────────────────────────────────────────
     UiFactory uiFactory = new ConsoleUiFactory();
