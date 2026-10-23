@@ -32,8 +32,7 @@ public class Main {
     // ── Donation module (Observer: new donation → thank you notification) ──
     DonationService donationService = new DonationService(
       new SqliteDonorRepository(conn),
-      new SqliteDonationRepository(conn),
-      new FakePaymentGatewayAdapter(new FakePaymentProvider())
+      new SqliteDonationRepository(conn)
     );
     donationService.addObserver(new ThankYouNotificationObserver(notifier));
     DonationController donationController = new DonationController(donationService);

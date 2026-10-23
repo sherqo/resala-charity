@@ -3,6 +3,7 @@ package com.resala.persistence.sqlite;
 import com.resala.payment.Payment;
 import com.resala.payment.PaymentError;
 import com.resala.payment.PaymentMethod;
+import com.resala.payment.PaymentMethods;
 import com.resala.payment.PaymentRepository;
 import com.resala.payment.PaymentStatus;
 

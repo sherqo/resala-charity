@@ -4,7 +4,6 @@ import com.resala.model.DonationType;
 import com.resala.model.Donor;
 import com.resala.notification.DonationObserver;
 import com.resala.notification.DonationSubject;
-import com.resala.payment.PaymentGateway;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,13 +13,11 @@ public class DonationService implements DonationSubject {
 
   private final DonorRepository donors;
   private final DonationRepository donations;
-  private final PaymentGateway paymentGateway;
   private final List<DonationObserver> observers = new ArrayList<>();
 
-  public DonationService(DonorRepository donors, DonationRepository donations, PaymentGateway paymentGateway) {
+  public DonationService(DonorRepository donors, DonationRepository donations) {
     this.donors = donors;
     this.donations = donations;
-    this.paymentGateway = paymentGateway;
   }
 
   public Donor saveDonor(Donor donor) {
@@ -35,32 +32,31 @@ public class DonationService implements DonationSubject {
   public Donation record(DonationRequest request) {
     Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
     if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
-
-    DonationRequest processed = request;
-    if (
-      request.type() == DonationType.ONLINE &&
-      (request.referenceNumber() == null || request.referenceNumber().isBlank())
-    ) {
-      if (request.amountMinor() == null || request.amountMinor() <= 0) throw new IllegalArgumentException(
-        "Online donation amount must be positive"
-      );
-      processed = new DonationRequest(
-        request.donorId(),
-        request.type(),
-        request.amountMinor(),
-        request.itemDescription(),
-        request.quantity(),
-        request.estimatedValueMinor(),
-        paymentGateway.charge(request.amountMinor()),
-        request.donationDate(),
-        request.notes()
-      );
+    if (request.type() == DonationType.ONLINE
+        && (request.referenceNumber() == null || request.referenceNumber().isBlank())) {
+      throw new IllegalArgumentException("Online donations must be paid through the payment module");
     }
-
-    Donation donation = new DonationFactory().create(processed);
+    Donation donation = new DonationFactory().create(request);
     donations.save(donation);
     notifyObservers(donation, donor);
     return donation;
+  }
+
+  /** Used by PaymentService inside a transaction. Does NOT notify observers. */
+  public Donation recordConfirmed(DonationRequest request) {
+    Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
+    if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
+    if (request.type() != DonationType.ONLINE || request.referenceNumber() == null || request.referenceNumber().isBlank()) {
+      throw new IllegalArgumentException("recordConfirmed is only for paid online donations");
+    }
+    Donation donation = new DonationFactory().create(request);
+    donations.save(donation);
+    return donation;
+  }
+
+  /** Call only after the payment transaction commits. */
+  public void notifyRecorded(Donation donation, Donor donor) {
+    notifyObservers(donation, donor);
   }
 
   public List<Donor> findActiveDonors(String query) {
