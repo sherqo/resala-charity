@@ -12,3 +12,4 @@ public interface PaymentRepository {
   List<Payment> findByDonor(long donorId);
   List<Payment> findByStatus(PaymentStatus status);
 }
+
