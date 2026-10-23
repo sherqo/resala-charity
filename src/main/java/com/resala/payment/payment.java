@@ -70,7 +70,7 @@ public final class payment {
   }
 
 
-  public static Payment createPending(String payerType, long payerId, long amountMinor, String currency,
+    public static Payment createPending(String payerType, long payerId, long amountMinor, String currency,
                                      PaymentMethod paymentMethod, String idempotencyKey, String notes) {
     if (payerType == null || payerType.isBlank()) throw new IllegalArgumentException("payerType is required");
     if (payerId <= 0) throw new IllegalArgumentException("payerId must be positive");
@@ -82,7 +82,9 @@ public final class payment {
     if (idempotencyKey == null || idempotencyKey.isBlank()) {
       throw new IllegalArgumentException("idempotencyKey is required");
     }
-    return new Payment(payerType, payerId, amountMinor, currency, paymentMethod.code(), idempotencyKey, notes, Instant.now());
+    Payment p = new Payment(payerType, payerId, amountMinor, currency, paymentMethod.code(), idempotencyKey, notes, Instant.now());
+    p.validate();
+    return p;
   }
 
   public static Payment restore(
@@ -101,8 +103,57 @@ public final class payment {
     payment.notes = notes;
     payment.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
     payment.paidAt = paidAt;
-    payment.validatePersistedState();
+    payment.validate();
     return payment;
+  }
+
+  public void markPaid(String referenceType, long referenceId) {
+    require(PaymentStatus.PAID);
+    if (referenceType == null || referenceType.isBlank()) throw new IllegalArgumentException("referenceType is required");
+    if (referenceId < 0) throw new IllegalArgumentException("referenceId must be non-negative");
+    if (referenceId == 0 && !"NONE".equals(referenceType)) {
+      throw new IllegalArgumentException("referenceId 0 is only allowed with referenceType NONE");
+    }
+    this.status = PaymentStatus.PAID;
+    this.referenceType = referenceType;
+    this.referenceId = referenceId;
+    this.paidAt = Instant.now();
+    this.updatedAt = this.paidAt;
+    validate();
+  }
+
+  public void markFailed(PaymentError reason, String message) {
+    require(PaymentStatus.FAILED);
+    if (reason == null) throw new IllegalArgumentException("reason is required");
+    this.status = PaymentStatus.FAILED;
+    this.failureReason = reason;
+    this.failureMessage = message;
+    this.updatedAt = Instant.now();
+    validate();
+  }
+
+  private void require(PaymentStatus target) {
+    if (!status.canTransitionTo(target)) {
+      throw new PaymentException(PaymentError.INVALID_STATE,
+          id > 0 ? id : null,
+          "cannot transition from " + status + " to " + target, null);
+    }
+  }
+
+  private void validate() {
+    if (id < 0) throw new IllegalStateException("Payment id cannot be negative");
+    if (payerType == null || payerType.isBlank()) throw new IllegalStateException("Missing payer type");
+    if (payerId <= 0) throw new IllegalStateException("Persisted payment must have a payer");
+    if (amountMinor <= 0) throw new IllegalStateException("Persisted payment must have a positive amount");
+    if (currency == null || currency.isBlank()) throw new IllegalStateException("Missing currency");
+    if (paymentMethodCode == null || paymentMethodCode.isBlank()) throw new IllegalStateException("Missing payment method");
+    if (idempotencyKey == null || idempotencyKey.isBlank()) {
+      throw new IllegalStateException("Missing idempotency key");
+    }
+    if (status != PaymentStatus.FAILED && failureReason != null) {
+      throw new IllegalStateException("Only FAILED payments carry a failure reason");
+    }
+    status.validate(this);   // state-specific invariants live in the enum
   }
 
 
