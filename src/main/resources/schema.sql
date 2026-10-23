@@ -51,6 +51,20 @@ CREATE TABLE IF NOT EXISTS events (
   description   TEXT
 );
 
+CREATE TABLE IF NOT EXISTS payments (
+  id INTEGER PRIMARY KEY,
+  donor_id INTEGER NOT NULL REFERENCES donors(id),
+  donation_id INTEGER REFERENCES donations(id),
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  currency TEXT NOT NULL DEFAULT 'EGP',
+  status TEXT NOT NULL CHECK (status IN ('PENDING','PAID','FAILED')),
+  provider_reference TEXT UNIQUE,
+  transaction_id TEXT UNIQUE,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  failure_reason TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS event_registrations (
   id             INTEGER PRIMARY KEY,
   event_id       INTEGER NOT NULL REFERENCES events(id),
