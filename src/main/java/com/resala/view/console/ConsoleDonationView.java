@@ -12,17 +12,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
-// console implemntation for the UI boundary, this should be enhanced with some abstraction since we will have shared code between difference modules
-public class ConsoleDonationView implements DonationView {
-
-  private static final String LINE = "----------------------------------------";
+public class ConsoleDonationView extends AbstractConsoleView implements DonationView {
 
   private final DonationController controller;
-  private final Scanner input;
 
   public ConsoleDonationView(DonationController controller, Scanner input) {
+    super(input);
     this.controller = controller;
-    this.input = input;
   }
 
   public void start() {
@@ -40,7 +36,7 @@ public class ConsoleDonationView implements DonationView {
       System.out.println("6) List / filter donations");
       System.out.println("7) Print a receipt");
       System.out.println("8) Yearly donor statement");
-      System.out.println("0) Exit");
+      System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
 
@@ -54,14 +50,11 @@ public class ConsoleDonationView implements DonationView {
           case "6" -> listDonations();
           case "7" -> printReceipt();
           case "8" -> printYearlyStatement();
-          case "0" -> {
-            System.out.println("Goodbye.");
-            running = false;
-          }
-          default -> System.out.println("Invalid option. Please type a number from the menu.");
+          case "0" -> running = false;
+          default  -> System.out.println("Invalid option. Please type a number from the menu.");
         }
       } catch (IllegalArgumentException e) {
-        System.out.println("Error: " + e.getMessage());
+        printError(e.getMessage());
       }
       System.out.println();
     }
@@ -76,18 +69,17 @@ public class ConsoleDonationView implements DonationView {
   private void addDonor() {
     System.out.println("\n--- Add Donor ---");
     System.out.println("Required: name, type (INDIVIDUAL or ORGANIZATION).");
-    System.out.println("Optional: email, phone, tax ID (press Enter to skip).");
+    System.out.println("Optional: email, phone (press Enter to skip).");
     Donor donor = readDonor(null);
     donor = controller.saveDonor(donor);
-    System.out.println("Donor saved successfully: #" + donor.getId() + " - " + donor.getName());
+    printSuccess("Donor saved: #" + donor.getId() + " - " + donor.getName());
   }
 
   private void findDonors() {
     System.out.println("\n--- Find Donors ---");
     System.out.println("Search by name, phone, or email. Press Enter to show all active donors.");
     String query = readLine("Search: ");
-    List<Donor> donors = controller.findDonors(query);
-    printDonors(donors);
+    printDonors(controller.findDonors(query));
   }
 
   private void editDonor() {
@@ -95,19 +87,12 @@ public class ConsoleDonationView implements DonationView {
     long id = readLong("Donor ID to edit: ");
     Donor current = controller.getDonor(id);
     System.out.println(
-      "Editing: #" +
-        current.getId() +
-        " | " +
-        current.getName() +
-        " | " +
-        current.getType() +
-        " | " +
-        current.getPhone()
+      "Editing: #" + current.getId() + " | " + current.getName() +
+      " | " + current.getType() + " | " + current.getPhone()
     );
     System.out.println("Press Enter to keep current value for any field.");
-    Donor updated = readDonor(current);
-    controller.saveDonor(updated);
-    System.out.println("Donor updated successfully.");
+    controller.saveDonor(readDonor(current));
+    printSuccess("Donor updated.");
   }
 
   private void archiveDonor() {
@@ -116,7 +101,7 @@ public class ConsoleDonationView implements DonationView {
     long id = readLong("Donor ID to archive: ");
     if (readLine("Confirm archive of donor #" + id + "? (yes/no): ").equalsIgnoreCase("yes")) {
       controller.archiveDonor(id);
-      System.out.println("Donor #" + id + " archived.");
+      printSuccess("Donor #" + id + " archived.");
     } else {
       System.out.println("Cancelled.");
     }
@@ -158,19 +143,13 @@ public class ConsoleDonationView implements DonationView {
     String notes = readLine("Notes (optional): ");
 
     DonationRequest request = new DonationRequest(
-      donorId,
-      type,
-      amountMinor,
-      itemDescription,
-      quantity,
-      estimatedValueMinor,
-      referenceNumber,
-      donationDate,
+      donorId, type, amountMinor, itemDescription, quantity,
+      estimatedValueMinor, referenceNumber, donationDate,
       notes.isBlank() ? null : notes
     );
 
     Donation donation = controller.recordDonation(request);
-    System.out.println("Donation saved successfully: #" + donation.getId());
+    printSuccess("Donation saved: #" + donation.getId());
     System.out.println("\nReceipt:");
     System.out.println(controller.receipt(donation.getId()));
   }
@@ -179,19 +158,17 @@ public class ConsoleDonationView implements DonationView {
     System.out.println("\n--- List / Filter Donations ---");
     System.out.println("Leave blank for no filter.");
     String donorText = readLine("Donor ID: ");
-    String typeText = readLine("Type (ONLINE / CHECK / IN_KIND): ");
-    String fromText = readLine("From date YYYY-MM-DD: ");
-    String toText = readLine("To date YYYY-MM-DD: ");
+    String typeText  = readLine("Type (ONLINE / CHECK / IN_KIND): ");
+    String fromText  = readLine("From date YYYY-MM-DD: ");
+    String toText    = readLine("To date YYYY-MM-DD: ");
 
     DonationFilter filter = new DonationFilter(
       donorText.isBlank() ? null : Long.parseLong(donorText),
-      typeText.isBlank() ? null : DonationType.valueOf(typeText.toUpperCase()),
-      fromText.isBlank() ? null : LocalDate.parse(fromText),
-      toText.isBlank() ? null : LocalDate.parse(toText)
+      typeText.isBlank()  ? null : DonationType.valueOf(typeText.toUpperCase()),
+      fromText.isBlank()  ? null : LocalDate.parse(fromText),
+      toText.isBlank()    ? null : LocalDate.parse(toText)
     );
-
-    List<Donation> donations = controller.findDonations(filter);
-    printDonations(donations);
+    printDonations(controller.findDonations(filter));
   }
 
   private void printReceipt() {
@@ -211,12 +188,11 @@ public class ConsoleDonationView implements DonationView {
 
   private long chooseOrCreateDonor() {
     System.out.println("\nSelect donor:");
-    List<Donor> donors = controller.findDonors("");
-    printDonors(donors);
+    printDonors(controller.findDonors(""));
     long id = readLong("Donor ID (or 0 to add a new donor): ");
     if (id != 0) return id;
     Donor newDonor = controller.saveDonor(readDonor(null));
-    System.out.println("New donor saved: #" + newDonor.getId());
+    printSuccess("New donor saved: #" + newDonor.getId());
     return newDonor.getId();
   }
 
@@ -225,24 +201,23 @@ public class ConsoleDonationView implements DonationView {
     System.out.println("  1) Online   - money received through a channel (reference optional)");
     System.out.println("  2) Check    - money received by check (check number required)");
     System.out.println("  3) In-kind  - items / goods (item description and quantity required)");
-    String choice = readLine("Choose 1 / 2 / 3: ");
-    return switch (choice) {
+    return switch (readLine("Choose 1 / 2 / 3: ")) {
       case "1" -> DonationType.ONLINE;
       case "2" -> DonationType.CHECK;
       case "3" -> DonationType.IN_KIND;
-      default -> throw new IllegalArgumentException("Please choose 1, 2, or 3.");
+      default  -> throw new IllegalArgumentException("Please choose 1, 2, or 3.");
     };
   }
 
   private Donor readDonor(Donor current) {
-    String name = value("Donor name", current == null ? null : current.getName());
-    String type = value("Type (INDIVIDUAL / ORGANIZATION)", current == null ? null : current.getType().name());
-    String email = value("Email address", current == null ? null : current.getEmail());
-    String phone = value("Phone number", current == null ? null : current.getPhone());
+    String name  = value("Donor name",                   current == null ? null : current.getName());
+    String type  = value("Type (INDIVIDUAL / ORGANIZATION)", current == null ? null : current.getType().name());
+    String email = value("Email address",                current == null ? null : current.getEmail());
+    String phone = value("Phone number",                 current == null ? null : current.getPhone());
     return new Donor(
       current == null ? 0 : current.getId(),
       name,
-      com.resala.model.Donor.Type.valueOf(type.toUpperCase()),
+      Donor.Type.valueOf(type.toUpperCase()),
       blankToNull(email),
       blankToNull(phone),
       true
@@ -250,63 +225,25 @@ public class ConsoleDonationView implements DonationView {
   }
 
   private void printDonors(List<Donor> donors) {
-    if (donors.isEmpty()) {
-      System.out.println("No active donors found.");
-      return;
-    }
+    if (donors.isEmpty()) { System.out.println("No active donors found."); return; }
     System.out.println("ID  | Name                   | Type          | Phone");
     System.out.println(LINE);
     for (Donor d : donors) {
-      System.out.printf("%-3d| %-22s| %-13s| %s%n", d.getId(), truncate(d.getName(), 22), d.getType(), d.getPhone());
+      System.out.printf("%-3d| %-22s| %-13s| %s%n",
+        d.getId(), truncate(d.getName(), 22), d.getType(), d.getPhone());
     }
   }
 
   private void printDonations(List<Donation> donations) {
-    if (donations.isEmpty()) {
-      System.out.println("No donations found.");
-      return;
-    }
+    if (donations.isEmpty()) { System.out.println("No donations found."); return; }
     System.out.println("ID  | Date       | Type      | Description / Amount");
     System.out.println(LINE);
     for (Donation d : donations) {
-      String value;
-      if (d.getType() == DonationType.IN_KIND) {
-        value = d.getQuantity() + " x " + d.getItemDescription();
-      } else {
-        value = formatMoney(d.getAmountMinor());
-      }
-      System.out.printf("%-3d| %-10s| %-9s| %s%n", d.getId(), d.getDonationDate(), d.getType(), value);
+      String val = d.getType() == DonationType.IN_KIND
+        ? d.getQuantity() + " x " + d.getItemDescription()
+        : formatMoney(d.getAmountMinor());
+      System.out.printf("%-3d| %-10s| %-9s| %s%n", d.getId(), d.getDonationDate(), d.getType(), val);
     }
-  }
-
-  private String value(String label, String current) {
-    String suffix = current == null ? "" : " (current: " + current + ")";
-    System.out.print(label + suffix + ": ");
-    String entered = input.nextLine().trim();
-    return entered.isBlank() && current != null ? current : entered;
-  }
-
-  private String requiredLine(String prompt) {
-    String value = readLine(prompt);
-    if (value.isBlank()) throw new IllegalArgumentException("This field is required.");
-    return value;
-  }
-
-  private String readLine(String prompt) {
-    System.out.print(prompt);
-    return input.nextLine().trim();
-  }
-
-  private String readLine() {
-    return input.nextLine().trim();
-  }
-
-  private long readLong(String prompt) {
-    return Long.parseLong(requiredLine(prompt));
-  }
-
-  private int readInt(String prompt) {
-    return Integer.parseInt(requiredLine(prompt));
   }
 
   private Long moneyToMinor(String value) {
@@ -315,14 +252,6 @@ public class ConsoleDonationView implements DonationView {
     } catch (ArithmeticException | NumberFormatException e) {
       throw new IllegalArgumentException("Invalid amount. Use numbers like 250.00.");
     }
-  }
-
-  private String blankToNull(String value) {
-    return value == null || value.isBlank() ? null : value;
-  }
-
-  private String truncate(String text, int max) {
-    return text == null ? "" : text.length() > max ? text.substring(0, max) : text;
   }
 
   private String formatMoney(long minor) {

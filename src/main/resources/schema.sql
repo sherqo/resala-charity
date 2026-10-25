@@ -40,6 +40,26 @@ CREATE TABLE IF NOT EXISTS donations (
   notes TEXT
 );
 
+-- Event module
+CREATE TABLE IF NOT EXISTS events (
+  id            INTEGER PRIMARY KEY,
+  title         TEXT    NOT NULL,
+  event_type_id INTEGER NOT NULL REFERENCES event_types(id),
+  date          TEXT    NOT NULL,
+  capacity      INTEGER NOT NULL CHECK (capacity > 0),
+  status        TEXT    NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','OPEN','CLOSED')),
+  description   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS event_registrations (
+  id             INTEGER PRIMARY KEY,
+  event_id       INTEGER NOT NULL REFERENCES events(id),
+  attendee_name  TEXT    NOT NULL,
+  attendee_email TEXT,
+  ticket_ref     TEXT    NOT NULL UNIQUE,
+  checked_in     INTEGER NOT NULL DEFAULT 0 CHECK (checked_in IN (0,1))
+);
+
 -- admin deletions/edits of lookup rows survive restarts.
 CREATE TABLE IF NOT EXISTS seed_history (
   name TEXT PRIMARY KEY,
