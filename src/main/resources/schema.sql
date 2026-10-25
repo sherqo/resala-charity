@@ -60,6 +60,27 @@ CREATE TABLE IF NOT EXISTS event_registrations (
   checked_in     INTEGER NOT NULL DEFAULT 0 CHECK (checked_in IN (0,1))
 );
 
+-- Beneficiary module
+CREATE TABLE IF NOT EXISTS beneficiaries (
+  id             INTEGER PRIMARY KEY,
+  name           TEXT NOT NULL,
+  phone          TEXT,
+  household_size INTEGER NOT NULL DEFAULT 1 CHECK (household_size > 0),
+  need_type_id   INTEGER NOT NULL REFERENCES need_types(id),
+  status         TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CLOSED')),
+  notes          TEXT
+);
+
+CREATE TABLE IF NOT EXISTS distributions (
+  id                INTEGER PRIMARY KEY,
+  beneficiary_id    INTEGER NOT NULL REFERENCES beneficiaries(id),
+  donation_id       INTEGER REFERENCES donations(id),
+  item_description  TEXT NOT NULL,
+  quantity          INTEGER NOT NULL CHECK (quantity > 0),
+  distribution_date TEXT NOT NULL,
+  notes             TEXT
+);
+
 -- admin deletions/edits of lookup rows survive restarts.
 CREATE TABLE IF NOT EXISTS seed_history (
   name TEXT PRIMARY KEY,

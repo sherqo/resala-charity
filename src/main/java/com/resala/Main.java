@@ -1,5 +1,8 @@
 package com.resala;
 
+import com.resala.beneficiary.BeneficiaryRepository;
+import com.resala.beneficiary.BeneficiaryService;
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.core.DatabaseManager;
@@ -11,6 +14,7 @@ import com.resala.notification.Notifier;
 import com.resala.notification.ThankYouNotificationObserver;
 import com.resala.payment.FakePaymentGatewayAdapter;
 import com.resala.payment.FakePaymentProvider;
+import com.resala.persistence.sqlite.SqliteBeneficiaryRepository;
 import com.resala.persistence.sqlite.SqliteDonationRepository;
 import com.resala.persistence.sqlite.SqliteDonorRepository;
 import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
@@ -47,6 +51,11 @@ public class Main {
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
     EventController eventController = new EventController(eventService);
 
+    // ── Beneficiary module ──────────────────────────────────────────────
+    BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
+    BeneficiaryService beneficiaryService = new BeneficiaryService(beneficiaryRepo);
+    BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
+    
     // ── Top-level module menu ──────────────────────────────────────────────
     UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
@@ -59,6 +68,7 @@ public class Main {
       System.out.println("========================================");
       System.out.println("1) Donation Management");
       System.out.println("2) Event Management");
+      System.out.println("3) Beneficiary Management");
       System.out.println("0) Exit");
       System.out.println("========================================");
       System.out.print("Choose a module: ");
@@ -67,6 +77,7 @@ public class Main {
       switch (choice) {
         case "1" -> uiFactory.createDonationView(donationController).start();
         case "2" -> uiFactory.createEventView(eventController).start();
+        case "3" -> uiFactory.createBeneficiaryView(beneficiaryController).start();
         case "0" -> {
           System.out.println("Goodbye.");
           running = false;
