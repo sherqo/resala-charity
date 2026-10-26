@@ -1,6 +1,9 @@
 package com.resala.payment;
 
-// TODO
+import java.util.List;
+
 public interface PaymentGateway {
-  String charge(long amountMinor);
+  List<PaymentMethod> getAvailableMethods();
+  GatewayResult charge(PaymentCommand command);
 }
+
