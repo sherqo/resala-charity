@@ -52,19 +52,32 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 
+CREATE TABLE IF NOT EXISTS payment_methods (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS payments (
   id INTEGER PRIMARY KEY,
-  donor_id INTEGER NOT NULL REFERENCES donors(id),
-  donation_id INTEGER REFERENCES donations(id),
+  payer_type TEXT NOT NULL,
+  payer_id INTEGER NOT NULL,
   amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
-  currency TEXT NOT NULL DEFAULT 'EGP',
+  currency TEXT NOT NULL DEFAULT 'EGP' CHECK (currency = 'EGP'),
+  payment_method_id INTEGER NOT NULL REFERENCES payment_methods(id),
   status TEXT NOT NULL CHECK (status IN ('PENDING','PAID','FAILED')),
-  provider_reference TEXT UNIQUE,
-  transaction_id TEXT UNIQUE,
   idempotency_key TEXT NOT NULL UNIQUE,
-  failure_reason TEXT,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-); 
+  failure_code TEXT,
+  failure_message TEXT,
+  notes TEXT,
+  reference_type TEXT,
+  reference_id INTEGER,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  paid_at TEXT,
+  CHECK (status <> 'PAID' OR (reference_type IS NOT NULL AND reference_id IS NOT NULL AND paid_at IS NOT NULL)),
+  CHECK (status <> 'FAILED' OR failure_code IS NOT NULL),
+  CHECK (status = 'FAILED' OR failure_code IS NULL)
+);
 
 
 CREATE TABLE IF NOT EXISTS event_registrations (
@@ -112,13 +125,22 @@ SELECT name FROM (
 )
 WHERE NOT EXISTS (SELECT 1 FROM seed_history WHERE name = 'lookup_init');
 
+INSERT INTO payment_methods (name)
+SELECT name FROM (
+  SELECT 'CASH' AS name
+  UNION ALL SELECT 'CARD'
+  UNION ALL SELECT 'WALLET'
+)
+WHERE NOT EXISTS (SELECT 1 FROM seed_history WHERE name = 'payment_methods_init');
+
 -- mark the block as done
 INSERT OR IGNORE INTO seed_history (name) VALUES ('lookup_init');
+INSERT OR IGNORE INTO seed_history (name) VALUES ('payment_methods_init');
 
 COMMIT;
 
-CREATE INDEX IF NOT EXISTS idx_payments_donor_created
-  ON payments(donor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payments_payer_created
+  ON payments(payer_type, payer_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_payments_status_created
 ON payments(status, created_at);

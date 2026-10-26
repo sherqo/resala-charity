@@ -2,6 +2,7 @@ package com.resala.view.console;
 
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
+import com.resala.controller.PaymentController;
 import com.resala.view.DonationView;
 import com.resala.view.EventView;
 import com.resala.view.UiFactory;
@@ -14,8 +15,8 @@ public class ConsoleUiFactory implements UiFactory {
   private final Scanner input = new Scanner(System.in);
 
   @Override
-  public DonationView createDonationView(DonationController controller) {
-    return new ConsoleDonationView(controller, input);
+  public DonationView createDonationView(DonationController controller, PaymentController payments) {
+    return new ConsoleDonationView(controller, payments, input);
   }
 
   @Override

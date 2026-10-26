@@ -4,6 +4,8 @@ import com.resala.model.DonationType;
 import com.resala.model.Donor;
 import com.resala.notification.DonationObserver;
 import com.resala.notification.DonationSubject;
+import com.resala.payment.Payment;
+import com.resala.payment.PaymentRepository;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +15,17 @@ public class DonationService implements DonationSubject {
 
   private final DonorRepository donors;
   private final DonationRepository donations;
+  private final PaymentRepository payments;
   private final List<DonationObserver> observers = new ArrayList<>();
 
   public DonationService(DonorRepository donors, DonationRepository donations) {
+    this(donors, donations, null);
+  }
+
+  public DonationService(DonorRepository donors, DonationRepository donations, PaymentRepository payments) {
     this.donors = donors;
     this.donations = donations;
+    this.payments = payments;
   }
 
   public Donor saveDonor(Donor donor) {
@@ -32,9 +40,8 @@ public class DonationService implements DonationSubject {
   public Donation record(DonationRequest request) {
     Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
     if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
-    if (request.type() == DonationType.ONLINE
-        && (request.referenceNumber() == null || request.referenceNumber().isBlank())) {
-      throw new IllegalArgumentException("Online donations must be paid through the payment module");
+    if (request.type() == DonationType.ONLINE) {
+      requireCompletedPayment(request);
     }
     Donation donation = new DonationFactory().create(request);
     donations.save(donation);
@@ -42,16 +49,45 @@ public class DonationService implements DonationSubject {
     return donation;
   }
 
-  /** Used by PaymentService inside a transaction. Does NOT notify observers. */
+  /** Records an online donation whose payment is already confirmed. Does NOT notify observers. */
   public Donation recordConfirmed(DonationRequest request) {
     Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
     if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
-    if (request.type() != DonationType.ONLINE || request.referenceNumber() == null || request.referenceNumber().isBlank()) {
+    if (request.type() != DonationType.ONLINE) {
       throw new IllegalArgumentException("recordConfirmed is only for paid online donations");
     }
+    requireCompletedPayment(request);
     Donation donation = new DonationFactory().create(request);
     donations.save(donation);
     return donation;
+  }
+
+  /**
+   * A reference number is only a lookup key. The donation may be recorded only when that key
+   * identifies a completed payment for the same donor and the same amount.
+   */
+  private void requireCompletedPayment(DonationRequest request) {
+    String reference = request.referenceNumber();
+    if (reference == null || reference.isBlank()) {
+      throw new IllegalArgumentException("Online donations must be paid through the payment module");
+    }
+    if (payments == null) {
+      throw new IllegalArgumentException("Online donations must be paid through the payment module");
+    }
+
+    Payment payment = payments
+      .findByReference(reference)
+      .orElseThrow(() -> new IllegalArgumentException("No payment found for reference " + reference));
+
+    if (!payment.isPaid()) {
+      throw new IllegalArgumentException("Payment " + reference + " has not completed");
+    }
+    if (payment.getPayerId() != request.donorId()) {
+      throw new IllegalArgumentException("Payment " + reference + " was not made by this donor");
+    }
+    if (request.amountMinor() == null || payment.getAmountMinor() != request.amountMinor()) {
+      throw new IllegalArgumentException("Payment " + reference + " does not match the donation amount");
+    }
   }
 
   /** Call only after the payment transaction commits. */

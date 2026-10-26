@@ -9,4 +9,9 @@ public interface PaymentRepository {
   Optional<Payment> findByIdempotencyKey(String key);
   List<Payment> findByPayer(String payerType, long payerId);
   List<Payment> findByStatus(PaymentStatus status);
+
+  /** The caller-facing reference for a payment is its idempotency key. */
+  default Optional<Payment> findByReference(String reference) {
+    return findByIdempotencyKey(reference);
+  }
 }

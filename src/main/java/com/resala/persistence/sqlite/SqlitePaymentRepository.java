@@ -99,7 +99,7 @@ public class SqlitePaymentRepository implements PaymentRepository {
         INSERT INTO payments (payer_type, payer_id, amount_minor, currency, payment_method_id,
           status, idempotency_key, failure_code, failure_message, notes, reference_type, reference_id,
           created_at, updated_at, paid_at)
-        VALUES (?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)
+        VALUES (?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         Statement.RETURN_GENERATED_KEYS)) {
       bindInsert(ps, payment);
@@ -158,6 +158,10 @@ public class SqlitePaymentRepository implements PaymentRepository {
     else ps.setString(i++, payment.getFailureReason().name());
     ps.setString(i++, payment.getFailureMessage());
     ps.setString(i++, payment.getNotes());
+    if (payment.getReferenceType() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
+    else ps.setString(i++, payment.getReferenceType());
+    if (payment.getReferenceId() == null) ps.setNull(i++, java.sql.Types.INTEGER);
+    else ps.setLong(i++, payment.getReferenceId());
     ps.setString(i++, payment.getCreatedAt().toString());
     ps.setString(i++, payment.getUpdatedAt().toString());
     if (payment.getPaidAt() == null) ps.setNull(i++, java.sql.Types.VARCHAR);

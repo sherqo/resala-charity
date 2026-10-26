@@ -16,6 +16,9 @@ public record PaymentOutcome(
     return new PaymentOutcome(p.getId(), PaymentStatus.FAILED, null,
         p.getFailureMessage(), p.getFailureReason());
   }
+  public static PaymentOutcome pending(Payment p, PaymentError error, String message) {
+    return new PaymentOutcome(p.getId(), PaymentStatus.PENDING, null, message, error);
+  }
   public static PaymentOutcome rejected(PaymentException e) {
     return new PaymentOutcome(e.paymentId() == null ? 0 : e.paymentId(), null, null,
         e.userMessage(), e.error());

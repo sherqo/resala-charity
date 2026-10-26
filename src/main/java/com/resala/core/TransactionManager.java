@@ -16,19 +16,24 @@ public class TransactionManager {
     boolean previous;
     try {
       previous = connection.getAutoCommit();
+      if (!previous) return work.get(); // an outer transaction owns commit/rollback
       connection.setAutoCommit(false);
     } catch (SQLException e) {
       throw new IllegalStateException("Could not begin transaction", e);
     }
     try {
       T result = work.get();
-      try { connection.commit(); } catch (SQLException e) { throw new IllegalStateException("Could not commit transaction", e); }
+      try {
+        connection.commit();
+      } catch (SQLException e) {
+        throw new IllegalStateException("Could not commit transaction", e);
+      }
       return result;
-    } catch (RuntimeException e) {
+    } catch (RuntimeException | Error e) {
       try { connection.rollback(); } catch (SQLException ignored) {}
       throw e;
     } finally {
-      try { connection.setAutoCommit(previous); } catch (SQLException ignored) {}
+      try { connection.setAutoCommit(true); } catch (SQLException ignored) {}
     }
   }
 }

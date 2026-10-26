@@ -2,7 +2,10 @@ package com.resala;
 
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
+import com.resala.controller.PaymentController;
 import com.resala.core.DatabaseManager;
+import com.resala.core.TransactionManager;
+import com.resala.donation.DonationPaymentSettlement;
 import com.resala.donation.DonationService;
 import com.resala.event.EventService;
 import com.resala.notification.EmailStrategy;
@@ -11,10 +14,12 @@ import com.resala.notification.Notifier;
 import com.resala.notification.ThankYouNotificationObserver;
 import com.resala.payment.FakePaymentGatewayAdapter;
 import com.resala.payment.FakePaymentProvider;
+import com.resala.payment.PaymentService;
 import com.resala.persistence.sqlite.SqliteDonationRepository;
 import com.resala.persistence.sqlite.SqliteDonorRepository;
 import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
 import com.resala.persistence.sqlite.SqliteEventRepository;
+import com.resala.persistence.sqlite.SqlitePaymentRepository;
 import com.resala.view.UiFactory;
 import com.resala.view.console.ConsoleUiFactory;
 import java.sql.Connection;
@@ -30,12 +35,23 @@ public class Main {
     Notifier notifier = new Notifier(new EmailStrategy());
 
     // ── Donation module (Observer: new donation → thank you notification) ──
+    SqlitePaymentRepository paymentRepository = new SqlitePaymentRepository(conn);
     DonationService donationService = new DonationService(
       new SqliteDonorRepository(conn),
-      new SqliteDonationRepository(conn)
+      new SqliteDonationRepository(conn),
+      paymentRepository
     );
     donationService.addObserver(new ThankYouNotificationObserver(notifier));
     DonationController donationController = new DonationController(donationService);
+
+    // ── Online payments (gateway → settlement → donation) ───────────────────
+    PaymentService paymentService = new PaymentService(
+      paymentRepository,
+      new FakePaymentGatewayAdapter(new FakePaymentProvider()),
+      new TransactionManager(conn),
+      new DonationPaymentSettlement(donationService)
+    );
+    PaymentController paymentController = new PaymentController(paymentService);
 
     // ── Event module (Observer: event update/close → attendee notification) ─
     SqliteEventRegistrationRepository eventRegistrationRepo = new SqliteEventRegistrationRepository(conn);
@@ -64,7 +80,7 @@ public class Main {
       String choice = input.nextLine().trim();
 
       switch (choice) {
-        case "1" -> uiFactory.createDonationView(donationController).start();
+        case "1" -> uiFactory.createDonationView(donationController, paymentController).start();
         case "2" -> uiFactory.createEventView(eventController).start();
         case "0" -> {
           System.out.println("Goodbye.");

@@ -30,21 +30,35 @@ public class PaymentService {
 
     Payment payment = Payment.createPending(request.payerType(), request.payerId(), request.amountMinor(),
         request.currency(), request.paymentMethod(), request.idempotencyKey(), request.notes());
-    payments.save(payment);
+    try {
+      payments.save(payment);
+    } catch (RuntimeException e) {
+      // Another request may have inserted the same key between our lookup and save.
+      Optional<Payment> raced = payments.findByIdempotencyKey(request.idempotencyKey());
+      if (raced.isPresent()) return resumeOrReturn(raced.get(), request);
+      throw e;
+    }
 
+    return charge(payment, request.description());
+  }
+
+  private PaymentOutcome charge(Payment payment, String description) {
     GatewayResult result;
     try {
       result = gateway.charge(new PaymentCommand(
           payment.getIdempotencyKey(), payment.getAmountMinor(), payment.getCurrency(),
-          payment.getPaymentMethod(), request.description()));
+          payment.getPaymentMethod(), description));
     } catch (RuntimeException e) {
-      payment.markFailed(PaymentError.PROVIDER_UNAVAILABLE, "Unexpected gateway error");
-      payments.save(payment);
-      return PaymentOutcome.failed(payment);
+      // The provider may have accepted the charge. Keep the payment pending for a same-key retry.
+      return PaymentOutcome.pending(payment, PaymentError.PROVIDER_UNAVAILABLE, "Unexpected gateway error");
     }
 
     if (!result.approved()) {
-      payment.markFailed(result.failureReason(), result.message());
+      PaymentError reason = result.failureReason();
+      if (isAmbiguous(reason)) {
+        return PaymentOutcome.pending(payment, reason, result.message());
+      }
+      payment.markFailed(reason, result.message());
       payments.save(payment);
       return PaymentOutcome.failed(payment);
     }
@@ -56,18 +70,27 @@ public class PaymentService {
     }
 
     if (settlement != null) {
+      long recordId;
       try {
-        tx.inTransaction(() -> {
-          long recordId = settlement.settle(payment);
-          payment.markPaid(settlement.referenceType(), recordId);
+        recordId = tx.inTransaction(() -> {
+          // Mark paid first so the settlement can verify the completed payment.
+          payment.markPaid("NONE", 0);
           payments.save(payment);
-          return recordId;
+          long settledId = settlement.settle(payment);
+          payment.attachReference(settlement.referenceType(), settledId);
+          payments.save(payment);
+          return settledId;
         });
-        return PaymentOutcome.paid(payment);
       } catch (RuntimeException e) {
         throw new PaymentException(PaymentError.PERSISTENCE_FAILURE, payment.getId(),
             "approved but not recorded", e);
       }
+      try {
+        settlement.afterCommit(payment, recordId);
+      } catch (RuntimeException ignored) {
+        // The payment is already committed; a notification failure must not turn it into a failure.
+      }
+      return PaymentOutcome.paid(payment);
     }
 
     payment.markPaid("NONE", 0);
@@ -89,6 +112,10 @@ public class PaymentService {
   }
 
   private PaymentOutcome resumeOrReturn(Payment existing, PaymentRequest request) {
+    if (!matches(existing, request)) {
+      throw new PaymentException(PaymentError.IDEMPOTENCY_CONFLICT, existing.getId(),
+          "idempotency key was already used with different payment details", null);
+    }
     if (existing.getStatus() == PaymentStatus.PAID) {
       return PaymentOutcome.paid(existing);
     }
@@ -96,9 +123,21 @@ public class PaymentService {
       return PaymentOutcome.failed(existing);
     }
     // PENDING: re-charge with the same key; provider idempotency prevents a double charge.
-    return pay(new PaymentRequest(existing.getIdempotencyKey(), request.payerType(), existing.getPayerId(),
-        existing.getAmountMinor(), existing.getCurrency(), existing.getPaymentMethod(),
-        request.description(), request.notes()));
+    return charge(existing, request.description());
+  }
+
+  private boolean matches(Payment payment, PaymentRequest request) {
+    return payment.getPayerType().equals(request.payerType())
+        && payment.getPayerId() == request.payerId()
+        && payment.getAmountMinor() == request.amountMinor()
+        && payment.getCurrency().equals(request.currency())
+        && payment.getPaymentMethodCode().equals(request.paymentMethod().code());
+  }
+
+  /** A timeout or provider outage may still have charged the card, so the same key must be retried. */
+  private boolean isAmbiguous(PaymentError reason) {
+    return reason == PaymentError.PROVIDER_TIMEOUT
+        || reason == PaymentError.PROVIDER_UNAVAILABLE;
   }
 
   private void validate(PaymentRequest request) {
