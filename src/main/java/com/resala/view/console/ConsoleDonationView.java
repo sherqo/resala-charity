@@ -1,24 +1,31 @@
 package com.resala.view.console;
 
 import com.resala.controller.DonationController;
+import com.resala.controller.PaymentController;
 import com.resala.donation.Donation;
 import com.resala.donation.DonationFilter;
 import com.resala.donation.DonationRequest;
 import com.resala.model.DonationType;
 import com.resala.model.Donor;
+import com.resala.payment.PaymentMethod;
+import com.resala.payment.PaymentOutcome;
+import com.resala.payment.PaymentStatus;
 import com.resala.view.DonationView;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class ConsoleDonationView extends AbstractConsoleView implements DonationView {
 
   private final DonationController controller;
+  private final PaymentController payments;
 
-  public ConsoleDonationView(DonationController controller, Scanner input) {
+  public ConsoleDonationView(DonationController controller, PaymentController payments, Scanner input) {
     super(input);
     this.controller = controller;
+    this.payments = payments;
   }
 
   public void start() {
@@ -132,26 +139,69 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
       amountMinor = moneyToMinor(requiredLine("Amount (e.g. 250.00): "));
       if (type == DonationType.CHECK) {
         referenceNumber = requiredLine("Check number: ");
-      } else {
-        String ref = readLine("Payment reference (press Enter to auto-generate): ");
-        referenceNumber = ref.isBlank() ? null : ref;
       }
+    }
+
+    String notes = readLine("Notes (optional): ");
+    String cleanNotes = notes.isBlank() ? null : notes;
+
+    if (type == DonationType.ONLINE) {
+      recordOnlineDonation(donorId, amountMinor, cleanNotes);
+      return;
     }
 
     String dateText = readLine("Donation date YYYY-MM-DD [" + LocalDate.now() + "]: ");
     LocalDate donationDate = dateText.isBlank() ? LocalDate.now() : LocalDate.parse(dateText);
-    String notes = readLine("Notes (optional): ");
 
     DonationRequest request = new DonationRequest(
       donorId, type, amountMinor, itemDescription, quantity,
-      estimatedValueMinor, referenceNumber, donationDate,
-      notes.isBlank() ? null : notes
+      estimatedValueMinor, referenceNumber, donationDate, cleanNotes
     );
 
     Donation donation = controller.recordDonation(request);
     printSuccess("Donation saved: #" + donation.getId());
     System.out.println("\nReceipt:");
     System.out.println(controller.receipt(donation.getId()));
+  }
+
+  private void recordOnlineDonation(long donorId, long amountMinor, String notes) {
+    PaymentMethod method = choosePaymentMethod();
+    String reference = UUID.randomUUID().toString();
+    PaymentOutcome outcome = payments.payDonation(donorId, amountMinor, method, reference, notes);
+    while (outcome.status() == PaymentStatus.PENDING && outcome.canRetry()) {
+      printError("Payment is pending: " + outcome.message());
+      String retry = readLine("Retry with the same payment reference? (y/N): ");
+      if (!retry.equalsIgnoreCase("y")) {
+        System.out.println("Payment reference: " + reference);
+        return;
+      }
+      outcome = payments.payDonation(donorId, amountMinor, method, reference, notes);
+    }
+    if (!outcome.isPaid()) {
+      printError("Payment failed: " + outcome.message());
+      return;
+    }
+    Long donationId = outcome.referenceId();
+    if (donationId == null) {
+      printError("Payment succeeded but the donation was not recorded.");
+      return;
+    }
+    printSuccess("Donation saved: #" + donationId);
+    System.out.println("\nReceipt:");
+    System.out.println(controller.receipt(donationId));
+  }
+
+  private PaymentMethod choosePaymentMethod() {
+    List<PaymentMethod> methods = payments.availableMethods();
+    System.out.println("\nPayment method:");
+    for (int i = 0; i < methods.size(); i++) {
+      System.out.println("  " + (i + 1) + ") " + methods.get(i).displayName());
+    }
+    int choice = readInt("Choose a payment method: ");
+    if (choice < 1 || choice > methods.size()) {
+      throw new IllegalArgumentException("Please choose a valid payment method.");
+    }
+    return methods.get(choice - 1);
   }
 
   private void listDonations() {
