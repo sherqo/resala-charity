@@ -13,7 +13,7 @@ Volunteer
 - Volunteer CRUD + availability; skills (lookup) per volunteer.
 - Assign to events (skill/date check); log hours per assignment; summaries (total, per event, per month).
 - Certificate at ≥20 hours; search by skill/availability.
-- Patterns: Iterator (Phase 2, VolunteerCollection). Optional second Strategy for assignment — don't put it in the diagram.
+- Patterns: MVC + concrete `SqliteVolunteerRepository`; assignment checks are a private method in `VolunteerService`. Iterator and Strategy are intentionally not used.
 
 Events
 

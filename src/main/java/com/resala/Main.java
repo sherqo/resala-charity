@@ -3,6 +3,7 @@ package com.resala;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.controller.PaymentController;
+import com.resala.controller.VolunteerController;
 import com.resala.core.DatabaseManager;
 import com.resala.core.TransactionManager;
 import com.resala.donation.DonationPaymentSettlement;
@@ -20,8 +21,10 @@ import com.resala.persistence.sqlite.SqliteDonorRepository;
 import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
 import com.resala.persistence.sqlite.SqliteEventRepository;
 import com.resala.persistence.sqlite.SqlitePaymentRepository;
+import com.resala.persistence.sqlite.SqliteVolunteerRepository;
 import com.resala.view.UiFactory;
 import com.resala.view.console.ConsoleUiFactory;
+import com.resala.volunteer.VolunteerService;
 import java.sql.Connection;
 import java.util.Scanner;
 
@@ -62,6 +65,13 @@ public class Main {
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
     EventController eventController = new EventController(eventService);
 
+    // ── Volunteer module (Strategy: assignment rules) ───────────────────────
+    VolunteerService volunteerService = new VolunteerService(
+      new SqliteVolunteerRepository(conn),
+      new SqliteEventRepository(conn)
+    );
+    VolunteerController volunteerController = new VolunteerController(volunteerService);
+
     // ── Top-level module menu ──────────────────────────────────────────────
     UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
@@ -74,6 +84,7 @@ public class Main {
       System.out.println("========================================");
       System.out.println("1) Donation Management");
       System.out.println("2) Event Management");
+      System.out.println("3) Volunteer Management");
       System.out.println("0) Exit");
       System.out.println("========================================");
       System.out.print("Choose a module: ");
@@ -82,6 +93,7 @@ public class Main {
       switch (choice) {
         case "1" -> uiFactory.createDonationView(donationController, paymentController).start();
         case "2" -> uiFactory.createEventView(eventController).start();
+        case "3" -> uiFactory.createVolunteerView(volunteerController).start();
         case "0" -> {
           System.out.println("Goodbye.");
           running = false;
