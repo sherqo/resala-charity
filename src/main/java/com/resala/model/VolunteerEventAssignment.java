@@ -1,34 +1,28 @@
-package com.resala.volunteer;
+package com.resala.model;
 
 import java.time.LocalDate;
 
-/**
- * One volunteer assignment to an event.
- * The same row stores the hours logged after the volunteer finishes.
- * It is persisted in the volunteer_hours table.
- */
-public class VolunteerAssignment {
+public class VolunteerEventAssignment {
 
-  private long id;
-  private long volunteerId;
-  private long eventId;
+  private int id;
+  private int volunteerId;
+  private int eventId;
   private int skillId;
   private LocalDate workDate;
-  private double hours;
+  private int hours;
 
-  // Display-only values filled by the repository from a JOIN.
   private String eventTitle;
   private String skillName;
 
-  public VolunteerAssignment() {}
+  public VolunteerEventAssignment() {}
 
-  public VolunteerAssignment(
-    long id,
-    long volunteerId,
-    long eventId,
+  public VolunteerEventAssignment(
+    int id,
+    int volunteerId,
+    int eventId,
     int skillId,
     LocalDate workDate,
-    double hours
+    int hours
   ) {
     this.id = id;
     this.volunteerId = volunteerId;
@@ -38,27 +32,27 @@ public class VolunteerAssignment {
     this.hours = hours;
   }
 
-  public long getId() {
+  public int getId() {
     return id;
   }
 
-  public void setId(long id) {
+  public void setId(int id) {
     this.id = id;
   }
 
-  public long getVolunteerId() {
+  public int getVolunteerId() {
     return volunteerId;
   }
 
-  public void setVolunteerId(long volunteerId) {
+  public void setVolunteerId(int volunteerId) {
     this.volunteerId = volunteerId;
   }
 
-  public long getEventId() {
+  public int getEventId() {
     return eventId;
   }
 
-  public void setEventId(long eventId) {
+  public void setEventId(int eventId) {
     this.eventId = eventId;
   }
 
@@ -82,7 +76,7 @@ public class VolunteerAssignment {
     return hours;
   }
 
-  public void setHours(double hours) {
+  public void setHours(int hours) {
     this.hours = hours;
   }
 

@@ -1,8 +1,8 @@
-package com.resala.volunteer;
+package com.resala.volunteer.helpers;
 
 import java.util.Map;
 
-/** Calculated hour totals for one volunteer. */
+
 public class VolunteerSummary {
 
   private final double totalHours;
@@ -20,7 +20,7 @@ public class VolunteerSummary {
     return totalHours;
   }
 
-  /** Event title -> total hours. */
+  // Event title -> total hours
   public Map<String, Double> getHoursByEvent() {
     return hoursByEvent;
   }

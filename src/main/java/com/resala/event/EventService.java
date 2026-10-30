@@ -29,8 +29,7 @@ public class EventService implements EventSubject {
     this.registrations = registrations;
   }
 
-  // ── Observer Registration (EventSubject) ──────────────────────────────────
-
+  // Observer Registration (EventSubject)
   @Override
   public void addObserver(EventObserver observer) {
     observers.add(observer);
@@ -47,8 +46,7 @@ public class EventService implements EventSubject {
     }
   }
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-
+  // CRUD
   /** Creates a new event in DRAFT status. */
   public Event create(EventRequest request) {
     validate(request);
@@ -105,8 +103,7 @@ public class EventService implements EventSubject {
     events.delete(id);
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+  // Lifecycle
   /** DRAFT / CLOSED → OPEN: starts accepting registrations. */
   public Event open(long id) {
     Event event = getEvent(id);
@@ -132,8 +129,7 @@ public class EventService implements EventSubject {
     return saved;
   }
 
-  // ── Registration ───────────────────────────────────────────────────────────
-
+  // Registration
   /**
    * Registers an attendee for an OPEN event.
    * Enforces capacity limit and generates a unique ticket reference (E4).
@@ -168,8 +164,7 @@ public class EventService implements EventSubject {
     registrations.checkIn(registrationId);
   }
 
-  // ── Queries ────────────────────────────────────────────────────────────────
-
+  // Queries
   public List<Event> findAll() {
     return events.findAll();
   }
@@ -205,8 +200,7 @@ public class EventService implements EventSubject {
     );
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
+  // Private helpers
   private static final String LINE = "----------------------------------------";
 
   private void validate(EventRequest req) {

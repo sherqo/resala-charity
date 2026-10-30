@@ -3,10 +3,10 @@ package com.resala.view.console;
 import com.resala.controller.VolunteerController;
 import com.resala.model.Event;
 import com.resala.model.Skill;
+import com.resala.model.Volunteer;
 import com.resala.view.VolunteerView;
-import com.resala.volunteer.VolunteerAssignment;
-import com.resala.volunteer.Volunteer;
-import com.resala.volunteer.VolunteerSummary;
+import com.resala.model.VolunteerEventAssignment;
+import com.resala.volunteer.helpers.VolunteerSummary;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println(LINE);
       System.out.println("Resala Charity - Volunteer Module");
       System.out.println(LINE);
-      System.out.println("1) Volunteer Management");
+      System.out.println("1) Volunteers Management");
       System.out.println("2) Volunteer Event Assignment");
       System.out.println("3) Volunteer Skills Management");
       System.out.println("0) Main Menu");
@@ -50,8 +50,8 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  // In main menu
 
+  // In main menu
   private void volunteerList(){
     boolean running = true;
     while (running) {
@@ -65,8 +65,8 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println("4) Delete volunteer");
       System.out.println("5) Set availability");
       System.out.println("6) List available volunteers");
-      System.out.println("7) Log hours");
-      System.out.println("8) Hours summary");
+      System.out.println("7) Log hours for Volunteer");
+      System.out.println("8) Hours summary for Volunteer");
       System.out.println("9) Generate certificate");
       System.out.println("0) Back");
       System.out.println(LINE);
@@ -131,16 +131,20 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println("2) Add skill to volunteer");
       System.out.println("3) Remove skill from volunteer");
       System.out.println("4) Search volunteers by skill");
+      System.out.println("5) Add a new skill type");
+      System.out.println("6) Delete a skill type");
       System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
 
       try {
         switch (readLine().toUpperCase()) {
-          case "1" -> addSkill();
-          case "2" -> removeSkill();
-          case "3" -> searchBySkill();
-          case "4" -> showVolunteerSkills();
+          case "1" -> showVolunteerSkills();
+          case "2" -> addSkill();
+          case "3" -> removeSkill();
+          case "4" -> searchBySkill();
+          case "5" -> createSkill();
+          case "6" -> deleteSkill();
           case "0" -> running = false;
           default  -> System.out.println("Invalid option.");
         }
@@ -152,32 +156,31 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
   }
 
 
-  // ── Volunteer CRUD ─────────────────────────────────────────────────────────
-
+  // Volunteer CRUD
   private void listVolunteers() {
     printVolunteers(controller.listVolunteers());
   }
 
   private void createVolunteer() {
     System.out.println("\n--- Create Volunteer ---");
-    com.resala.model.Volunteer volunteer = controller.create(readVolunteerRequest(null));
+    Volunteer volunteer = controller.create(readVolunteerRequest(null));
     printSuccess("Volunteer created: #" + volunteer.getId() + " - " + volunteer.getName());
   }
 
   private void editVolunteer() {
     System.out.println("\n--- Edit Volunteer ---");
-    long id = readLong("Volunteer ID to edit: ");
-    com.resala.model.Volunteer current = controller.getVolunteer(id);
+    int id = readInt("Volunteer ID to edit: ");
+    Volunteer current = controller.getVolunteer(id);
     System.out.println("Editing: #" + current.getId() + " - " + current.getName());
     System.out.println("Press Enter to keep the current value.");
-    com.resala.model.Volunteer updated = controller.update(id, readVolunteerRequest(current));
+    Volunteer updated = controller.update(id, readVolunteerRequest(current));
     printSuccess("Volunteer #" + updated.getId() + " updated.");
   }
 
   private void deleteVolunteer() {
     System.out.println("\n--- Delete Volunteer ---");
-    long id = readLong("Volunteer ID to delete: ");
-    com.resala.model.Volunteer volunteer = controller.getVolunteer(id);
+    int id = readInt("Volunteer ID to delete: ");
+    Volunteer volunteer = controller.getVolunteer(id);
     if (readLine("Delete \"" + volunteer.getName() + "\"? (yes/no): ").equalsIgnoreCase("yes")) {
       controller.delete(id);
       printSuccess("Volunteer #" + id + " deleted.");
@@ -188,19 +191,18 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
 
   private void setAvailability() {
     System.out.println("\n--- Set Availability ---");
-    long id = readLong("Volunteer ID: ");
-    com.resala.model.Volunteer volunteer = controller.getVolunteer(id);
+    int id = readInt("Volunteer ID: ");
+    Volunteer volunteer = controller.getVolunteer(id);
     boolean available = readYesNo("Available? (yes/no)", volunteer.isAvailable());
     controller.setAvailability(id, available);
     printSuccess("Availability updated to " + (available ? "available" : "not available") + ".");
   }
 
-  // ── Skills ─────────────────────────────────────────────────────────────────
-
+  // Skills
   private void showVolunteerSkills() {
     System.out.println("\n--- Volunteer Skills ---");
-    long id = readLong("Volunteer ID: ");
-    com.resala.model.Volunteer volunteer = controller.getVolunteer(id);
+    int id = readInt("Volunteer ID: ");
+    Volunteer volunteer = controller.getVolunteer(id);
     List<Skill> skills = controller.getVolunteerSkills(id);
     System.out.println(volunteer.getName() + ":");
     printSkills(skills);
@@ -208,7 +210,7 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
 
   private void addSkill() {
     System.out.println("\n--- Add Skill ---");
-    long id = readLong("Volunteer ID: ");
+    int id = readInt("Volunteer ID: ");
     printSkills(controller.listSkills());
     int skillId = readInt("Skill ID to add: ");
     controller.addSkill(id, skillId);
@@ -217,7 +219,7 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
 
   private void removeSkill() {
     System.out.println("\n--- Remove Skill ---");
-    long id = readLong("Volunteer ID: ");
+    int id = readInt("Volunteer ID: ");
     List<Skill> skills = controller.getVolunteerSkills(id);
     if (skills.isEmpty()) {
       System.out.println("This volunteer has no skills.");
@@ -236,25 +238,44 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     printVolunteers(controller.searchBySkill(skillId));
   }
 
+  private void createSkill() {
+    System.out.println("\n--- Add a New Skill Type ---");
+    printSkills(controller.listSkills());
+    String name = readLine("Skill name: ");
+    Skill skill = controller.createSkill(name);
+    printSuccess("Skill added: #" + skill.getId() + " - " + skill.getName());
+  }
+
+  private void deleteSkill() {
+    System.out.println("\n--- Delete a Skill Type ---");
+    printSkills(controller.listSkills());
+    int skillId = readInt("Skill ID to delete: ");
+    Skill skill = controller.getSkill(skillId);
+
+    if (readLine("Delete \"" + skill.getName() + "\"? (yes/no): ").equalsIgnoreCase("yes")) {
+      controller.deleteSkill(skillId);
+      printSuccess("Skill #" + skillId + " deleted.");
+    }
+  }
+
   private void listAvailableVolunteers() {
     System.out.println("\n--- Available Volunteers ---");
     printVolunteers(controller.listAvailableVolunteers());
   }
 
-  // ── Assignments and hours ─────────────────────────────────────────────────
-
+  // Assignments and hours
   private void assignVolunteer() {
     System.out.println("\n--- Assign Volunteer to Event ---");
     printVolunteers(controller.listVolunteers());
-    long volunteerId = readLong("Volunteer ID: ");
+    int volunteerId = readInt("Volunteer ID: ");
 
     printEvents(controller.listEvents());
-    long eventId = readLong("Event ID: ");
+    int eventId = readInt("Event ID: ");
 
     printSkills(controller.listSkills());
     int skillId = readInt("Skill the volunteer will use: ");
 
-    VolunteerAssignment assignment = controller.assign(volunteerId, eventId, skillId);
+    VolunteerEventAssignment assignment = controller.assign(volunteerId, eventId, skillId);
     printSuccess(
       "Assigned. Assignment ID: #" + assignment.getId() +
       " | " + assignment.getEventTitle() +
@@ -264,53 +285,50 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
 
   private void viewAssignments() {
     System.out.println("\n--- View Assignments ---");
-    long volunteerId = readLong("Volunteer ID: ");
+    int volunteerId = readInt("Volunteer ID: ");
     printAssignments(controller.listAssignments(volunteerId));
   }
 
   private void logHours() {
     System.out.println("\n--- Log Hours ---");
-    long volunteerId = readLong("Volunteer ID: ");
-    List<VolunteerAssignment> assignments = controller.listAssignments(volunteerId);
+    int volunteerId = readInt("Volunteer ID: ");
+    List<VolunteerEventAssignment> assignments = controller.listAssignments(volunteerId);
     printAssignments(assignments);
     if (assignments.isEmpty()) return;
 
-    long assignmentId = readLong("Assignment ID: ");
-    double hours = readDouble("Hours worked: ");
-    VolunteerAssignment assignment = controller.logHours(assignmentId, hours);
+    int assignmentId = readInt("Assignment ID: ");
+    int hours = readInt("Hours worked: ");
+    VolunteerEventAssignment assignment = controller.logHours(assignmentId, hours);
     printSuccess("Logged " + formatHours(assignment.getHours()) + " hours.");
   }
 
   private void showSummary() {
     System.out.println("\n--- Hours Summary ---");
-    long volunteerId = readLong("Volunteer ID: ");
-    com.resala.model.Volunteer volunteer = controller.getVolunteer(volunteerId);
+    int volunteerId = readInt("Volunteer ID: ");
+    Volunteer volunteer = controller.getVolunteer(volunteerId);
     VolunteerSummary summary = controller.summary(volunteerId);
 
     System.out.println("Volunteer : " + volunteer.getName());
     System.out.println("Total     : " + formatHours(summary.getTotalHours()) + " hours");
     System.out.println("\nPer event:");
     printTotals(summary.getHoursByEvent());
-    System.out.println("\nPer month:");
-    printTotals(summary.getHoursByMonth());
   }
 
   private void showCertificate() {
     System.out.println("\n--- Certificate ---");
-    long volunteerId = readLong("Volunteer ID: ");
+    int volunteerId = readInt("Volunteer ID: ");
     System.out.println("\n" + controller.certificate(volunteerId));
   }
 
-  // ── Printing helpers ───────────────────────────────────────────────────────
-
-  private void printVolunteers(List<com.resala.model.Volunteer> volunteers) {
+  // Printing helpers
+  private void printVolunteers(List<Volunteer> volunteers) {
     if (volunteers.isEmpty()) {
       System.out.println("No volunteers found.");
       return;
     }
     System.out.println("ID  | Available | Name                 | Phone        | Email");
     System.out.println(LINE);
-    for (com.resala.model.Volunteer volunteer : volunteers) {
+    for (Volunteer volunteer : volunteers) {
       System.out.printf(
         "%-3d | %-9s | %-20s | %-12s | %s%n",
         volunteer.getId(),
@@ -352,14 +370,14 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  private void printAssignments(List<VolunteerAssignment> assignments) {
+  private void printAssignments(List<VolunteerEventAssignment> assignments) {
     if (assignments.isEmpty()) {
       System.out.println("No assignments found.");
       return;
     }
     System.out.println("ID  | Date       | Hours | Skill            | Event");
     System.out.println(LINE);
-    for (VolunteerAssignment assignment : assignments) {
+    for (VolunteerEventAssignment assignment : assignments) {
       System.out.printf(
         "%-3d | %-10s | %-5s | %-16s | %s%n",
         assignment.getId(),
@@ -381,9 +399,8 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  // ── Input helpers ──────────────────────────────────────────────────────────
-
-  private Volunteer readVolunteerRequest(com.resala.model.Volunteer current) {
+  // Input helpers
+  private Volunteer readVolunteerRequest(Volunteer current) {
     String name = value("Name", current == null ? null : current.getName());
     String email = value("Email", current == null ? null : current.getEmail());
     String phone = value("Phone", current == null ? null : current.getPhone());
@@ -400,10 +417,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     if (answer.equalsIgnoreCase("y")) return true;
     if (answer.equalsIgnoreCase("n")) return false;
     throw new IllegalArgumentException("Please answer y or n");
-  }
-
-  private double readDouble(String prompt) {
-    return Double.parseDouble(requiredLine(prompt));
   }
 
   private String formatHours(double hours) {

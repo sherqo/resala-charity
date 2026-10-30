@@ -34,10 +34,10 @@ public class Main {
     DatabaseManager database = DatabaseManager.getInstance();
     Connection conn = database.getConnection();
 
-    // ── Shared Notification System (Strategy Pattern) ──────────────────────
+    // Shared Notification System (Strategy Pattern)
     Notifier notifier = new Notifier(new EmailStrategy());
 
-    // ── Donation module (Observer: new donation → thank you notification) ──
+    // Donation module (Observer: new donation → thank you notification)
     SqlitePaymentRepository paymentRepository = new SqlitePaymentRepository(conn);
     DonationService donationService = new DonationService(
       new SqliteDonorRepository(conn),
@@ -47,7 +47,7 @@ public class Main {
     donationService.addObserver(new ThankYouNotificationObserver(notifier));
     DonationController donationController = new DonationController(donationService);
 
-    // ── Online payments (gateway → settlement → donation) ───────────────────
+    // Online payments (gateway → settlement → donation)
     PaymentService paymentService = new PaymentService(
       paymentRepository,
       new FakePaymentGatewayAdapter(new FakePaymentProvider()),
@@ -56,7 +56,7 @@ public class Main {
     );
     PaymentController paymentController = new PaymentController(paymentService);
 
-    // ── Event module (Observer: event update/close → attendee notification) ─
+    // Event module (Observer: event update/close → attendee notification)
     SqliteEventRegistrationRepository eventRegistrationRepo = new SqliteEventRegistrationRepository(conn);
     EventService eventService = new EventService(
       new SqliteEventRepository(conn),
@@ -65,14 +65,14 @@ public class Main {
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
     EventController eventController = new EventController(eventService);
 
-    // ── Volunteer module (Strategy: assignment rules) ───────────────────────
+    // Volunteer module
     VolunteerService volunteerService = new VolunteerService(
       new SqliteVolunteerRepository(conn),
       new SqliteEventRepository(conn)
     );
     VolunteerController volunteerController = new VolunteerController(volunteerService);
 
-    // ── Top-level module menu ──────────────────────────────────────────────
+    // Top-level module menu
     UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
     boolean running = true;

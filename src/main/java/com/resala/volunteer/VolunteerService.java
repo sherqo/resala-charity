@@ -3,122 +3,151 @@ package com.resala.volunteer;
 import com.resala.event.EventRepository;
 import com.resala.model.Event;
 import com.resala.model.Skill;
-import com.resala.persistence.sqlite.SqliteVolunteerRepository;
+import com.resala.model.Volunteer;
+import com.resala.model.VolunteerEventAssignment;
+import com.resala.volunteer.helpers.CertificateGenerator;
+import com.resala.volunteer.helpers.VolunteerSummary;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Business logic for volunteers, skills, assignments, hours, and certificates. */
 public class VolunteerService {
 
-  private final SqliteVolunteerRepository volunteers;
+  private final VolunteerRepository volunteers;
   private final EventRepository events;
   private final CertificateGenerator certificateGenerator;
 
-  public VolunteerService(SqliteVolunteerRepository volunteers, EventRepository events) {
+  public VolunteerService(VolunteerRepository volunteers, EventRepository events) {
     this.volunteers = volunteers;
     this.events = events;
     this.certificateGenerator = new CertificateGenerator();
   }
 
-  // ── Volunteer CRUD ─────────────────────────────────────────────────────────
-
-  public com.resala.model.Volunteer create(Volunteer request) {
+  // Volunteer CRUD
+  public Volunteer create(Volunteer request) {
+    // to ensure name is not empty 
     validate(request);
-    com.resala.model.Volunteer volunteer = new com.resala.model.Volunteer(
-      0,
+    Volunteer volunteer = new Volunteer(
       request.getName().trim(),
-      blankToNull(request.getEmail()),
-      blankToNull(request.getPhone()),
+      isNull(request.getEmail()),
+      isNull(request.getPhone()),
       request.isAvailable()
     );
     return volunteers.save(volunteer);
   }
 
-  public com.resala.model.Volunteer update(long id, Volunteer request) {
-    com.resala.model.Volunteer volunteer = getVolunteer(id);
+  public Volunteer update(int id, Volunteer request) {
+    Volunteer volunteer = getVolunteer(id);
     validate(request);
 
     volunteer.setName(request.getName().trim());
-    volunteer.setEmail(blankToNull(request.getEmail()));
-    volunteer.setPhone(blankToNull(request.getPhone()));
+    volunteer.setEmail(isNull(request.getEmail()));
+    volunteer.setPhone(isNull(request.getPhone()));
     volunteer.setAvailable(request.isAvailable());
     return volunteers.save(volunteer);
   }
 
-  public void delete(long id) {
+  public void delete(int id) {
     getVolunteer(id);
     volunteers.delete(id);
   }
 
-  public void setAvailability(long id, boolean available) {
+  public void setAvailability(int id, boolean available) {
     getVolunteer(id);
     volunteers.setAvailability(id, available);
   }
 
-  public List<com.resala.model.Volunteer> listVolunteers() {
+  public List<Volunteer> listVolunteers() {
     return volunteers.findAll();
   }
 
-  public com.resala.model.Volunteer getVolunteer(long id) {
-    return volunteers
-      .findById(id)
-      .orElseThrow(() -> new IllegalArgumentException("Volunteer not found: #" + id));
+  public Volunteer getVolunteer(int id) {
+    Volunteer volunteer = volunteers.findById(id);
+    if (volunteer == null) {
+      throw new IllegalArgumentException("Volunteer not found: #" + id);
+    }
+    return volunteer;
   }
 
-  // ── Skills ─────────────────────────────────────────────────────────────────
-
+  // Skills
   public List<Skill> listSkills() {
     return volunteers.findAllSkills();
   }
 
   public Skill getSkill(int skillId) {
-    return volunteers
-      .findSkillById(skillId)
-      .orElseThrow(() -> new IllegalArgumentException("Skill not found: #" + skillId));
+    Skill skill = volunteers.findSkillById(skillId);
+    if (skill == null) {
+      throw new IllegalArgumentException("Skill not found: #" + skillId);
+    }
+    return skill;
   }
 
-  public List<Skill> getVolunteerSkills(long volunteerId) {
+  public Skill createSkill(String name) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Skill name is required");
+    }
+
+    String cleanName = name.trim();
+    if (volunteers.findSkillByName(cleanName) != null) {
+      throw new IllegalStateException("Skill already exists: " + cleanName);
+    }
+
+    return volunteers.saveSkill(new Skill(0, cleanName));
+  }
+
+  public void deleteSkill(int skillId) {
+    getSkill(skillId);
+    if (volunteers.isSkillInUse(skillId)) {
+      throw new IllegalStateException(
+        "Cannot delete skill #" + skillId +
+        ": it is assigned to volunteers or used in an assignment"
+      );
+    }
+    volunteers.deleteSkill(skillId);
+  }
+
+  // Volunteer Skills
+  public List<Skill> getVolunteerSkills(int volunteerId) {
     getVolunteer(volunteerId);
     return volunteers.findSkillsForVolunteer(volunteerId);
   }
 
-  public void addSkill(long volunteerId, int skillId) {
+  public void addSkill(int volunteerId, int skillId) {
     getVolunteer(volunteerId);
     getSkill(skillId);
     volunteers.addSkill(volunteerId, skillId);
   }
 
-  public void removeSkill(long volunteerId, int skillId) {
+  public void removeSkill(int volunteerId, int skillId) {
     getVolunteer(volunteerId);
     volunteers.removeSkill(volunteerId, skillId);
   }
 
-  public List<com.resala.model.Volunteer> searchBySkill(int skillId) {
+  public List<Volunteer> searchBySkill(int skillId) {
     getSkill(skillId);
     return volunteers.findBySkill(skillId);
   }
 
-  public List<com.resala.model.Volunteer> listAvailableVolunteers() {
+  public List<Volunteer> listAvailableVolunteers() {
     return volunteers.findAvailable();
   }
 
-  // ── Assignments ────────────────────────────────────────────────────────────
 
+  // Assignments
   public List<Event> listEvents() {
     return events.findAll();
   }
 
-  public VolunteerAssignment assign(long volunteerId, long eventId, int skillId) {
-    com.resala.model.Volunteer volunteer = getVolunteer(volunteerId);
+  public VolunteerEventAssignment assign(int volunteerId, int eventId, int skillId) {
+    Volunteer volunteer = getVolunteer(volunteerId);
     Event event = getEvent(eventId);
     Skill skill = getSkill(skillId);
 
     validateAssignment(volunteer, event, skillId);
 
-    VolunteerAssignment assignment = new VolunteerAssignment(
+    VolunteerEventAssignment assignment = new VolunteerEventAssignment(
       0,
       volunteerId,
       eventId,
@@ -131,36 +160,37 @@ public class VolunteerService {
     return volunteers.saveAssignment(assignment);
   }
 
-  public VolunteerAssignment getAssignment(long assignmentId) {
-    return volunteers
-      .findAssignmentById(assignmentId)
-      .orElseThrow(() -> new IllegalArgumentException("Assignment not found: #" + assignmentId));
+  public VolunteerEventAssignment getAssignment(int assignmentId) {
+    VolunteerEventAssignment assignment = volunteers.findAssignmentById(assignmentId);
+    if (assignment == null) {
+      throw new IllegalArgumentException("Assignment not found: #" + assignmentId);
+    }
+    return assignment;
   }
 
-  public List<VolunteerAssignment> listAssignments(long volunteerId) {
+  public List<VolunteerEventAssignment> listAssignments(int volunteerId) {
     getVolunteer(volunteerId);
     return volunteers.findAssignments(volunteerId);
   }
 
-  /** Logs (or corrects) the hours for one assignment. */
-  public VolunteerAssignment logHours(long assignmentId, double hours) {
+  //add event hours to volunteer
+  public VolunteerEventAssignment logHours(int assignmentId, int hours) {
     if (hours <= 0) throw new IllegalArgumentException("Hours must be greater than zero");
 
-    VolunteerAssignment assignment = getAssignment(assignmentId);
+    VolunteerEventAssignment assignment = getAssignment(assignmentId);
     assignment.setHours(hours);
     return volunteers.saveAssignment(assignment);
   }
 
-  // ── Summaries and certificate ──────────────────────────────────────────────
-
-  public VolunteerSummary summary(long volunteerId) {
+  // Summaries and certificate
+  public VolunteerSummary summary(int volunteerId) {
     getVolunteer(volunteerId);
 
-    List<VolunteerAssignment> assignments = volunteers.findAssignments(volunteerId);
+    List<VolunteerEventAssignment> assignments = volunteers.findAssignments(volunteerId);
     double total = 0;
     Map<String, Double> byEvent = new LinkedHashMap<>();
 
-    for (VolunteerAssignment assignment : assignments) {
+    for (VolunteerEventAssignment assignment : assignments) {
       if (assignment.getHours() <= 0) continue;
 
       total += assignment.getHours();
@@ -173,20 +203,20 @@ public class VolunteerService {
     return new VolunteerSummary(total, byEvent);
   }
 
-  public String certificate(long volunteerId) {
-    com.resala.model.Volunteer volunteer = getVolunteer(volunteerId);
+  public String certificate(int volunteerId) {
+    Volunteer volunteer = getVolunteer(volunteerId);
     return certificateGenerator.generate(volunteer, summary(volunteerId));
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
-  private Event getEvent(long eventId) {
-    return events
-      .findById(eventId)
-      .orElseThrow(() -> new IllegalArgumentException("Event not found: #" + eventId));
+  // Private helpers
+  private Event getEvent(int eventId) {
+    for (Event event : events.findAll()) {
+      if (event.getId() == eventId) return event;
+    }
+    throw new IllegalArgumentException("Event not found: #" + eventId);
   }
 
-  private void validateAssignment(com.resala.model.Volunteer volunteer, Event event, int skillId) {
+  private void validateAssignment(Volunteer volunteer, Event event, int skillId) {
     if (!volunteer.isAvailable()) {
       throw new IllegalStateException("Volunteer is not available");
     }
@@ -196,7 +226,7 @@ public class VolunteerService {
     if (event.getDate().isBefore(LocalDate.now())) {
       throw new IllegalStateException("Cannot assign a volunteer to a past event");
     }
-    if (volunteers.hasAssignment(volunteer.getId(), event.getId())) {
+    if (volunteers.hasAssignment(volunteer.getId(), (int) event.getId())) {
       throw new IllegalStateException("Volunteer is already assigned to this event");
     }
 
@@ -217,7 +247,7 @@ public class VolunteerService {
     }
   }
 
-  private String blankToNull(String value) {
+  private String isNull(String value) {
     return value == null || value.isBlank() ? null : value.trim();
   }
 }

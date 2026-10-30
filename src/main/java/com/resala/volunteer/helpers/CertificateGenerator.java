@@ -1,24 +1,17 @@
-package com.resala.volunteer;
+package com.resala.volunteer.helpers;
 
 import com.resala.model.Volunteer;
+
 import java.time.LocalDate;
 import java.util.Locale;
 
-/** Builds the plain-text volunteer certificate. */
 public class CertificateGenerator {
 
   public static final double REQUIRED_HOURS = 20.0;
 
   public String generate(Volunteer volunteer, VolunteerSummary summary) {
     if (summary.getTotalHours() < REQUIRED_HOURS) {
-      throw new IllegalStateException(
-        String.format(
-          Locale.US,
-          "Volunteer needs at least %.0f hours. Current total: %.1f",
-          REQUIRED_HOURS,
-          summary.getTotalHours()
-        )
-      );
+      throw new IllegalStateException("Volunteer needs at least " + REQUIRED_HOURS + " hours. Current total: " + summary.getTotalHours());
     }
 
     return String.join(
@@ -31,7 +24,8 @@ public class CertificateGenerator {
       String.format(Locale.US, "For completing %.1f volunteer hours.", summary.getTotalHours()),
       "Issued on: " + LocalDate.now(),
       "----------------------------------------",
-      "Authorized signature"
+      "Authorized signature",
+            "RESALA"
     );
   }
 }
