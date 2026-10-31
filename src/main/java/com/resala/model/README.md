@@ -8,6 +8,7 @@ Shared nouns. Plain data + validation, no SQL, no printing.
 - `Account` — login: username, password hash, full name, email, role, optional `volunteerId`
 - `Donor` — individual/organization, contact, tax id
 - `Volunteer` — contact, availability
+- `Skill` — lookup skill assigned to volunteers
 - `Event` — title, type, date, capacity, status
 - `Beneficiary` — contact, household size, need type, status
 - `Permission` — actions granted to roles and checked by `Session`

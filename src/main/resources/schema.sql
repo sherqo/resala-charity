@@ -52,6 +52,33 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 
+-- Volunteer module
+CREATE TABLE IF NOT EXISTS volunteers (
+  id        INTEGER PRIMARY KEY,
+  name      TEXT    NOT NULL,
+  email     TEXT,
+  phone     TEXT,
+  available INTEGER NOT NULL DEFAULT 1 CHECK (available IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_skills (
+  volunteer_id INTEGER NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+  skill_id     INTEGER NOT NULL REFERENCES skills(id),
+  PRIMARY KEY (volunteer_id, skill_id)
+);
+
+-- One row per assignment; hours stay 0 until they are logged.
+CREATE TABLE IF NOT EXISTS volunteer_hours (
+  id           INTEGER PRIMARY KEY,
+  volunteer_id INTEGER NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+  event_id     INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  skill_id     INTEGER NOT NULL REFERENCES skills(id),
+  work_date    TEXT    NOT NULL,
+  hours        REAL    NOT NULL DEFAULT 0 CHECK (hours >= 0),
+  logged_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (volunteer_id, event_id)
+);
+
 CREATE TABLE IF NOT EXISTS payment_methods (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
@@ -144,3 +171,12 @@ CREATE INDEX IF NOT EXISTS idx_payments_payer_created
 
 CREATE INDEX IF NOT EXISTS idx_payments_status_created
 ON payments(status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_volunteer_skills_skill
+  ON volunteer_skills(skill_id);
+
+CREATE INDEX IF NOT EXISTS idx_volunteer_hours_volunteer
+  ON volunteer_hours(volunteer_id, work_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_volunteer_hours_event
+  ON volunteer_hours(event_id);
