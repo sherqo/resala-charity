@@ -61,8 +61,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // ── Event CRUD ─────────────────────────────────────────────────────────────
-
+  // Event CRUD
   private void listEvents() {
     List<Event> events = controller.listEvents();
     if (events.isEmpty()) { System.out.println("No events found."); return; }
@@ -104,8 +103,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+  // Lifecycle
   private void openEvent() {
     System.out.println("\n--- Open Event ---");
     long id = readLong("Event ID to open: ");
@@ -120,8 +118,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED.");
   }
 
-  // ── Registration ───────────────────────────────────────────────────────────
-
+  // Registration
   private void registerAttendee() {
     System.out.println("\n--- Register Attendee ---");
     listEvents();
@@ -153,8 +150,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n" + controller.attendanceReport(eventId));
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
+  // Helpers
   private EventRequest readEventRequest(Event current) {
     String title   = value("Title",              current == null ? null : current.getTitle());
     String typeStr = value("Event type ID",      current == null ? null : String.valueOf(current.getEventTypeId()));

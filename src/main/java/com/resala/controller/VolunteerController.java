@@ -2,10 +2,10 @@ package com.resala.controller;
 
 import com.resala.model.Event;
 import com.resala.model.Skill;
-import com.resala.volunteer.VolunteerAssignment;
-import com.resala.volunteer.Volunteer;
+import com.resala.model.Volunteer;
+import com.resala.model.VolunteerEventAssignment;
 import com.resala.volunteer.VolunteerService;
-import com.resala.volunteer.VolunteerSummary;
+import com.resala.volunteer.helpers.VolunteerSummary;
 import java.util.List;
 
 public class VolunteerController {
@@ -16,27 +16,27 @@ public class VolunteerController {
     this.service = service;
   }
 
-  public com.resala.model.Volunteer create(Volunteer request) {
+  public Volunteer create(Volunteer request) {
     return service.create(request);
   }
 
-  public com.resala.model.Volunteer update(long id, Volunteer request) {
+  public Volunteer update(int id, Volunteer request) {
     return service.update(id, request);
   }
 
-  public void delete(long id) {
+  public void delete(int id) {
     service.delete(id);
   }
 
-  public void setAvailability(long id, boolean available) {
+  public void setAvailability(int id, boolean available) {
     service.setAvailability(id, available);
   }
 
-  public List<com.resala.model.Volunteer> listVolunteers() {
+  public List<Volunteer> listVolunteers() {
     return service.listVolunteers();
   }
 
-  public com.resala.model.Volunteer getVolunteer(long id) {
+  public Volunteer getVolunteer(int id) {
     return service.getVolunteer(id);
   }
 
@@ -44,23 +44,35 @@ public class VolunteerController {
     return service.listSkills();
   }
 
-  public List<Skill> getVolunteerSkills(long volunteerId) {
+  public Skill getSkill(int skillId) {
+    return service.getSkill(skillId);
+  }
+
+  public Skill createSkill(String name) {
+    return service.createSkill(name);
+  }
+
+  public void deleteSkill(int skillId) {
+    service.deleteSkill(skillId);
+  }
+
+  public List<Skill> getVolunteerSkills(int volunteerId) {
     return service.getVolunteerSkills(volunteerId);
   }
 
-  public void addSkill(long volunteerId, int skillId) {
+  public void addSkill(int volunteerId, int skillId) {
     service.addSkill(volunteerId, skillId);
   }
 
-  public void removeSkill(long volunteerId, int skillId) {
+  public void removeSkill(int volunteerId, int skillId) {
     service.removeSkill(volunteerId, skillId);
   }
 
-  public List<com.resala.model.Volunteer> searchBySkill(int skillId) {
+  public List<Volunteer> searchBySkill(int skillId) {
     return service.searchBySkill(skillId);
   }
 
-  public List<com.resala.model.Volunteer> listAvailableVolunteers() {
+  public List<Volunteer> listAvailableVolunteers() {
     return service.listAvailableVolunteers();
   }
 
@@ -68,27 +80,23 @@ public class VolunteerController {
     return service.listEvents();
   }
 
-  public VolunteerAssignment assign(long volunteerId, long eventId, int skillId) {
+  public VolunteerEventAssignment assign(int volunteerId, int eventId, int skillId) {
     return service.assign(volunteerId, eventId, skillId);
   }
 
-  public VolunteerAssignment getAssignment(long assignmentId) {
-    return service.getAssignment(assignmentId);
-  }
-
-  public List<VolunteerAssignment> listAssignments(long volunteerId) {
+  public List<VolunteerEventAssignment> listAssignments(int volunteerId) {
     return service.listAssignments(volunteerId);
   }
 
-  public VolunteerAssignment logHours(long assignmentId, double hours) {
+  public VolunteerEventAssignment logHours(int assignmentId, int hours) {
     return service.logHours(assignmentId, hours);
   }
 
-  public VolunteerSummary summary(long volunteerId) {
+  public VolunteerSummary summary(int volunteerId) {
     return service.summary(volunteerId);
   }
 
-  public String certificate(long volunteerId) {
+  public String certificate(int volunteerId) {
     return service.certificate(volunteerId);
   }
 }

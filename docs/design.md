@@ -10,10 +10,10 @@ Donation
 
 Volunteer
 
-- Volunteer CRUD + availability; skills (lookup) per volunteer.
+- Volunteer CRUD + availability; skills (lookup) per volunteer; add/delete skill types.
 - Assign to events (skill/date check); log hours per assignment; summaries (total, per event, per month).
 - Certificate at ≥20 hours; search by skill/availability.
-- Patterns: MVC + concrete `SqliteVolunteerRepository`; assignment checks are a private method in `VolunteerService`. Iterator and Strategy are intentionally not used.
+- Patterns: MVC + Repository (`VolunteerRepository` / `SqliteVolunteerRepository`); assignment checks are a private method in `VolunteerService`. Iterator and Strategy are intentionally not used.
 
 Events
 
