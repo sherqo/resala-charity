@@ -2,10 +2,14 @@ package com.resala.view.console;
 
 import com.resala.controller.BeneficiaryController;
 import com.resala.beneficiary.Distribution;
+import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
+import com.resala.beneficiary.policy.EqualDistributionPolicy;
+import com.resala.beneficiary.policy.FifoDistributionPolicy;
 import com.resala.model.Beneficiary;
 import com.resala.view.BeneficiaryView;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class ConsoleBeneficiaryView extends AbstractConsoleView implements BeneficiaryView {
@@ -30,6 +34,7 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("4) Delete beneficiary");
       System.out.println("5) Record distribution");
       System.out.println("6) View beneficiary distribution history");
+      System.out.println("7) Distribute aid via Policy (Strategy Pattern)");
       System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
@@ -42,6 +47,7 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
           case "4" -> deleteBeneficiary();
           case "5" -> recordDistribution();
           case "6" -> viewDistributionHistory();
+          case "7" -> distributeWithPolicy();
           case "0" -> running = false;
           default  -> System.out.println("Invalid option.");
         }
@@ -171,6 +177,67 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
         truncate(d.getItemDescription(), 28),
         d.getDonationId() == null ? "-" : "#" + d.getDonationId()
       );
+    }
+  }
+
+  private void distributeWithPolicy() {
+    System.out.println("\n--- Batch Aid Distribution (Strategy Pattern) ---");
+    System.out.println("Select Distribution Policy:");
+    System.out.println("1) By Need (Proportional to household size)");
+    System.out.println("2) Equal (Even distribution across active)");
+    System.out.println("3) FIFO (First-In, First-Out by registration)");
+    System.out.print("Choose policy (1-3, default 1): ");
+
+    String choice = readLine().trim();
+    switch (choice) {
+      case "2" -> controller.setDistributionPolicy(new EqualDistributionPolicy());
+      case "3" -> {
+        int quota = readInt("Enter quota per beneficiary (default 1): ");
+        controller.setDistributionPolicy(new FifoDistributionPolicy(quota));
+      }
+      default  -> controller.setDistributionPolicy(new ByNeedDistributionPolicy());
+    }
+
+    System.out.println("Active Policy: " + controller.getDistributionPolicy().getName());
+
+    String item = requiredLine("Item / Aid description: ");
+    int totalQty = readInt("Total quantity available to distribute: ");
+
+    Map<Beneficiary, Integer> preview = controller.previewDistribution(totalQty);
+    if (preview.isEmpty()) {
+      System.out.println("No active beneficiaries found to distribute aid to.");
+      return;
+    }
+
+    System.out.println("\n--- Allocation Preview (" + controller.getDistributionPolicy().getName() + ") ---");
+    System.out.println("ID  | Household Size | Name                 | Allocated Qty");
+    System.out.println(LINE);
+    for (Map.Entry<Beneficiary, Integer> entry : preview.entrySet()) {
+      Beneficiary b = entry.getKey();
+      System.out.printf("%-3d | %-14d | %-20s | %d%n",
+          b.getId(),
+          b.getHouseholdSize(),
+          truncate(b.getName(), 20),
+          entry.getValue()
+      );
+    }
+    System.out.println(LINE);
+
+    String confirm = readLine("Confirm and record this distribution? (yes/no): ");
+    if (confirm.equalsIgnoreCase("yes")) {
+      String dateStr = readLine("Distribution date (YYYY-MM-DD, Enter for today): ");
+      LocalDate date = dateStr.isBlank() ? LocalDate.now() : LocalDate.parse(dateStr);
+
+      String donationIdStr = readLine("In-Kind Donation ID (Enter if none/direct aid): ");
+      Long donationId = donationIdStr.isBlank() ? null : Long.parseLong(donationIdStr);
+
+      String notes = blankToNull(readLine("Notes: "));
+
+      List<Distribution> results = controller.distributeByPolicy(item, totalQty, donationId, date, notes);
+      printSuccess("Successfully recorded " + results.size() + " distributions using policy: "
+          + controller.getDistributionPolicy().getName());
+    } else {
+      System.out.println("Distribution cancelled.");
     }
   }
 

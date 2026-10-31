@@ -2,9 +2,11 @@ package com.resala.controller;
 
 import com.resala.beneficiary.BeneficiaryService;
 import com.resala.beneficiary.Distribution;
+import com.resala.beneficiary.policy.DistributionPolicy;
 import com.resala.model.Beneficiary;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * MVC Controller for the beneficiary module.
@@ -56,5 +58,29 @@ public class BeneficiaryController {
 
   public List<Distribution> listDistributions() {
     return service.getAllDistributions();
+  }
+
+  // ── Strategy Pattern (Distribution Policy) ───────────────────────────────
+
+  public void setDistributionPolicy(DistributionPolicy policy) {
+    service.setDistributionPolicy(policy);
+  }
+
+  public DistributionPolicy getDistributionPolicy() {
+    return service.getDistributionPolicy();
+  }
+
+  public Map<Beneficiary, Integer> previewDistribution(int totalItems) {
+    return service.previewDistribution(totalItems);
+  }
+
+  public List<Distribution> distributeByPolicy(
+      String itemDescription,
+      int totalItems,
+      Long donationId,
+      LocalDate distributionDate,
+      String notes
+  ) {
+    return service.distributeByPolicy(itemDescription, totalItems, donationId, distributionDate, notes);
   }
 }

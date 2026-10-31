@@ -28,7 +28,7 @@ Beneficiary
 - Beneficiary CRUD; need types (lookup).
 - Record distributions, incl. distributing in-kind stock; history per beneficiary.
 - Impact metrics (people served, items/value distributed, per period) — all derived from stored rows.
-- Patterns: none required. Optional Strategy (DistributionPolicy: by-need / equal / FIFO).
+- Patterns: Strategy (DistributionPolicy: by-need / equal / FIFO).
 
 Communication
 
