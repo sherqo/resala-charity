@@ -101,8 +101,7 @@ public class SqliteEventRegistrationRepository implements EventRegistrationRepos
     }
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
+  // Private helpers
   private EventRegistration map(ResultSet rs) throws SQLException {
     return new EventRegistration(
       rs.getLong("id"),

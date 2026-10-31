@@ -82,8 +82,7 @@ public class SqliteEventRepository implements EventRepository {
     }
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
+  // Private helpers
   private Event insert(Event event) throws SQLException {
     try (PreparedStatement ps = connection.prepareStatement(
       """
