@@ -1,0 +1,427 @@
+/* ==========================================================================
+   Resala Charity System - JavaFX Stylesheet
+   Based on design.md §6
+   ========================================================================== */
+
+/* 1. Reset & tokens */
+.root {
+    -fx-base: #F8FAFC;
+    -fx-text-base-color: #1E293B;
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* 2. Layout */
+.sidebar {
+    -fx-background-color: #1E1B4B;
+    -fx-background-radius: 0 16 16 0;
+    -fx-padding: 0;
+}
+
+.logo {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-padding: 24 16;
+    -fx-border-color: transparent transparent #312E81 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #CBD5E1;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-padding: 12 16;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.nav-btn:hover {
+    -fx-background-color: #312E81;
+    -fx-text-fill: white;
+}
+
+.nav-btn.active {
+    -fx-background-color: #3730A3;
+    -fx-text-fill: white;
+    -fx-border-color: #6366F1 transparent transparent transparent;
+    -fx-border-width: 0 0 0 3;
+}
+
+.main-pane {
+    -fx-background-color: #F8FAFC;
+}
+
+.header-bar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.header-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1E293B;
+}
+
+.header-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748B;
+}
+
+.content-area {
+    -fx-background-color: #F8FAFC;
+}
+
+.status-bar {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 16;
+}
+
+.status-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #64748B;
+}
+
+.feed-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+}
+
+.status-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748B;
+}
+
+.version {
+    -fx-text-fill: #475569;
+    -fx-font-size: 11px;
+    -fx-alignment: CENTER;
+}
+
+/* 3. Components */
+.card {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 1);
+}
+
+.card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1E293B;
+}
+
+.stat-card {
+    -fx-min-width: 180;
+}
+
+.stat-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748B;
+    -fx-font-weight: 500;
+}
+
+.stat-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1E293B;
+}
+
+.toolbar {
+    -fx-padding: 0 0 12 0;
+}
+
+.btn {
+    -fx-font-weight: 600;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.btn-primary {
+    -fx-background-color: #4F46E5;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #4338CA;
+}
+
+.btn-ghost {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-text-fill: #374151;
+}
+
+.btn-ghost:hover {
+    -fx-background-color: #F3F4F6;
+    -fx-border-color: #D1D5DB;
+}
+
+.btn-danger {
+    -fx-background-color: #EF4444;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #DC2626;
+}
+
+.empty-state {
+    -fx-alignment: CENTER;
+}
+
+.empty-emoji {
+    -fx-font-size: 48px;
+}
+
+.empty-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1E293B;
+}
+
+.empty-hint {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748B;
+}
+
+.toolbar {
+    -fx-spacing: 10;
+}
+
+/* Stat card accent colors via style classes */
+.stat-card-indigo { -fx-border-color: #3F3D99 transparent transparent transparent; -fx-border-width: 4 0 0 0; }
+.stat-card-teal { -fx-border-color: #14B8A6 transparent transparent transparent; -fx-border-width: 4 0 0 0; }
+.stat-card-amber { -fx-border-color: #F59E0B transparent transparent transparent; -fx-border-width: 4 0 0 0; }
+.stat-card-rose { -fx-border-color: #E11D48 transparent transparent transparent; -fx-border-width: 4 0 0 0; }
+.stat-card-indigo-light { -fx-border-color: #6366F1 transparent transparent transparent; -fx-border-width: 4 0 0 0; }
+
+/* 4. Tables */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: #EEF2FF;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+    -fx-text-fill: #3730A3;
+    -fx-padding: 10 12;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #3730A3;
+}
+
+.table-row-cell {
+    -fx-cell-size: 32;
+    -fx-padding: 0 12;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #F8FAFC;
+}
+
+.table-row-cell:even {
+    -fx-background-color: white;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #E0E7FF;
+    -fx-text-fill: #1E1B4B;
+}
+
+.table-row-cell:focused {
+    -fx-background-color: #E0E7FF;
+    -fx-border-color: #6366F1;
+    -fx-border-width: 0 0 0 2;
+}
+
+.table-cell {
+    -fx-padding: 6 12;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-text-fill: #334155;
+}
+
+/* 5. Forms */
+.form-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #374151;
+}
+
+.input {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+    -fx-background-color: white;
+}
+
+.input:focused {
+    -fx-border-color: #6366F1;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+}
+
+.input-error {
+    -fx-border-color: #EF4444;
+    -fx-border-width: 2;
+}
+
+.combo-box {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-background-color: white;
+}
+
+.combo-box:focused {
+    -fx-border-color: #6366F1;
+    -fx-border-width: 2;
+}
+
+.date-picker {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #CBD5E1;
+}
+
+.spinner {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #CBD5E1;
+}
+
+.text-area {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+}
+
+.check-box {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+.radio-button {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+/* 6. Dialogs */
+.dialog-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: transparent;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: transparent;
+}
+
+.dialog-pane .content {
+    -fx-spacing: 16;
+}
+
+.dialog-pane .button-bar {
+    -fx-padding: 16 24 16 24;
+}
+
+/* 7. Toasts */
+.toast {
+    -fx-background-radius: 8;
+    -fx-padding: 12 16;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 4);
+}
+
+.toast-info {
+    -fx-background-color: #3B82F6;
+    -fx-text-fill: white;
+}
+
+.toast-success {
+    -fx-background-color: #14B8A6;
+    -fx-text-fill: white;
+}
+
+.toast-warning {
+    -fx-background-color: #F59E0B;
+    -fx-text-fill: white;
+}
+
+.toast-error {
+    -fx-background-color: #EF4444;
+    -fx-text-fill: white;
+}
+
+/* 8. View specific */
+.view {
+    -fx-spacing: 16;
+    -fx-padding: 24;
+}
+
+.stat-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+}
+
+.recent-table {
+    -fx-pref-height: 300;
+}
+
+.feed-list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+}
+
+.feed-list-view .list-cell {
+    -fx-padding: 8 12;
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.feed-list-view .list-cell:last-child {
+    -fx-border-color: transparent;
+}
+
+/* 9. Accessibility - Focus rings */
+*:focused {
+    -fx-border-color: #6366F1;
+    -fx-border-radius: 4;
+    -fx-border-width: 2;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        -fx-transition-duration: 0ms;
+    }
+}
