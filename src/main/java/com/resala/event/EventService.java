@@ -17,6 +17,9 @@ import java.util.UUID;
  *   OPEN  → CLOSED (via close)  — stops registrations
  *   Events in any status can have their date, title, or capacity updated
  *   (capacity cannot be reduced below already-registered attendee count).
+ *
+ * All business-rule violations are reported as {@link EventException} so that
+ * callers can distinguish them from unexpected runtime failures.
  */
 public class EventService implements EventSubject {
 
@@ -29,8 +32,7 @@ public class EventService implements EventSubject {
     this.registrations = registrations;
   }
 
-  // ── Observer Registration (EventSubject) ──────────────────────────────────
-
+  // Observer Registration (EventSubject)
   @Override
   public void addObserver(EventObserver observer) {
     observers.add(observer);
@@ -47,20 +49,23 @@ public class EventService implements EventSubject {
     }
   }
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-
+  // CRUD
   /** Creates a new event in DRAFT status. */
   public Event create(EventRequest request) {
     validate(request);
-    return events.save(new Event(
-      0,
-      request.title().trim(),
-      request.eventTypeId(),
-      request.date(),
-      request.capacity(),
-      Event.Status.DRAFT,
-      request.description()
-    ));
+    try {
+      return events.save(new Event(
+        0,
+        request.title().trim(),
+        request.eventTypeId(),
+        request.date(),
+        request.capacity(),
+        Event.Status.DRAFT,
+        request.description()
+      ));
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
   /**
@@ -75,8 +80,9 @@ public class EventService implements EventSubject {
 
     int registered = registrations.countRegistered(id);
     if (request.capacity() < registered) {
-      throw new IllegalArgumentException(
-        "New capacity (" + request.capacity() + ") cannot be less than existing registrations (" + registered + ")"
+      throw new EventException(
+        EventError.CAPACITY_BELOW_REGISTERED,
+        "(requested: " + request.capacity() + ", registered: " + registered + ")"
       );
     }
 
@@ -86,7 +92,13 @@ public class EventService implements EventSubject {
     event.setDate(request.date());
     event.setCapacity(request.capacity());
     event.setDescription(request.description());
-    Event saved = events.save(event);
+
+    Event saved;
+    try {
+      saved = events.save(event);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
 
     String message = dateChanged
       ? "Event has been rescheduled. New date: " + saved.getDate()
@@ -100,21 +112,29 @@ public class EventService implements EventSubject {
   public void delete(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.DRAFT) {
-      throw new IllegalStateException("Only DRAFT events with no active history can be deleted");
+      throw new EventException(EventError.DELETE_NON_DRAFT, null);
     }
-    events.delete(id);
+    try {
+      events.delete(id);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+  // Lifecycle
   /** DRAFT / CLOSED → OPEN: starts accepting registrations. */
   public Event open(long id) {
     Event event = getEvent(id);
     if (event.getStatus() == Event.Status.OPEN) {
-      throw new IllegalStateException("Event is already OPEN");
+      throw new EventException(EventError.EVENT_ALREADY_OPEN, null);
     }
     event.setStatus(Event.Status.OPEN);
-    Event saved = events.save(event);
+    Event saved;
+    try {
+      saved = events.save(event);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
     notifyObservers(saved, "Event registration is now OPEN.");
     return saved;
   }
@@ -123,17 +143,20 @@ public class EventService implements EventSubject {
   public Event close(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.OPEN) {
-      throw new IllegalStateException("Only OPEN events can be closed");
+      throw new EventException(EventError.EVENT_NOT_OPEN, null);
     }
     event.setStatus(Event.Status.CLOSED);
-    Event saved = events.save(event);
-
+    Event saved;
+    try {
+      saved = events.save(event);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
     notifyObservers(saved, "The event has now been closed for registrations.");
     return saved;
   }
 
-  // ── Registration ───────────────────────────────────────────────────────────
-
+  // Registration
   /**
    * Registers an attendee for an OPEN event.
    * Enforces capacity limit and generates a unique ticket reference (E4).
@@ -141,46 +164,70 @@ public class EventService implements EventSubject {
   public EventRegistration register(long eventId, String attendeeName, String attendeeEmail) {
     Event event = getEvent(eventId);
     if (event.getStatus() != Event.Status.OPEN) {
-      throw new IllegalStateException("Registrations are only accepted for OPEN events");
+      throw new EventException(EventError.REGISTRATION_CLOSED, null);
     }
     if (attendeeName == null || attendeeName.isBlank()) {
-      throw new IllegalArgumentException("Attendee name is required");
+      throw new EventException(EventError.ATTENDEE_NAME_REQUIRED, null);
     }
     int registered = registrations.countRegistered(eventId);
     if (registered >= event.getCapacity()) {
-      throw new IllegalStateException(
-        "Event is at full capacity (" + event.getCapacity() + " spots)"
+      throw new EventException(
+        EventError.EVENT_FULL,
+        "(" + event.getCapacity() + " spots)"
       );
     }
     String ticketRef = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-    return registrations.register(new EventRegistration(
-      0,
-      eventId,
-      attendeeName.trim(),
-      attendeeEmail == null || attendeeEmail.isBlank() ? null : attendeeEmail.trim(),
-      ticketRef,
-      false
-    ));
+    try {
+      return registrations.register(new EventRegistration(
+        0,
+        eventId,
+        attendeeName.trim(),
+        attendeeEmail == null || attendeeEmail.isBlank() ? null : attendeeEmail.trim(),
+        ticketRef,
+        false
+      ));
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
   /** Marks a registration as checked-in (E5). */
   public void checkIn(long registrationId) {
-    registrations.checkIn(registrationId);
+    try {
+      registrations.checkIn(registrationId);
+    } catch (IllegalArgumentException e) {
+      throw new EventException(EventError.REGISTRATION_NOT_FOUND, "#" + registrationId);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
-  // ── Queries ────────────────────────────────────────────────────────────────
-
+  // Queries
   public List<Event> findAll() {
-    return events.findAll();
+    try {
+      return events.findAll();
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
   public Event getEvent(long id) {
-    return events.findById(id)
-      .orElseThrow(() -> new IllegalArgumentException("Event not found: #" + id));
+    try {
+      return events.findById(id)
+        .orElseThrow(() -> new EventException(EventError.EVENT_NOT_FOUND, "#" + id));
+    } catch (EventException e) {
+      throw e;
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
   public List<EventRegistration> getRegistrations(long eventId) {
-    return registrations.findByEvent(eventId);
+    try {
+      return registrations.findByEvent(eventId);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
   }
 
   /**
@@ -189,7 +236,12 @@ public class EventService implements EventSubject {
    */
   public String attendanceReport(long eventId) {
     Event event = getEvent(eventId);
-    List<EventRegistration> regs = registrations.findByEvent(eventId);
+    List<EventRegistration> regs;
+    try {
+      regs = registrations.findByEvent(eventId);
+    } catch (IllegalStateException e) {
+      throw new EventException(EventError.PERSISTENCE_FAILURE, null, e);
+    }
     long attended = regs.stream().filter(EventRegistration::isCheckedIn).count();
     long noShow   = regs.size() - attended;
     return String.join("\n",
@@ -205,18 +257,17 @@ public class EventService implements EventSubject {
     );
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
+  // Private helpers
   private static final String LINE = "----------------------------------------";
 
   private void validate(EventRequest req) {
     if (req.title() == null || req.title().isBlank())
-      throw new IllegalArgumentException("Event title is required");
+      throw new EventException(EventError.TITLE_REQUIRED, null);
     if (req.date() == null)
-      throw new IllegalArgumentException("Event date is required");
+      throw new EventException(EventError.DATE_REQUIRED, null);
     if (req.eventTypeId() <= 0)
-      throw new IllegalArgumentException("A valid event type is required");
+      throw new EventException(EventError.INVALID_EVENT_TYPE, null);
     if (req.capacity() <= 0)
-      throw new IllegalArgumentException("Capacity must be a positive number");
+      throw new EventException(EventError.INVALID_CAPACITY, null);
   }
 }

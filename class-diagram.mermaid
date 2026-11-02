@@ -1,0 +1,322 @@
+classDiagram
+direction TB
+
+%% ===================== MODELS =====================
+class Role {
+    <<enumeration>>
+    ADMIN
+    STAFF
+    VOLUNTEER
+}
+class User {
+    -int id
+    -String username
+    -String passwordHash
+    -Role role
+}
+class Donor {
+    -int id
+    -String name
+    -String email
+    -String phone
+}
+class Volunteer {
+    -int id
+    -String name
+    -String email
+    -double hours
+    +addHours(double h) void
+}
+class Beneficiary {
+    -int id
+    -String name
+    -String address
+    -String needType
+}
+class Event {
+    -int id
+    -String title
+    -Date date
+    -EventState state
+    +setState(EventState s) void
+    +next() void
+    +register(Volunteer v) boolean
+}
+
+User --> Role
+Donor "1" --> "*" Donation : makes
+Volunteer "*" -- "*" Event : registers for
+
+%% ===================== SINGLETON (P1, Phase 1) =====================
+class DatabaseManager {
+    -DatabaseManager instance$
+    -Connection conn
+    -DatabaseManager()
+    +getInstance()$ DatabaseManager
+    +getConnection() Connection
+}
+class ConfigManager {
+    -ConfigManager instance$
+    -Properties props
+    +getInstance()$ ConfigManager
+    +get(String key) String
+}
+
+%% ===================== FACTORY + DECORATOR (P2, Phase 1) =====================
+class Donation {
+    <<interface>>
+    +getAmount() double
+    +getDescription() String
+    +getDonor() Donor
+}
+class OnlineDonation
+class CheckDonation
+class InKindDonation
+class DonationFactory {
+    +create(String type, double amount, Donor d)$ Donation
+}
+class DonationDecorator {
+    <<abstract>>
+    #Donation wrapped
+    +getAmount() double
+    +getDescription() String
+}
+class TaxReceiptDecorator
+class ThankYouDecorator
+
+Donation <|.. OnlineDonation
+Donation <|.. CheckDonation
+Donation <|.. InKindDonation
+Donation <|.. DonationDecorator
+DonationDecorator o-- Donation : wraps
+DonationDecorator <|-- TaxReceiptDecorator
+DonationDecorator <|-- ThankYouDecorator
+DonationFactory ..> Donation : creates
+
+%% ===================== ADAPTER (P2, Phase 2) =====================
+class PaymentProcessor {
+    <<interface>>
+    +pay(double amount) boolean
+}
+class LegacyGateway {
+    +makePayment(int cents, String card) int
+}
+class FakeGatewayAdapter {
+    -LegacyGateway gateway
+    +pay(double amount) boolean
+}
+PaymentProcessor <|.. FakeGatewayAdapter
+FakeGatewayAdapter --> LegacyGateway : adapts
+
+%% ===================== TEMPLATE METHOD (P2, Phase 2) =====================
+class ReportGenerator {
+    <<abstract>>
+    +generate() String
+    #header() String
+    #body() String*
+    #footer() String
+}
+class ReceiptReport
+class MonthlyReport
+ReportGenerator <|-- ReceiptReport
+ReportGenerator <|-- MonthlyReport
+
+%% ===================== OBSERVER (P4, Phase 1) =====================
+class Observer {
+    <<interface>>
+    +update(String message) void
+}
+class Subject {
+    -List~Observer~ observers
+    +attach(Observer o) void
+    +detach(Observer o) void
+    +notifyObservers(String msg) void
+}
+Observer <|.. Volunteer
+Observer <|.. Donor
+Subject o-- Observer : notifies
+Subject <|-- Event
+Subject <|-- DonationService
+
+%% ===================== STRATEGY (P4, Phase 1) =====================
+class NotificationStrategy {
+    <<interface>>
+    +send(String to, String msg) void
+}
+class EmailStrategy
+class SmsStrategy
+class SocialStrategy
+class Notifier {
+    -NotificationStrategy strategy
+    +setStrategy(NotificationStrategy s) void
+    +notify(String to, String msg) void
+}
+NotificationStrategy <|.. EmailStrategy
+NotificationStrategy <|.. SmsStrategy
+NotificationStrategy <|.. SocialStrategy
+Notifier o-- NotificationStrategy : uses
+
+%% ===================== STATE (P3, Phase 2) =====================
+class EventState {
+    <<interface>>
+    +getName() String
+    +canRegister() boolean
+    +next(Event e) void
+}
+class DraftState
+class OpenState
+class ClosedState
+EventState <|.. DraftState
+EventState <|.. OpenState
+EventState <|.. ClosedState
+Event --> EventState : current state
+
+%% ===================== ITERATOR (P3, Phase 2) =====================
+class Iterable {
+    <<interface>>
+    +iterator() Iterator
+}
+class Iterator {
+    <<interface>>
+    +hasNext() boolean
+    +next() Object
+}
+class VolunteerCollection {
+    -List~Volunteer~ items
+    +add(Volunteer v) void
+    +iterator() Iterator
+}
+class VolunteerIterator {
+    -int index
+    +hasNext() boolean
+    +next() Volunteer
+}
+Iterable <|.. VolunteerCollection
+Iterator <|.. VolunteerIterator
+VolunteerCollection ..> VolunteerIterator : creates
+VolunteerCollection o-- Volunteer
+
+%% ===================== COMMAND (P1, Phase 2) =====================
+class Command {
+    <<interface>>
+    +execute() void
+    +undo() void
+}
+class CommandHistory {
+    -Deque~Command~ undoStack
+    -Deque~Command~ redoStack
+    +run(Command c) void
+    +undo() void
+    +redo() void
+}
+class AddDonationCommand {
+    -DonationService service
+    -Donation donation
+}
+Command <|.. AddDonationCommand
+CommandHistory o-- Command
+AddDonationCommand --> DonationService
+
+%% ===================== PROXY (P1, Phase 2) =====================
+class AdminService {
+    <<interface>>
+    +manageUsers() void
+    +editLookups() void
+}
+class AdminServiceImpl
+class AdminServiceProxy {
+    -AdminService real
+    -User currentUser
+    -checkAccess() void
+}
+AdminService <|.. AdminServiceImpl
+AdminService <|.. AdminServiceProxy
+AdminServiceProxy --> AdminService : delegates
+AdminServiceProxy --> User : checks role
+
+%% ===================== SERVICES + REPOSITORIES =====================
+class DonationService {
+    -DonationRepository repo
+    -PaymentProcessor payment
+    +donate(String type, double amt, Donor d) Donation
+    +generateReceipt(Donation d) String
+}
+class VolunteerService
+class EventService
+class BeneficiaryService
+class DistributionService
+class CertificateGenerator
+
+class JdbcRepository {
+    <<abstract>>
+    #Connection conn
+    #JdbcRepository(Connection conn)
+    #execute(String sql, Object... params) int
+    #query(String sql, Object... params) ResultSet
+}
+class DonationRepository
+class VolunteerRepository
+class EventRepository
+class BeneficiaryRepository
+JdbcRepository <|-- DonationRepository
+JdbcRepository <|-- VolunteerRepository
+JdbcRepository <|-- EventRepository
+JdbcRepository <|-- BeneficiaryRepository
+
+DonationService --> DonationRepository
+DonationService --> PaymentProcessor
+DonationService ..> DonationFactory
+DonationService ..> ReportGenerator
+VolunteerService --> VolunteerRepository
+VolunteerService ..> CertificateGenerator
+EventService --> EventRepository
+BeneficiaryService --> BeneficiaryRepository
+DistributionService --> BeneficiaryService
+
+JdbcRepository ..> DatabaseManager : obtains Connection from
+
+%% ===================== FACADE (P1, Phase 2) =====================
+class NonProfitFacade {
+    -DonationService donations
+    -VolunteerService volunteers
+    -EventService events
+    -BeneficiaryService beneficiaries
+    -DistributionService distribution
+    -Notifier notifier
+    -CommandHistory history
+    -AdminService admin
+    +donate(String type, double amt, Donor d) void
+    +registerVolunteer(Volunteer v, Event e) void
+    +createEvent(Event e) void
+    +distributeAid(Beneficiary b, String item) void
+    +notify(String to, String msg) void
+    +undo() void
+}
+NonProfitFacade --> DonationService
+NonProfitFacade --> VolunteerService
+NonProfitFacade --> EventService
+NonProfitFacade --> BeneficiaryService
+NonProfitFacade --> DistributionService
+NonProfitFacade --> Notifier
+NonProfitFacade --> CommandHistory
+NonProfitFacade --> AdminService
+
+%% ===================== VIEW / CONTROLLER ENTRY =====================
+class Controllers {
+    <<MVC>>
+    DonationController
+    VolunteerController
+    EventController
+    BeneficiaryController
+    AdminController
+}
+class Views {
+    <<UI>>
+    ConsoleMenu
+    DonationView
+    VolunteerView
+    EventView
+    BeneficiaryView
+}
+Views --> Controllers
+Controllers --> NonProfitFacade
