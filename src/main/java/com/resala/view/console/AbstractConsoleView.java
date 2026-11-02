@@ -16,8 +16,7 @@ public abstract class AbstractConsoleView {
     this.input = input;
   }
 
-  // ── Input helpers ──────────────────────────────────────────────────────────
-
+  // Input helpers
   /** Prints prompt, returns trimmed line. */
   protected String readLine(String prompt) {
     System.out.print(prompt);
@@ -57,8 +56,7 @@ public abstract class AbstractConsoleView {
     return entered.isBlank() && current != null ? current : entered;
   }
 
-  // ── Output helpers ─────────────────────────────────────────────────────────
-
+  // Output helpers
   protected void printError(String message) {
     System.out.println("Error: " + message);
   }
@@ -67,8 +65,7 @@ public abstract class AbstractConsoleView {
     System.out.println("✓ " + message);
   }
 
-  // ── String utilities ───────────────────────────────────────────────────────
-
+  // String utilities
   protected String blankToNull(String value) {
     return value == null || value.isBlank() ? null : value;
   }
