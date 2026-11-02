@@ -12,5 +12,5 @@ public class PaymentException extends RuntimeException {
 
   public PaymentError error() { return error; }
   public Long paymentId() { return paymentId; }
-  public String userMessage() { return error.message(); }
+  public String userMessage() { return getMessage(); }
 }

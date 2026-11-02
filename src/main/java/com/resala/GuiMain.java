@@ -1,5 +1,7 @@
 package com.resala;
 
+import com.resala.beneficiary.BeneficiaryService;
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.controller.PaymentController;
@@ -10,6 +12,7 @@ import com.resala.donation.DonationPaymentSettlement;
 import com.resala.donation.DonationService;
 import com.resala.event.EventService;
 import com.resala.event.EventTypeService;
+import com.resala.persistence.sqlite.SqliteBeneficiaryRepository;
 import com.resala.persistence.sqlite.SqliteEventTypeRepository;
 import com.resala.model.EventType;
 import com.resala.gui.AppShell;
@@ -82,6 +85,10 @@ public class GuiMain extends Application {
         );
         VolunteerController volunteerController = new VolunteerController(volunteerService);
 
+        // Beneficiary module
+        BeneficiaryService beneficiaryService = new BeneficiaryService(new SqliteBeneficiaryRepository(conn));
+        BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
+
         // Create JavaFX UI Factory (Abstract Factory pattern)
         JavaFxUiFactory uiFactory = new JavaFxUiFactory(
             donationController, paymentController,
@@ -93,7 +100,8 @@ public class GuiMain extends Application {
         new AppShell(stage,
             donationController, eventController, volunteerController,
             paymentController, paymentService,
-            donationService, eventService
+            donationService, eventService,
+            beneficiaryController
         ).show();
     }
 

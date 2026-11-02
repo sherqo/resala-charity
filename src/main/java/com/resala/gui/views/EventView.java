@@ -11,85 +11,83 @@ import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
 import com.resala.model.Event;
 import com.resala.model.EventType;
+import com.resala.notification.EventObserver;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Events view - manage events, registrations, attendance.
+ * Implements EventObserver for real-time reactive table updates.
  */
-public class EventView extends BaseView {
+public class EventView extends BaseView implements EventObserver {
 
     private final AppShell appShell;
     private final EventController eventController;
-
     private final DataTable<Event> eventsTable;
-
-    /**
-     * Resolved on every {@link #refresh()} call so the Type column always shows
-     * the current name rather than a raw integer id.
-     */
-    private Map<Integer, String> eventTypeNames = Collections.emptyMap();
+    private final Map<Integer, String> eventTypeNames;
+    private Button primaryActionButton;
 
     public EventView(AppShell appShell, EventController eventController) {
+        this(appShell, eventController, new HashMap<>());
+    }
+
+    @SuppressWarnings("unchecked")
+    private EventView(AppShell appShell, EventController eventController, Map<Integer, String> typeMap) {
         super(createToolbar(), DataTable.<Event>builder()
             .column("ID",     60,  (java.util.function.Function<Event, String>) e -> String.valueOf(e.getId()))
             .column("Title",  200, Event::getTitle)
-            .column("Type",   120, e -> "")   // placeholder; real value set via refresh()
+            .column("Type",   120, e -> typeMap.getOrDefault(e.getEventTypeId(), "Type #" + e.getEventTypeId()))
             .column("Date",   120, e -> e.getDate().toString())
             .column("Seats",  100, e -> e.getCapacity() + " spots")
             .column("Status", 80,  e -> e.getStatus().name())
             .items(FXCollections.observableArrayList())
             .build());
 
-        this.appShell        = appShell;
+        this.appShell = appShell;
         this.eventController = eventController;
+        this.eventTypeNames = typeMap;
+        this.eventsTable = (DataTable<Event>) this.table;
 
-        // Build the real table (instance method so the lambda can close over eventTypeNames)
-        this.eventsTable = buildEventsTable();
+        // Secondary actions
+        Button registerBtn = Toolbar.ghost("Register Attendee", e -> showRegisterDialog());
+        Button rescheduleBtn = Toolbar.ghost("Reschedule", e -> showRescheduleDialog());
+        Button remindBtn = Toolbar.ghost("Send Reminder", e -> showRemindDialog());
+        Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
+        toolbar.getChildren().addAll(registerBtn, rescheduleBtn, remindBtn, deleteBtn);
 
-        this.primaryActionButton = Toolbar.primary("+ Create Event", e -> showCreateEventDialog());
+        this.primaryActionButton = Toolbar.primary("Create Event", e -> showCreateEventDialog());
     }
 
-    private Button primaryActionButton;
+    @Override
+    public void onEventUpdated(Event event, String message) {
+        Platform.runLater(this::refresh);
+    }
 
     @Override
     public Button getPrimaryAction() { return primaryActionButton; }
 
     private static HBox createToolbar() { return Toolbar.of(); }
 
-    /**
-     * Builds the events {@link DataTable} whose Type column resolves names via
-     * {@link #eventTypeNames}. Must be an instance method so the lambda can
-     * capture the instance field.
-     */
-    private DataTable<Event> buildEventsTable() {
-        return DataTable.<Event>builder()
-            .column("ID",     60,  (java.util.function.Function<Event, String>) e -> String.valueOf(e.getId()))
-            .column("Title",  200, Event::getTitle)
-            .column("Type",   120, e -> eventTypeNames.getOrDefault(
-                                            e.getEventTypeId(), "Type #" + e.getEventTypeId()))
-            .column("Date",   120, e -> e.getDate().toString())
-            .column("Seats",  100, e -> e.getCapacity() + " spots")
-            .column("Status", 80,  e -> e.getStatus().name())
-            .items(FXCollections.observableArrayList())
-            .build();
-    }
-
     // -------------------------------------------------------------------------
     // Dialogs
     // -------------------------------------------------------------------------
 
     private void showCreateEventDialog() {
+        List<EventType> types = eventController.listEventTypes();
+        String[] typeOptions = types.isEmpty()
+            ? new String[]{"1: General"}
+            : types.stream().map(t -> t.getId() + ": " + t.getName()).toArray(String[]::new);
+
         var fields = List.of(
             new FormDialog.Field("title",       "Title",            FormDialog.Type.TEXT,     true),
-            new FormDialog.Field("eventTypeId", "Event Type ID",    FormDialog.Type.NUMBER,   true),
+            new FormDialog.Field("eventTypeId", "Event Type",       FormDialog.Type.COMBO,    true, (Object[]) typeOptions),
             new FormDialog.Field("date",        "Date (YYYY-MM-DD)",FormDialog.Type.DATE,     true),
             new FormDialog.Field("capacity",    "Capacity",         FormDialog.Type.NUMBER,   true),
             new FormDialog.Field("description", "Description",      FormDialog.Type.TEXTAREA, false)
@@ -100,13 +98,13 @@ public class EventView extends BaseView {
         result.ifPresent(map -> {
             try {
                 String title        = (String) map.get("title");
-                int    eventTypeId  = Integer.parseInt(map.get("eventTypeId").toString());
+                int    eventTypeId  = Integer.parseInt(((String) map.get("eventTypeId")).split(":")[0].trim());
                 java.time.LocalDate date = java.time.LocalDate.parse((String) map.get("date"));
                 int    capacity     = Integer.parseInt(map.get("capacity").toString());
                 String description  = (String) map.get("description");
 
                 eventController.create(new EventRequest(title, eventTypeId, date, capacity, description));
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Event created!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
@@ -168,7 +166,7 @@ public class EventView extends BaseView {
                 eventController.update(selected.getId(), new EventRequest(
                     selected.getTitle(), selected.getEventTypeId(), newDate,
                     selected.getCapacity(), selected.getDescription()));
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Event rescheduled!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
@@ -199,7 +197,7 @@ public class EventView extends BaseView {
                 "Delete event '" + selected.getTitle() + "'?")) {
             try {
                 eventController.delete(selected.getId());
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Event deleted.", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
@@ -214,11 +212,13 @@ public class EventView extends BaseView {
 
     @Override
     public void refresh() {
-        // Populate the name map first so the Type column renders correctly
-        eventTypeNames = eventController.listEventTypes().stream()
-            .collect(Collectors.toMap(EventType::getId, EventType::getName));
+        eventTypeNames.clear();
+        for (EventType t : eventController.listEventTypes()) {
+            eventTypeNames.put(t.getId(), t.getName());
+        }
 
         List<Event> events = eventController.listEvents();
         eventsTable.getTableView().setItems(FXCollections.observableArrayList(events));
+        eventsTable.getTableView().refresh();
     }
 }

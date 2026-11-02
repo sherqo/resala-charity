@@ -57,14 +57,13 @@ public class LookupView extends BaseView {
         this.appShell            = appShell;
         this.volunteerController = volunteerController;
         this.eventController     = eventController;
+        this.lookupTable         = (DataTable<Object>) this.table;
 
-        this.lookupTable = (DataTable<Object>) getTableView().getProperties().get("dataTable");
-        if (this.lookupTable == null) {
-            this.lookupTable = createGenericTable();
-            getTableView().getProperties().put("dataTable", this.lookupTable);
-        }
+        Button renameBtn = Toolbar.ghost("Rename", e -> showRenameDialog());
+        Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
+        toolbar.getChildren().addAll(renameBtn, deleteBtn);
 
-        this.primaryActionButton = Toolbar.primary("+ Add", e -> showAddDialog());
+        this.primaryActionButton = Toolbar.primary("Add", e -> showAddDialog());
         buildTableSelector();
     }
 
@@ -86,7 +85,6 @@ public class LookupView extends BaseView {
         tableSelector = new ComboBox<>();
         for (LookupTable t : LookupTable.values()) tableSelector.getItems().add(t.label);
         tableSelector.getSelectionModel().selectFirst();
-        tableSelector.getStyleClass().add("input");
         tableSelector.setPrefWidth(200);
 
         tableSelector.getSelectionModel().selectedItemProperty().addListener((obs, old, nw) -> {
@@ -117,7 +115,7 @@ public class LookupView extends BaseView {
                     case SKILLS      -> volunteerController.createSkill(name);
                     case EVENT_TYPES -> eventController.createEventType(name);
                 }
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Added!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
@@ -152,7 +150,7 @@ public class LookupView extends BaseView {
                         "Rename not supported for Skills yet.", Toast.Type.INFO);
                     case EVENT_TYPES -> {
                         eventController.renameEventType(idOf(selected), newName);
-                        refresh();
+                        appShell.refreshAll();
                         appShell.getToast().show(appShell.getStage(),
                             "Renamed to \"" + newName + "\".", Toast.Type.SUCCESS);
                     }
@@ -183,7 +181,7 @@ public class LookupView extends BaseView {
                 case SKILLS      -> volunteerController.deleteSkill(idOf(selected));
                 case EVENT_TYPES -> eventController.deleteEventType(idOf(selected));
             }
-            refresh();
+            appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(), "Deleted.", Toast.Type.SUCCESS);
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(),

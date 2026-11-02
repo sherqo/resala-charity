@@ -1,17 +1,21 @@
 package com.resala.gui.components;
 
+import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 /**
- * Non-blocking toast notifications that slide in from bottom-right.
+ * Non-blocking toast notifications that slide in quietly from bottom-right.
+ * Styled in Notion minimal aesthetic: crisp dark pill, muted typography, gentle transitions.
  */
 public class Toast {
 
@@ -22,46 +26,62 @@ public class Toast {
      *
      * @param owner the owner stage (for positioning)
      * @param msg   the message text
-     * @param type  the toast type (affects color/icon)
+     * @param type  the toast type
      */
     public void show(Stage owner, String msg, Type type) {
-        // Create toast label
+        if (owner == null) return;
+
         Label label = new Label(msg);
         label.getStyleClass().addAll("toast", "toast-" + type.name().toLowerCase());
-        label.setPadding(new javafx.geometry.Insets(12, 16, 12, 16));
+        label.setPadding(new Insets(10, 14, 10, 14));
         label.setWrapText(true);
-        label.setMaxWidth(320);
+        label.setMaxWidth(340);
 
-        // Container for stacking multiple toasts
         VBox container = new VBox(8);
         container.setAlignment(Pos.BOTTOM_RIGHT);
         container.getChildren().add(label);
 
-        // Transparent overlay stage
         Stage toastStage = new Stage(StageStyle.TRANSPARENT);
         toastStage.initOwner(owner);
+
         StackPane root = new StackPane(container);
         root.setStyle("-fx-background-color: transparent;");
+
+        if (owner != null && owner.getScene() != null && owner.getScene().getRoot() != null
+                && owner.getScene().getRoot().getStyleClass().contains("dark-theme")) {
+            root.getStyleClass().add("dark-theme");
+        }
+
         Scene scene = new Scene(root);
-        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        scene.setFill(Color.TRANSPARENT);
+        if (getClass().getResource("/styles.css") != null) {
+            scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        }
         toastStage.setScene(scene);
 
         // Position at owner's bottom-right
-        toastStage.setX(owner.getX() + owner.getWidth() - 360);
-        toastStage.setY(owner.getY() + owner.getHeight() - 100);
+        toastStage.setX(owner.getX() + owner.getWidth() - 380);
+        toastStage.setY(owner.getY() + owner.getHeight() - 80);
         toastStage.show();
 
-        // Slide-in animation
-        label.setTranslateY(50);
-        TranslateTransition slideIn = new TranslateTransition(Duration.millis(200), label);
+        // Subtle slide & fade in
+        label.setOpacity(0);
+        label.setTranslateY(10);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(150), label);
+        fadeIn.setToValue(1);
+
+        TranslateTransition slideIn = new TranslateTransition(Duration.millis(150), label);
         slideIn.setToY(0);
+
+        fadeIn.play();
         slideIn.play();
 
-        // Auto-dismiss after 3 seconds
-        TranslateTransition slideOut = new TranslateTransition(Duration.millis(200), label);
-        slideOut.setDelay(Duration.seconds(3));
-        slideOut.setToY(-50);
-        slideOut.setOnFinished(e -> toastStage.close());
-        slideOut.play();
+        // Auto-dismiss after 2.8 seconds
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(150), label);
+        fadeOut.setDelay(Duration.millis(2800));
+        fadeOut.setToValue(0);
+        fadeOut.setOnFinished(e -> toastStage.close());
+        fadeOut.play();
     }
 }

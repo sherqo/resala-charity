@@ -86,8 +86,8 @@ public class Main {
     VolunteerController volunteerController = new VolunteerController(volunteerService);
 
     // Top-level module menu
-    UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
+    UiFactory uiFactory = new ConsoleUiFactory(input);
     boolean running = true;
     System.out.println("Welcome to Resala Charity System");
 

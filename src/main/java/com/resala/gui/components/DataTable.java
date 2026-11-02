@@ -1,13 +1,12 @@
 package com.resala.gui.components;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.util.Callback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Fluent builder for creating styled TableView instances.
- * Usage:
- * <pre>
- * DataTable.<Donation>builder()
- *     .column("ID", 60, Donation::getId)
- *     .column("Donor", 180, d -> donorName(d.getDonorId()))
- *     .column("Amount", 100, d -> fmt(d.getAmount()))
- *     .items(FXCollections.observableArrayList(donations))
- *     .onRowDoubleClick(this::onDonationDoubleClick)
- *     .build();
- * </pre>
+ * Fluent builder for creating styled TableView instances in Notion database aesthetic.
  */
 public final class DataTable<T> {
 
@@ -90,6 +79,11 @@ public final class DataTable<T> {
             TableView<T> table = new TableView<>(items);
             table.getStyleClass().add("table-view");
             table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+
+            Label emptyLabel = new Label("No records found");
+            emptyLabel.getStyleClass().add("empty-hint");
+            table.setPlaceholder(emptyLabel);
+
             table.setRowFactory(tv -> {
                 TableRow<T> row = new TableRow<>();
                 if (onRowDoubleClick != null) {
@@ -102,20 +96,19 @@ public final class DataTable<T> {
                 return row;
             });
 
-            for (ColumnSpec<T> spec : columns) {
+            for (int i = 0; i < columns.size(); i++) {
+                ColumnSpec<T> spec = columns.get(i);
                 TableColumn<T, String> col = new TableColumn<>(spec.name);
                 col.setPrefWidth(spec.width);
-                col.setMinWidth(spec.width);
-                col.setMaxWidth(spec.width);
-                col.setResizable(false);
+                col.setMinWidth(Math.min(spec.width, 60));
 
-                col.setCellValueFactory(cellData -> new SimpleStringProperty(spec.mapper.apply(cellData.getValue())));
+                col.setCellValueFactory(cellData ->
+                    new SimpleStringProperty(spec.mapper.apply(cellData.getValue())));
 
                 table.getColumns().add(col);
             }
 
-            // Striped rows via CSS pseudo-class
-            table.setFixedCellSize(32);
+            table.setFixedCellSize(34);
 
             return new DataTable<>(table);
         }

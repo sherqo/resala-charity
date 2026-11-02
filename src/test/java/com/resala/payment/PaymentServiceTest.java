@@ -46,10 +46,30 @@ class PaymentServiceTest {
     gateway.result = GatewayResult.approved(5_000L, "EGP", "ok");
     service.pay(request("key-1", 5_000L));
 
-    PaymentException error = assertThrows(PaymentException.class,
-        () -> service.pay(request("key-1", 6_000L)));
+    PaymentOutcome outcome = service.pay(request("key-1", 6_000L));
 
-    assertEquals(PaymentError.IDEMPOTENCY_CONFLICT, error.error());
+    assertEquals(PaymentError.IDEMPOTENCY_CONFLICT, outcome.error());
+  }
+
+  @Test
+  void cardPaymentWithoutATokenIsRejectedBeforeTheGateway() {
+    PaymentOutcome outcome = service.pay(new PaymentRequest(
+        "key-1", "DONOR", 7L, 5_000L, "EGP", new CardPaymentMethod(), null, "test", null));
+
+    assertEquals(PaymentError.INVALID_STATE, outcome.error());
+    assertEquals(0, gateway.calls);
+  }
+
+  @Test
+  void forwardsTheCardTokenToTheGateway() {
+    gateway.result = GatewayResult.approved(5_000L, "EGP", "ok");
+    String token = new CardPaymentMethod().tokenize(
+        new CardDetails("Test User", "4242 4242 4242 4242", "12/30", "123"));
+
+    service.pay(new PaymentRequest("key-1", "DONOR", 7L, 5_000L, "EGP",
+        new CardPaymentMethod(), token, "test", null));
+
+    assertEquals(token, gateway.lastCommand.token());
   }
 
   @Test
@@ -97,11 +117,12 @@ class PaymentServiceTest {
 
   private PaymentRequest request(String key, long amountMinor) {
     return new PaymentRequest(key, "DONOR", 7L, amountMinor, "EGP",
-        new CashPaymentMethod(), "test", null);
+        new CashPaymentMethod(), null, "test", null);
   }
 
   private static final class StubGateway implements PaymentGateway {
     private GatewayResult result;
+    private PaymentCommand lastCommand;
     private int calls;
 
     @Override public List<PaymentMethod> getAvailableMethods() {
@@ -110,6 +131,7 @@ class PaymentServiceTest {
 
     @Override public GatewayResult charge(PaymentCommand command) {
       calls++;
+      lastCommand = command;
       return result;
     }
   }

@@ -15,8 +15,12 @@ import java.util.Scanner;
 // Concrete factory — produces the console family of views
 public class ConsoleUiFactory implements UiFactory {
 
-  // Single shared Scanner so all views read from the same stdin stream
-  private final Scanner input = new Scanner(System.in);
+  // Shared Scanner so all views read from the same stdin stream
+  private final Scanner input;
+
+  public ConsoleUiFactory(Scanner input) {
+    this.input = input;
+  }
 
   @Override
   public DonationView createDonationView(DonationController controller, PaymentController payments) {
@@ -31,7 +35,8 @@ public class ConsoleUiFactory implements UiFactory {
   @Override
   public BeneficiaryView createBeneficiaryView(BeneficiaryController controller) {
     return new ConsoleBeneficiaryView(controller, input);
-  
+  }
+
   @Override
   public VolunteerView createVolunteerView(VolunteerController controller) {
     return new ConsoleVolunteerView(controller, input);
