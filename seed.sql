@@ -31,11 +31,17 @@ INSERT INTO events (id, title, date, state) VALUES
     (2, 'Winter Clothing Day',  '2026-12-15 10:00:00', 'DRAFT'),
     (3, 'Medical Checkup Day',  '2026-09-10 08:00:00', 'CLOSED');
 
+-- Donation types (lookup table for CRUD via LookupView)
+INSERT INTO donation_types (id, name, code) VALUES
+    (1, 'Online',  'ONLINE'),
+    (2, 'Check',   'CHECK'),
+    (3, 'In-kind', 'IN_KIND');
+
 -- Donations (one per type; donor 3 has an unthanked in-kind donation)
-INSERT INTO donations (id, donor_id, type, amount, description, has_tax_receipt, thanked, created_at) VALUES
+INSERT INTO donations (id, donor_id, donation_type, amount, description, has_tax_receipt, thanked, created_at) VALUES
     (1, 1, 'ONLINE', 500.00, 'Online transfer',        1, 1, '2026-09-15 11:20:00'),
     (2, 2, 'CHECK',  1200.00,'Check #12345',           1, 1, '2026-09-20 14:00:00'),
-    (3, 3, 'INKIND', 300.00, '10 boxes of food',       0, 0, '2026-10-01 09:30:00');
+    (3, 3, 'IN_KIND',300.00, '10 boxes of food',       0, 0, '2026-10-01 09:30:00');
 
 -- Volunteer *--* Event registrations
 INSERT INTO event_volunteers (event_id, volunteer_id) VALUES

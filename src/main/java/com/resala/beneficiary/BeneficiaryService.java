@@ -63,6 +63,21 @@ public class BeneficiaryService {
     repository.delete(id);
   }
 
+  // ── Impact Scoring ─────────────────────────────────────────────────────────
+
+  public int getImpactScore(long beneficiaryId) {
+    return getBeneficiary(beneficiaryId).getImpactScore();
+  }
+
+  public void setImpactScore(long beneficiaryId, int score) {
+    if (score < 0 || score > 10) {
+      throw new IllegalArgumentException("Impact score must be between 0 and 10.");
+    }
+    Beneficiary b = getBeneficiary(beneficiaryId);
+    b.setImpactScore(score);
+    repository.save(b);
+  }
+
   // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
 
   public List<NeedType> listNeedTypes() {
