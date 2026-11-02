@@ -9,6 +9,9 @@ import com.resala.core.TransactionManager;
 import com.resala.donation.DonationPaymentSettlement;
 import com.resala.donation.DonationService;
 import com.resala.event.EventService;
+import com.resala.event.EventTypeService;
+import com.resala.persistence.sqlite.SqliteEventTypeRepository;
+import com.resala.model.EventType;
 import com.resala.gui.AppShell;
 import com.resala.notification.EmailStrategy;
 import com.resala.notification.EventNotificationObserver;
@@ -69,7 +72,8 @@ public class GuiMain extends Application {
             eventRegistrationRepo
         );
         eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
-        EventController eventController = new EventController(eventService);
+        EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
+        EventController eventController = new EventController(eventService, eventTypeService);
 
         // Volunteer module
         VolunteerService volunteerService = new VolunteerService(

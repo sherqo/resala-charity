@@ -228,7 +228,7 @@ public class AppShell {
         views.put("Messages", new CommView(this));
 
         // Lookups
-        views.put("Lookups", new LookupView(this, volunteerController));
+        views.put("Lookups", new LookupView(this, volunteerController, eventController));
     }
 
     public void showView(String name) {
