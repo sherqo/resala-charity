@@ -14,6 +14,7 @@ import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
 import com.resala.model.Donor;
 import com.resala.model.DonationType;
+import com.resala.donation.DonationStatus;
 import com.resala.payment.CardDetails;
 import com.resala.payment.CardPaymentMethod;
 import com.resala.payment.PaymentInstrument;
@@ -54,6 +55,7 @@ public class DonationView extends BaseView implements DonationObserver {
     private final PaymentController paymentController;
 
     private final DataTable<Donation> donationsTable;
+    private DonationFilter currentFilter;
 
     @SuppressWarnings("unchecked")
     public DonationView(AppShell appShell,
@@ -68,8 +70,10 @@ public class DonationView extends BaseView implements DonationObserver {
 
         // Secondary actions in toolbar
         Button receiptBtn = Toolbar.ghost("View Receipt", e -> showReceiptDialog());
+        Button editBtn = Toolbar.ghost("Edit", e -> editSelected());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
-        toolbar.getChildren().addAll(receiptBtn, deleteBtn);
+        Button filterBtn = Toolbar.ghost("Filter", e -> showFilterDialog());
+        toolbar.getChildren().addAll(receiptBtn, editBtn, deleteBtn, filterBtn);
 
         this.primaryActionButton = Toolbar.primary("Add Donation", e -> showAddDonationDialog());
     }
@@ -117,6 +121,9 @@ public class DonationView extends BaseView implements DonationObserver {
                 DonationType.ONLINE.name(), DonationType.CHECK.name(), DonationType.IN_KIND.name()),
             new FormDialog.Field("amountMinor", "Amount (EGP)", FormDialog.Type.NUMBER, true),
             new FormDialog.Field("referenceNumber", "Check / external reference (optional)", FormDialog.Type.TEXT, false),
+            new FormDialog.Field("itemDescription", "Item description (in-kind only)", FormDialog.Type.TEXT, false),
+            new FormDialog.Field("quantity", "Quantity (in-kind only)", FormDialog.Type.NUMBER, false),
+            new FormDialog.Field("estimatedValueMinor", "Estimated value EGP (in-kind only)", FormDialog.Type.NUMBER, false),
             new FormDialog.Field("notes", "Notes", FormDialog.Type.TEXTAREA, false)
         );
 
@@ -134,13 +141,31 @@ public class DonationView extends BaseView implements DonationObserver {
                 }
 
                 String referenceNumber = blankToNull((String) map.get("referenceNumber"));
+                String itemDescription = blankToNull((String) map.get("itemDescription"));
+                Integer quantity = null;
+                String qtyText = (String) map.get("quantity");
+                if (qtyText != null && !qtyText.isBlank()) {
+                    quantity = Integer.parseInt(qtyText.trim());
+                }
+                Long estimatedValueMinor = null;
+                String estText = (String) map.get("estimatedValueMinor");
+                if (estText != null && !estText.isBlank()) {
+                    estimatedValueMinor = parseMinorUnits(estText);
+                }
                 DonationRequest request;
                 if (type == DonationType.IN_KIND) {
-                    // In-kind: itemDescription, quantity, estimatedValueMinor
-                    request = new DonationRequest(donorId, type, amountMinor, "In-kind donation", 1, amountMinor, null, LocalDate.now(), notes);
+                    if (itemDescription == null || itemDescription.isBlank()) {
+                        throw new IllegalArgumentException("Item description is required for in-kind donations.");
+                    }
+                    if (quantity == null || quantity <= 0) {
+                        throw new IllegalArgumentException("Quantity must be positive for in-kind donations.");
+                    }
+                    request = new DonationRequest(donorId, type, 0L, itemDescription, quantity,
+                        estimatedValueMinor, null, LocalDate.now(), notes);
                 } else {
                     // Check: referenceNumber is the check number
-                    request = new DonationRequest(donorId, type, amountMinor, null, null, null, referenceNumber, LocalDate.now(), notes);
+                    request = new DonationRequest(donorId, type, amountMinor, null, null, null,
+                        referenceNumber, LocalDate.now(), notes);
                 }
                 donationController.recordDonation(request);
                 appShell.refreshAll();
@@ -369,14 +394,92 @@ public class DonationView extends BaseView implements DonationObserver {
 
         if (appShell.getConfirmDialog().ask(appShell.getStage(),
                 "Delete donation #" + selected.getId() + "?")) {
-            appShell.getToast().show(appShell.getStage(), "Delete not implemented yet.", Toast.Type.INFO);
+            try {
+                donationController.deleteDonation(selected.getId());
+                appShell.refreshAll();
+                appShell.getToast().show(appShell.getStage(), "Donation #" + selected.getId() + " deleted.", Toast.Type.SUCCESS);
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
         }
+    }
+
+    private void editSelected() {
+        Donation selected = donationsTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select a donation first.", Toast.Type.WARNING);
+            return;
+        }
+        if (selected.getStatus() != DonationStatus.PENDING
+            && selected.getStatus() != DonationStatus.COMPLETED) {
+            appShell.getToast().show(appShell.getStage(),
+                "Cannot edit donation in status " + selected.getStatus(), Toast.Type.ERROR);
+            return;
+        }
+
+        var fields = List.of(
+            new FormDialog.Field("amountMinor", "Amount (EGP)", FormDialog.Type.NUMBER, true,
+                String.format("%.2f", selected.getAmountMinor() / 100.0)),
+            new FormDialog.Field("referenceNumber", "Reference number", FormDialog.Type.TEXT, false,
+                selected.getReferenceNumber() != null ? selected.getReferenceNumber() : ""),
+            new FormDialog.Field("donationDate", "Donation date YYYY-MM-DD", FormDialog.Type.TEXT, true,
+                selected.getDonationDate().toString()),
+            new FormDialog.Field("notes", "Notes", FormDialog.Type.TEXTAREA, false,
+                selected.getNotes() != null ? selected.getNotes() : "")
+        );
+
+        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Edit Donation", fields);
+        result.ifPresent(map -> {
+            try {
+                long amountMinor = parseMinorUnits(map.get("amountMinor"));
+                String referenceNumber = blankToNull((String) map.get("referenceNumber"));
+                LocalDate donationDate = LocalDate.parse(((String) map.get("donationDate")).trim());
+                String notes = blankToNull((String) map.get("notes"));
+
+                DonationRequest request = new DonationRequest(
+                    selected.getDonorId(), selected.getType(), amountMinor,
+                    selected.getType() == DonationType.IN_KIND
+                        ? (selected.getItemDescription() != null ? selected.getItemDescription() : "")
+                        : null,
+                    selected.getType() == DonationType.IN_KIND ? selected.getQuantity() : null,
+                    selected.getType() == DonationType.IN_KIND ? selected.getEstimatedValueMinor() : null,
+                    referenceNumber, donationDate, notes
+                );
+
+                Donation updated = donationController.updateDonation(request, selected.getId());
+                appShell.refreshAll();
+                appShell.getToast().show(appShell.getStage(),
+                    "Donation #" + updated.getId() + " updated.", Toast.Type.SUCCESS);
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
     }
 
     @Override
     public void refresh() {
-        List<Donation> donations = donationController.findDonations(new DonationFilter(null, null, null, null));
+        DonationFilter filter = currentFilter != null ? currentFilter : new DonationFilter(null, null, null, null);
+        List<Donation> donations = donationController.findDonations(filter);
         donationsTable.getTableView().setItems(FXCollections.observableArrayList(donations));
+    }
+
+    private void showFilterDialog() {
+        var fields = List.of(
+            new FormDialog.Field("type", "Type", FormDialog.Type.COMBO, true,
+                "All", "ONLINE", "CHECK", "IN_KIND")
+        );
+
+        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Filter Donations", fields);
+        result.ifPresent(map -> {
+            String typeText = (String) map.get("type");
+            if ("All".equals(typeText)) {
+                currentFilter = null;
+            } else {
+                currentFilter = new DonationFilter(null,
+                    DonationType.valueOf(typeText), null, null);
+            }
+            refresh();
+        });
     }
 
     private static String formatAmount(Donation d) {

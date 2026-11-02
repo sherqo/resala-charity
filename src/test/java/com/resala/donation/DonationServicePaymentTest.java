@@ -153,6 +153,25 @@ class DonationServicePaymentTest {
     }
     @Override public List<Donation> find(DonationFilter filter) { return saved; }
     @Override public long monetaryTotalForDonorYear(long donorId, int year) { return 0; }
+    @Override public void delete(long id) {
+      saved.removeIf(d -> d.getId() == id);
+    }
+    @Override public Donation update(DonationRequest request, long donationId) {
+      Donation existing = findById(donationId)
+          .orElseThrow(() -> new IllegalArgumentException("Donation not found"));
+      // Rebuild with new values, preserving id
+      Donation updated = new DonationFactory().create(request);
+      updated.setId(donationId);
+      saved.removeIf(d -> d.getId() == donationId);
+      saved.add(updated);
+      return updated;
+    }
+    @Override public Optional<Donation> findByReferenceNumber(String referenceNumber) {
+      if (referenceNumber == null || referenceNumber.isBlank()) return Optional.empty();
+      return saved.stream()
+          .filter(d -> referenceNumber.equals(d.getReferenceNumber()))
+          .findFirst();
+    }
   }
 
   private static final class FakePaymentRepository implements PaymentRepository {

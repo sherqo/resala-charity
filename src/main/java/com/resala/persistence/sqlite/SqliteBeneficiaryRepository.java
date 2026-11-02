@@ -31,13 +31,14 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
         PreparedStatement ps = connection.prepareStatement(
           """
           UPDATE beneficiaries
-          SET name=?, phone=?, household_size=?, need_type_id=?, status=?, notes=?
+          SET name=?, phone=?, household_size=?, need_type_id=?, status=?, notes=?, impact_score=?
           WHERE id=?
           """
         )
       ) {
         bind(ps, b);
-        ps.setLong(7, b.getId());
+        ps.setInt(7, b.getImpactScore());
+        ps.setLong(8, b.getId());
         ps.executeUpdate();
         return b;
       }
@@ -160,8 +161,8 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
     try (
       PreparedStatement ps = connection.prepareStatement(
         """
-        INSERT INTO beneficiaries (name, phone, household_size, need_type_id, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO beneficiaries (name, phone, household_size, need_type_id, status, notes, impact_score)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         Statement.RETURN_GENERATED_KEYS
       )
@@ -183,6 +184,7 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
     ps.setInt(4, b.getNeedTypeId());
     ps.setString(5, b.getStatus().name());
     ps.setString(6, b.getNotes());
+    ps.setInt(7, b.getImpactScore());
   }
 
   private Beneficiary map(ResultSet rs) throws SQLException {
@@ -193,7 +195,8 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
       rs.getInt("household_size"),
       rs.getInt("need_type_id"),
       Beneficiary.Status.valueOf(rs.getString("status")),
-      rs.getString("notes")
+      rs.getString("notes"),
+      rs.getInt("impact_score")
     );
   }
 

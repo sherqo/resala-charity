@@ -23,6 +23,14 @@ public class DonationController {
     service.archiveDonor(id);
   }
 
+  public void deleteDonation(long id) {
+    service.deleteDonation(id);
+  }
+
+  public Donation updateDonation(DonationRequest request, long donationId) {
+    return service.updateDonation(request, donationId);
+  }
+
   public Donor getDonor(long id) {
     return service.getDonor(id);
   }

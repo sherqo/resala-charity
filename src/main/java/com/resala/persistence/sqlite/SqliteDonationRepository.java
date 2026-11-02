@@ -4,6 +4,7 @@ import com.resala.donation.Donation;
 import com.resala.donation.DonationFilter;
 import com.resala.donation.DonationRepository;
 import com.resala.donation.DonationRequest;
+import com.resala.donation.DonationStatus;
 import com.resala.model.DonationType;
 import java.sql.Connection;
 import java.sql.Date;
@@ -29,8 +30,8 @@ public class SqliteDonationRepository implements DonationRepository {
       PreparedStatement ps = connection.prepareStatement(
         """
         INSERT INTO donations (donor_id, donation_type, amount_minor, item_description, quantity,
-          estimated_value_minor, reference_number, donation_date, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          estimated_value_minor, reference_number, donation_date, notes, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         Statement.RETURN_GENERATED_KEYS
       )
@@ -46,6 +47,7 @@ public class SqliteDonationRepository implements DonationRepository {
       ps.setString(7, donation.getReferenceNumber());
       ps.setString(8, donation.getDonationDate().toString());
       ps.setString(9, donation.getNotes());
+      ps.setString(10, donation.getStatus().name());
       ps.executeUpdate();
       try (ResultSet keys = ps.getGeneratedKeys()) {
         if (!keys.next()) throw new SQLException("No donation id returned");
@@ -87,6 +89,40 @@ public class SqliteDonationRepository implements DonationRepository {
   }
 
   @Override
+  public void delete(long id) {
+    try (PreparedStatement ps = connection.prepareStatement("DELETE FROM donations WHERE id=?")) {
+      ps.setLong(1, id);
+      if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Donation not found");
+    } catch (SQLException e) {
+      throw new IllegalStateException("Could not delete donation", e);
+    }
+  }
+
+  @Override
+  public Donation update(DonationRequest request, long donationId) {
+    try (
+      PreparedStatement ps = connection.prepareStatement(
+        """
+        UPDATE donations
+        SET amount_minor=?, reference_number=?, donation_date=?, notes=?
+        WHERE id=?
+        """
+      )
+    ) {
+      ps.setLong(1, request.amountMinor());
+      ps.setString(2, request.referenceNumber());
+      ps.setString(3, request.donationDate().toString());
+      ps.setString(4, request.notes());
+      ps.setLong(5, donationId);
+      if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Donation not found");
+    } catch (SQLException e) {
+      throw new IllegalStateException("Could not update donation", e);
+    }
+    return findById(donationId)
+        .orElseThrow(() -> new IllegalArgumentException("Donation not found after update"));
+  }
+
+  @Override
   public long monetaryTotalForDonorYear(long donorId, int year) {
     try (
       PreparedStatement ps = connection.prepareStatement(
@@ -105,6 +141,12 @@ public class SqliteDonationRepository implements DonationRepository {
     } catch (SQLException e) {
       throw new IllegalStateException("Could not calculate donor total", e);
     }
+  }
+
+  @Override
+  public Optional<Donation> findByReferenceNumber(String referenceNumber) {
+    if (referenceNumber == null || referenceNumber.isBlank()) return Optional.empty();
+    return find(" WHERE reference_number=?", List.of(referenceNumber)).stream().findFirst();
   }
 
   private List<Donation> find(String where, List<Object> values) {
@@ -141,6 +183,7 @@ public class SqliteDonationRepository implements DonationRepository {
     );
     Donation donation = new com.resala.donation.DonationFactory().create(request);
     donation.setId(rs.getLong("id"));
+    donation.setStatus(DonationStatus.valueOf(rs.getString("status")));
     return donation;
   }
 

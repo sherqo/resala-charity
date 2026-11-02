@@ -30,14 +30,15 @@ CREATE TABLE IF NOT EXISTS donors (
 CREATE TABLE IF NOT EXISTS donations (
   id INTEGER PRIMARY KEY,
   donor_id INTEGER NOT NULL REFERENCES donors(id),
-  donation_type TEXT NOT NULL,
-  amount_minor INTEGER,
+  donation_type TEXT NOT NULL CHECK (donation_type IN ('ONLINE','CHECK','IN_KIND')),
+  amount_minor INTEGER NOT NULL,
   item_description TEXT,
   quantity INTEGER,
   estimated_value_minor INTEGER,
   reference_number TEXT,
   donation_date TEXT NOT NULL,
-  notes TEXT
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'COMPLETED' CHECK (status IN ('PENDING','COMPLETED','CANCELLED','REFUNDED','FAILED'))
 );
 
 -- Event module
@@ -125,7 +126,8 @@ CREATE TABLE IF NOT EXISTS beneficiaries (
   household_size INTEGER NOT NULL DEFAULT 1 CHECK (household_size > 0),
   need_type_id   INTEGER NOT NULL REFERENCES need_types(id),
   status         TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CLOSED')),
-  notes          TEXT
+  notes          TEXT,
+  impact_score   INTEGER DEFAULT 0 CHECK (impact_score >= 0 AND impact_score <= 10)
 );
 
 CREATE TABLE IF NOT EXISTS distributions (
@@ -202,3 +204,6 @@ CREATE INDEX IF NOT EXISTS idx_volunteer_hours_volunteer
 
 CREATE INDEX IF NOT EXISTS idx_volunteer_hours_event
   ON volunteer_hours(event_id);
+
+CREATE INDEX IF NOT EXISTS idx_donations_donor ON donations(donor_id);
+CREATE INDEX IF NOT EXISTS idx_donations_date ON donations(donation_date DESC);

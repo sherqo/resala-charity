@@ -82,6 +82,13 @@ public class DatabaseManager {
   /** Best-effort migration for columns added after the initial schema. */
   private void migrate(Connection connection) {
     try (Statement st = connection.createStatement()) {
+      st.execute("""
+        CREATE TABLE IF NOT EXISTS donation_types (
+            id    INTEGER PRIMARY KEY AUTOINCREMENT,
+            name  TEXT NOT NULL UNIQUE,
+            code  TEXT NOT NULL UNIQUE CHECK (code IN ('ONLINE','CHECK','IN_KIND'))
+        )
+        """);
       st.execute("ALTER TABLE payments ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0");
     } catch (SQLException ignored) {
       // Column already exists on fresh databases.
