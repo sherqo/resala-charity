@@ -1,7 +1,7 @@
 package com.resala.model;
 
 /**
- * decides how the donation recieved
+ * decides how the donation is received
  */
 public enum DonationType {
   ONLINE,

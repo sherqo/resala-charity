@@ -106,4 +106,14 @@ public class BeneficiaryController {
   public void deleteNeedType(int id) {
     service.deleteNeedType(id);
   }
+
+  // ── Impact Scoring ─────────────────────────────────────────────────────────
+
+  public int getImpactScore(long beneficiaryId) {
+    return service.getImpactScore(beneficiaryId);
+  }
+
+  public void setImpactScore(long beneficiaryId, int score) {
+    service.setImpactScore(beneficiaryId, score);
+  }
 }

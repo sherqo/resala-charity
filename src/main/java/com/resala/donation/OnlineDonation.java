@@ -8,7 +8,12 @@ public final class OnlineDonation extends Donation {
   private final long amountMinor;
 
   public OnlineDonation(long donorId, long amountMinor, LocalDate date, String reference, String notes) {
-    super(donorId, DonationType.ONLINE, date, reference, notes);
+    this(donorId, amountMinor, date, reference, notes, DonationStatus.COMPLETED);
+  }
+
+  public OnlineDonation(long donorId, long amountMinor, LocalDate date, String reference, String notes,
+                        DonationStatus status) {
+    super(donorId, DonationType.ONLINE, date, reference, notes, status);
     this.amountMinor = amountMinor;
   }
 

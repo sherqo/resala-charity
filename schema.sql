@@ -30,10 +30,9 @@ CREATE TABLE beneficiaries (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     name      TEXT NOT NULL,
     address   TEXT,
-    need_type TEXT NOT NULL
+    need_type TEXT NOT NULL,
+    impact_score INTEGER DEFAULT 0
 );
-
--- Event (Subject + EventState)
 CREATE TABLE events (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -44,14 +43,17 @@ CREATE TABLE events (
 
 -- Donation (Factory products; type discriminator for Online/Check/InKind)
 CREATE TABLE donations (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    donor_id        INTEGER NOT NULL REFERENCES donors(id),
-    type            TEXT    NOT NULL CHECK (type IN ('ONLINE','CHECK','INKIND')),
-    amount          REAL    NOT NULL,
-    description     TEXT,
-    has_tax_receipt INTEGER NOT NULL DEFAULT 0,   -- TaxReceiptDecorator flag
-    thanked         INTEGER NOT NULL DEFAULT 0,   -- ThankYouDecorator flag
-    created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    donor_id           INTEGER NOT NULL REFERENCES donors(id),
+    donation_type      TEXT    NOT NULL CHECK (donation_type IN ('ONLINE','CHECK','IN_KIND')),
+    amount_minor       BIGINT  NOT NULL,
+    item_description   TEXT,
+    quantity           INTEGER,
+    estimated_value_minor BIGINT,
+    reference_number   TEXT,
+    donation_date      TEXT    NOT NULL,
+    notes              TEXT,
+    status             TEXT    NOT NULL DEFAULT 'COMPLETED' CHECK (status IN ('PENDING','COMPLETED','CANCELLED','REFUNDED','FAILED'))
 );
 
 -- Volunteer *--* Event ("registers for")
@@ -71,4 +73,5 @@ CREATE TABLE distributions (
 );
 
 CREATE INDEX idx_donations_donor  ON donations(donor_id);
+CREATE INDEX idx_donations_date   ON donations(donation_date DESC);
 CREATE INDEX idx_dist_beneficiary ON distributions(beneficiary_id);

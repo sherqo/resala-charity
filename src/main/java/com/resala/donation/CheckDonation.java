@@ -8,7 +8,12 @@ public final class CheckDonation extends Donation {
   private final long amountMinor;
 
   public CheckDonation(long donorId, long amountMinor, LocalDate date, String reference, String notes) {
-    super(donorId, DonationType.CHECK, date, reference, notes);
+    this(donorId, amountMinor, date, reference, notes, DonationStatus.COMPLETED);
+  }
+
+  public CheckDonation(long donorId, long amountMinor, LocalDate date, String reference, String notes,
+                       DonationStatus status) {
+    super(donorId, DonationType.CHECK, date, reference, notes, status);
     this.amountMinor = amountMinor;
   }
 

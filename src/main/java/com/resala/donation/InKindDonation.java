@@ -17,7 +17,19 @@ public final class InKindDonation extends Donation {
     LocalDate date,
     String notes
   ) {
-    super(donorId, DonationType.IN_KIND, date, null, notes);
+    this(donorId, itemDescription, quantity, estimatedValueMinor, date, notes, DonationStatus.COMPLETED);
+  }
+
+  public InKindDonation(
+    long donorId,
+    String itemDescription,
+    int quantity,
+    Long estimatedValueMinor,
+    LocalDate date,
+    String notes,
+    DonationStatus status
+  ) {
+    super(donorId, DonationType.IN_KIND, date, null, notes, status);
     this.itemDescription = itemDescription;
     this.quantity = quantity;
     this.estimatedValueMinor = estimatedValueMinor;

@@ -70,6 +70,7 @@ public class BeneficiaryView extends BaseView {
             .column("Household", 90, b -> String.valueOf(b.getHouseholdSize()))
             .column("Need Type", 120, b -> NEED_TYPES.getOrDefault(b.getNeedTypeId(), "Type #" + b.getNeedTypeId()))
             .column("Status", 80, b -> b.getStatus().name())
+            .column("Impact", 70, b -> String.valueOf(b.getImpactScore()))
             .items(FXCollections.observableArrayList())
             .build();
     }
@@ -114,9 +115,36 @@ public class BeneficiaryView extends BaseView {
     }
 
     private void showImpactDialog() {
-        appShell.getToast().show(appShell.getStage(),
-            "Impact report generation ready.",
-            Toast.Type.INFO);
+        Beneficiary selected = beneficiariesTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select a beneficiary first.", Toast.Type.WARNING);
+            return;
+        }
+
+        var fields = List.of(
+            new FormDialog.Field("impactScore", "Impact Score (0-10)", FormDialog.Type.NUMBER, true,
+                String.valueOf(selected.getImpactScore()))
+        );
+
+        Optional<Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Set Impact Score", fields);
+        result.ifPresent(map -> {
+            try {
+                int score = Integer.parseInt(((String) map.get("impactScore")).trim());
+                if (score < 0 || score > 10) {
+                    throw new IllegalArgumentException("Impact score must be between 0 and 10.");
+                }
+                if (beneficiaryController != null) {
+                    beneficiaryController.setImpactScore(selected.getId(), score);
+                    appShell.refreshAll();
+                    appShell.getToast().show(appShell.getStage(),
+                        "Impact score set to " + score + " for " + selected.getName(), Toast.Type.SUCCESS);
+                } else {
+                    appShell.getToast().show(appShell.getStage(), "Impact score set.", Toast.Type.SUCCESS);
+                }
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
     }
 
     private void deleteSelected() {
