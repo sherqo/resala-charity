@@ -3,6 +3,7 @@ package com.resala.beneficiary;
 import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
 import com.resala.beneficiary.policy.DistributionPolicy;
 import com.resala.model.Beneficiary;
+import com.resala.model.NeedType;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,40 @@ public class BeneficiaryService {
 
   public void delete(long id) {
     repository.delete(id);
+  }
+
+  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
+
+  public List<NeedType> listNeedTypes() {
+    return repository.findAllNeedTypes();
+  }
+
+  public NeedType getNeedType(int id) {
+    return repository.findNeedTypeById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Need type not found: #" + id));
+  }
+
+  public NeedType addNeedType(String name) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Need type name is required.");
+    }
+    return repository.saveNeedType(new NeedType(0, name.trim()));
+  }
+
+  public NeedType updateNeedType(int id, String name) {
+    if (id <= 0) {
+      throw new IllegalArgumentException("Invalid need type ID: " + id);
+    }
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Need type name is required.");
+    }
+    getNeedType(id);
+    return repository.saveNeedType(new NeedType(id, name.trim()));
+  }
+
+  public void deleteNeedType(int id) {
+    getNeedType(id);
+    repository.deleteNeedType(id);
   }
 
   // ── Distribution Logic (B3 & B4) ──────────────────────────────────────────
