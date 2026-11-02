@@ -1,7 +1,9 @@
 package com.resala.view.console;
 
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
+import com.resala.view.BeneficiaryView;
 import com.resala.controller.PaymentController;
 import com.resala.controller.VolunteerController;
 import com.resala.view.DonationView;
@@ -26,6 +28,10 @@ public class ConsoleUiFactory implements UiFactory {
     return new ConsoleEventView(controller, input);
   }
 
+  @Override
+  public BeneficiaryView createBeneficiaryView(BeneficiaryController controller) {
+    return new ConsoleBeneficiaryView(controller, input);
+  
   @Override
   public VolunteerView createVolunteerView(VolunteerController controller) {
     return new ConsoleVolunteerView(controller, input);

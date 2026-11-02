@@ -15,8 +15,12 @@ Every metric must be derived from stored rows; do not invent numbers.
 
 ## Patterns
 
-None required. Optional second **Strategy**: `DistributionPolicy`
-(by need / equal / FIFO) — only if the first Strategy is already solid.
+- **Strategy Pattern**: `DistributionPolicy`
+  - `DistributionPolicy` (interface)
+  - `ByNeedDistributionPolicy` (proportional to household size)
+  - `EqualDistributionPolicy` (equal allocation)
+  - `FifoDistributionPolicy` (first-in first-out by registration order)
+  - `BeneficiaryService` acts as the Context holding the active policy.
 
 ## Tables
 
