@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import com.resala.controller.BeneficiaryController;
 import com.resala.beneficiary.Distribution;
 import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
 import com.resala.beneficiary.policy.EqualDistributionPolicy;

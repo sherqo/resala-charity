@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payer_type TEXT NOT NULL,
   payer_id INTEGER NOT NULL,
   amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  fee_minor INTEGER NOT NULL DEFAULT 0 CHECK (fee_minor >= 0),
   currency TEXT NOT NULL DEFAULT 'EGP' CHECK (currency = 'EGP'),
   payment_method_id INTEGER NOT NULL REFERENCES payment_methods(id),
   status TEXT NOT NULL CHECK (status IN ('PENDING','PAID','FAILED')),

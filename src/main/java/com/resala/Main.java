@@ -12,6 +12,8 @@ import com.resala.core.TransactionManager;
 import com.resala.donation.DonationPaymentSettlement;
 import com.resala.donation.DonationService;
 import com.resala.event.EventService;
+import com.resala.event.EventTypeService;
+import com.resala.persistence.sqlite.SqliteEventTypeRepository;
 import com.resala.notification.EmailStrategy;
 import com.resala.notification.EventNotificationObserver;
 import com.resala.notification.Notifier;
@@ -67,7 +69,8 @@ public class Main {
       eventRegistrationRepo
     );
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
-    EventController eventController = new EventController(eventService);
+    EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
+    EventController eventController = new EventController(eventService, eventTypeService);
 
     // ── Beneficiary module ──────────────────────────────────────────────
     BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
@@ -83,8 +86,8 @@ public class Main {
     VolunteerController volunteerController = new VolunteerController(volunteerService);
 
     // Top-level module menu
-    UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
+    UiFactory uiFactory = new ConsoleUiFactory(input);
     boolean running = true;
     System.out.println("Welcome to Resala Charity System");
 

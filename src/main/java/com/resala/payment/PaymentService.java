@@ -4,8 +4,11 @@ import com.resala.core.TransactionManager;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class PaymentService {
+
+  private static final Logger LOGGER = Logger.getLogger(PaymentService.class.getName());
 
   private final PaymentRepository payments;
   private final PaymentGateway gateway;
@@ -21,7 +24,13 @@ public class PaymentService {
   }
 
   public PaymentOutcome pay(PaymentRequest request) {
-    validate(request);
+    try {
+      validate(request);
+    } catch (PaymentException e) {
+      return PaymentOutcome.rejected(e);
+    } catch (IllegalArgumentException e) {
+      return PaymentOutcome.rejected(new PaymentException(PaymentError.INVALID_STATE, null, e.getMessage(), e));
+    }
 
     Optional<Payment> existing = payments.findByIdempotencyKey(request.idempotencyKey());
     if (existing.isPresent()) {
@@ -36,20 +45,22 @@ public class PaymentService {
       // Another request may have inserted the same key between our lookup and save.
       Optional<Payment> raced = payments.findByIdempotencyKey(request.idempotencyKey());
       if (raced.isPresent()) return resumeOrReturn(raced.get(), request);
-      throw e;
+      return PaymentOutcome.rejected(new PaymentException(PaymentError.PERSISTENCE_FAILURE, null,
+          "Payment could not be recorded. Try again.", e));
     }
 
-    return charge(payment, request.description());
+    return charge(payment, request.paymentToken(), request.description());
   }
 
-  private PaymentOutcome charge(Payment payment, String description) {
+  private PaymentOutcome charge(Payment payment, String token, String description) {
     GatewayResult result;
     try {
       result = gateway.charge(new PaymentCommand(
           payment.getIdempotencyKey(), payment.getAmountMinor(), payment.getCurrency(),
-          payment.getPaymentMethod(), description));
+          payment.getPaymentMethod(), token, description));
     } catch (RuntimeException e) {
       // The provider may have accepted the charge. Keep the payment pending for a same-key retry.
+      LOGGER.warning("Unexpected gateway error for payment " + payment.getId() + ": " + e);
       return PaymentOutcome.pending(payment, PaymentError.PROVIDER_UNAVAILABLE, "Unexpected gateway error");
     }
 
@@ -82,13 +93,14 @@ public class PaymentService {
           return settledId;
         });
       } catch (RuntimeException e) {
-        throw new PaymentException(PaymentError.PERSISTENCE_FAILURE, payment.getId(),
-            "approved but not recorded", e);
+        LOGGER.warning("Settlement failed for payment " + payment.getId() + ": " + e);
+        return PaymentOutcome.pending(payment, PaymentError.PERSISTENCE_FAILURE, "approved but not recorded");
       }
       try {
         settlement.afterCommit(payment, recordId);
-      } catch (RuntimeException ignored) {
+      } catch (RuntimeException e) {
         // The payment is already committed; a notification failure must not turn it into a failure.
+        LOGGER.warning("afterCommit failed for payment " + payment.getId() + ": " + e);
       }
       return PaymentOutcome.paid(payment);
     }
@@ -111,10 +123,14 @@ public class PaymentService {
         .orElseThrow(() -> new PaymentException(PaymentError.INVALID_STATE, paymentId, "not found", null));
   }
 
+  public List<Payment> listPayments() {
+    return payments.findAll();
+  }
+
   private PaymentOutcome resumeOrReturn(Payment existing, PaymentRequest request) {
     if (!matches(existing, request)) {
-      throw new PaymentException(PaymentError.IDEMPOTENCY_CONFLICT, existing.getId(),
-          "idempotency key was already used with different payment details", null);
+      return PaymentOutcome.rejected(new PaymentException(PaymentError.IDEMPOTENCY_CONFLICT, existing.getId(),
+          "idempotency key was already used with different payment details", null));
     }
     if (existing.getStatus() == PaymentStatus.PAID) {
       return PaymentOutcome.paid(existing);
@@ -123,7 +139,7 @@ public class PaymentService {
       return PaymentOutcome.failed(existing);
     }
     // PENDING: re-charge with the same key; provider idempotency prevents a double charge.
-    return charge(existing, request.description());
+    return charge(existing, request.paymentToken(), request.description());
   }
 
   private boolean matches(Payment payment, PaymentRequest request) {
@@ -154,5 +170,8 @@ public class PaymentService {
     if (!"EGP".equals(request.currency())) throw new PaymentException(PaymentError.INVALID_CURRENCY, null,
         "currency=" + request.currency(), null);
     if (request.paymentMethod() == null) throw new IllegalArgumentException("paymentMethod is required");
+    request.paymentMethod().validate(new PaymentCommand(
+        request.idempotencyKey(), request.amountMinor(), request.currency(),
+        request.paymentMethod(), request.paymentToken(), request.description()));
   }
 }

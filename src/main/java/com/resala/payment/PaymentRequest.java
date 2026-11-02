@@ -7,6 +7,7 @@ public record PaymentRequest(
     long amountMinor,
     String currency,
     PaymentMethod paymentMethod,
+    String paymentToken,
     String description,
     String notes
 ) {}
