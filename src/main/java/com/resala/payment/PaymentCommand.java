@@ -5,5 +5,6 @@ public record PaymentCommand(
     long amountMinor,
     String currency,
     PaymentMethod paymentMethod,
+    String token,
     String description
 ) {}

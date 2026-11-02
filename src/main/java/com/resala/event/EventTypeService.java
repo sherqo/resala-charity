@@ -1,0 +1,80 @@
+package com.resala.event;
+
+import com.resala.model.EventType;
+import java.util.List;
+
+/**
+ * Business logic for the event_types lookup table.
+ * Rules:
+ *  - Name is required and must be unique (case-insensitive).
+ *  - An event type that is referenced by at least one event cannot be deleted.
+ */
+public class EventTypeService {
+
+  private final EventTypeRepository repo;
+
+  public EventTypeService(EventTypeRepository repo) {
+    this.repo = repo;
+  }
+
+  /** Returns all event types ordered by name. */
+  public List<EventType> findAll() {
+    return repo.findAll();
+  }
+
+  /** Returns a single event type by id, or throws if not found. */
+  public EventType getById(int id) {
+    return repo.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Event type not found: #" + id));
+  }
+
+  /**
+   * Creates a new event type.
+   * @throws IllegalArgumentException if name is blank or already exists.
+   */
+  public EventType create(String name) {
+    String clean = requireName(name);
+    checkUnique(clean, -1);
+    return repo.save(new EventType(0, clean));
+  }
+
+  /**
+   * Renames an existing event type.
+   * @throws IllegalArgumentException if name is blank, not found, or already taken by another type.
+   */
+  public EventType rename(int id, String newName) {
+    getById(id); // existence check
+    String clean = requireName(newName);
+    checkUnique(clean, id);
+    repo.rename(id, clean);
+    return repo.findById(id).orElseThrow();
+  }
+
+  /**
+   * Deletes an event type.
+   * @throws IllegalStateException if any event still references this type.
+   */
+  public void delete(int id) {
+    getById(id); // existence check
+    if (repo.isInUse(id)) {
+      throw new IllegalStateException(
+          "Cannot delete event type #" + id + ": it is used by one or more events.");
+    }
+    repo.delete(id);
+  }
+
+  // Private helpers
+  private String requireName(String name) {
+    if (name == null || name.isBlank())
+      throw new IllegalArgumentException("Event type name is required.");
+    return name.trim();
+  }
+
+  /** Throws if another event type (other than {@code excludeId}) already has this name. */
+  private void checkUnique(String name, int excludeId) {
+    repo.findByName(name).ifPresent(existing -> {
+      if (existing.getId() != excludeId)
+        throw new IllegalArgumentException("Event type already exists: \"" + name + "\"");
+    });
+  }
+}

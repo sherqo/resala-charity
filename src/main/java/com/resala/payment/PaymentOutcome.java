@@ -10,7 +10,11 @@ public record PaymentOutcome(
   public boolean isPaid() { return status == PaymentStatus.PAID; }
   public boolean canRetry() { return error != null && error.retryable(); }
   public static PaymentOutcome paid(Payment p) {
-    return new PaymentOutcome(p.getId(), PaymentStatus.PAID, p.getReferenceId(), "Payment approved", null);
+    String message = "Payment approved";
+    if (p.getFeeMinor() > 0) {
+      message += " (processing fee " + String.format("%.2f", p.getFeeMinor() / 100.0) + " EGP)";
+    }
+    return new PaymentOutcome(p.getId(), PaymentStatus.PAID, p.getReferenceId(), message, null);
   }
   public static PaymentOutcome failed(Payment p) {
     return new PaymentOutcome(p.getId(), PaymentStatus.FAILED, null,

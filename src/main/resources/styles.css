@@ -1,0 +1,1163 @@
+/* ==========================================================================
+   Resala Charity System - Notion-Inspired Clean Design System
+   Principles: Less is more, restraint is taste, 70/20/10 color rule.
+   Neutral canvas, crisp typography, subtle borders, no gratuitous glow or gradients.
+   ========================================================================== */
+
+/* 1. Reset & Tokens (70% Neutral Base, 20% Complementary, 10% Accent) */
+.root {
+    -fx-base: #FFFFFF;
+    -fx-background-color: #FFFFFF;
+    -fx-text-base-color: #2F3437;
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* 2. Layout */
+
+/* Notion-style clean warm-neutral sidebar */
+.sidebar {
+    -fx-background-color: #F7F7F5;
+    -fx-border-color: transparent #E9E9E7 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.logo {
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -fx-text-fill: #2F3437;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-padding: 16 16 14 16;
+    -fx-border-color: transparent transparent #E9E9E7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5F5E5B;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-padding: 7 12;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+    -fx-border-color: transparent;
+}
+
+.nav-btn:hover {
+    -fx-background-color: #EFEFED;
+    -fx-text-fill: #2F3437;
+}
+
+.nav-btn.active {
+    -fx-background-color: #EAEAEA;
+    -fx-text-fill: #0F172A;
+    -fx-font-weight: 600;
+    -fx-border-color: #0F172A transparent transparent transparent;
+    -fx-border-width: 0 0 0 3;
+}
+
+
+.main-pane {
+    -fx-background-color: #FFFFFF;
+}
+
+.header-bar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent transparent #E9E9E7 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 14 24;
+}
+
+.header-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0F172A;
+}
+
+.header-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #787774;
+}
+
+.content-area {
+    -fx-background-color: #FFFFFF;
+}
+
+/* Minimal 28px bottom status bar */
+.status-bar {
+    -fx-background-color: #FBFBFA;
+    -fx-border-color: #E9E9E7 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 16;
+}
+
+.status-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #787774;
+}
+
+.status-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #5F5E5B;
+}
+
+.feed-list {
+    -fx-background-color: transparent;
+    -fx-border-color: #E9E9E7;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+}
+
+/* 3. Containers & Cards */
+.card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-effect: null;
+}
+
+.card-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0F172A;
+}
+
+.stat-card {
+    -fx-min-width: 160;
+    -fx-padding: 14 16;
+}
+
+.stat-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #787774;
+    -fx-font-weight: 600;
+}
+
+.stat-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0F172A;
+}
+
+/* Stat card accents neutralized - no loud rainbow top bars */
+.stat-card-indigo,
+.stat-card-teal,
+.stat-card-amber,
+.stat-card-rose,
+.stat-card-indigo-light {
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+}
+
+/* 4. Buttons & Actions */
+.toolbar {
+    -fx-spacing: 8;
+    -fx-padding: 0 0 12 0;
+}
+
+.btn {
+    -fx-font-weight: 500;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-effect: null;
+}
+
+/* Primary CTA: crisp solid dark neutral (Notion style) */
+.btn-primary {
+    -fx-background-color: #0F172A;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #334155;
+}
+
+.btn-primary:pressed {
+    -fx-background-color: #020617;
+}
+
+/* Secondary / Ghost button: clean subtle border */
+.btn-ghost {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-text-fill: #374151;
+}
+
+.btn-ghost:hover {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #9CA3AF;
+    -fx-text-fill: #111827;
+}
+
+.btn-ghost:pressed {
+    -fx-background-color: #F1F5F9;
+}
+
+/* Danger button: restrained solid red without glow */
+.btn-danger {
+    -fx-background-color: #DC2626;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #B91C1C;
+}
+
+/* 5. Clean Empty State */
+.empty-state {
+    -fx-alignment: CENTER;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: null;
+    -fx-padding: 32;
+}
+
+.empty-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #374151;
+}
+
+.empty-hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: #787774;
+}
+
+/* 6. Tables (Notion Database aesthetic) */
+.table-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #F7F7F5;
+}
+
+.table-view .column-header {
+    -fx-background-color: #F7F7F5;
+    -fx-font-weight: 600;
+    -fx-font-size: 11px;
+    -fx-text-fill: #5F5E5B;
+    -fx-padding: 8 12;
+    -fx-border-color: transparent transparent #E9E9E7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #5F5E5B;
+}
+
+.table-row-cell {
+    -fx-cell-size: 34;
+    -fx-padding: 0 8;
+    -fx-border-color: transparent transparent #F1F1EF transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #FFFFFF;
+}
+
+.table-row-cell:even {
+    -fx-background-color: #FAFBFB;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #F7F7F5;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #F1F5F9;
+    -fx-text-fill: #0F172A;
+}
+
+.table-row-cell:focused {
+    -fx-background-color: #F1F5F9;
+    -fx-border-color: #0F172A transparent transparent transparent;
+    -fx-border-width: 0 0 0 2;
+}
+
+.table-cell {
+    -fx-padding: 6 10;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-text-fill: #2F3437;
+}
+
+/* 7. Forms & Inputs */
+.form-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #475569;
+}
+
+.input {
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-padding: 7 10;
+    -fx-font-size: 13px;
+    -fx-background-color: #FFFFFF;
+    -fx-effect: null;
+}
+
+.input:focused {
+    -fx-border-color: #0F172A;
+    -fx-border-width: 1.5;
+    -fx-effect: null;
+}
+
+.input-error {
+    -fx-border-color: #DC2626;
+    -fx-border-width: 1.5;
+}
+
+.combo-box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 0;
+}
+
+.combo-box:hover {
+    -fx-border-color: #9CA3AF;
+}
+
+.combo-box:focused {
+    -fx-border-color: #0F172A;
+    -fx-border-width: 1.5;
+}
+
+.combo-box .cell,
+.combo-box .list-cell,
+.combo-box > .list-cell,
+.combo-box > .combo-box-button-cell,
+.combo-box:focused .cell,
+.combo-box:focused .list-cell,
+.combo-box:focused > .list-cell,
+.combo-box:focused > .combo-box-button-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #2F3437;
+    -fx-padding: 7 10;
+    -fx-font-size: 13px;
+}
+
+/* Remove boxed compartment from arrow button */
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0 10 0 4;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #787774;
+    -fx-shape: "M 0 0 L 4 4 L 8 0 Z";
+    -fx-padding: 2.5 4;
+}
+
+/* Floating clean popup list */
+.combo-box-popup .list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-background-insets: 0;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2F3437;
+    -fx-padding: 6 10;
+    -fx-font-size: 13px;
+    -fx-background-radius: 4;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #F7F7F5;
+    -fx-text-fill: #0F172A;
+}
+
+.date-picker {
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 0;
+}
+
+.date-picker:hover {
+    -fx-border-color: #9CA3AF;
+}
+
+.date-picker:focused {
+    -fx-border-color: #0F172A;
+    -fx-border-width: 1.5;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 10 0 4;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #787774;
+}
+
+.spinner {
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+}
+
+.text-area {
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-padding: 7 10;
+    -fx-font-size: 13px;
+    -fx-effect: null;
+}
+
+.text-area:focused {
+    -fx-border-color: #0F172A;
+    -fx-border-width: 1.5;
+    -fx-effect: null;
+}
+
+.check-box {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+.radio-button {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+/* 8. Dialogs - Notion restrained modal design */
+.dialog-pane {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 20, 0, 0, 6);
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.dialog-pane > .content {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.dialog-pane > .button-bar {
+    -fx-padding: 12 24 16 24;
+    -fx-background-color: transparent;
+    -fx-border-color: #F1F1EF transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.dialog-pane > .button-bar > .container {
+    -fx-spacing: 8;
+}
+
+.dialog-pane .button {
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-padding: 6 14;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+/* Dialog content typography and form containers */
+.dialog-form-box {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8;
+}
+
+.dialog-header {
+    -fx-spacing: 3;
+}
+
+.dialog-header-title {
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1A1A1A;
+}
+
+.dialog-header-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #787774;
+}
+
+.dialog-message {
+    -fx-font-size: 13px;
+    -fx-text-fill: #37352F;
+    -fx-line-spacing: 2px;
+}
+
+.dialog-form-field {
+    -fx-spacing: 5;
+}
+
+.dialog-field-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #5A5A58;
+}
+
+.dialog-required-mark {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #EB5757;
+}
+
+.confirm-dialog {
+    -fx-background-color: #FFFFFF;
+}
+
+/* Monospace Preview Area (receipts, certificates) */
+.preview-area {
+    -fx-font-family: "JetBrains Mono", "SF Mono", "Fira Code", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-background-color: #F7F6F3;
+    -fx-text-fill: #2E2E2E;
+    -fx-background-radius: 6;
+    -fx-border-color: #E9E9E7;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+}
+
+.preview-area .content {
+    -fx-background-color: #F7F6F3;
+    -fx-background-radius: 6;
+}
+
+.preview-area .text {
+    -fx-fill: #2E2E2E;
+}
+
+/* 9. Toasts - Crisp, restrained pill notifications */
+.toast {
+    -fx-background-color: #1E293B;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 6;
+    -fx-padding: 10 14;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 2);
+}
+
+.toast-info {
+    -fx-background-color: #1E293B;
+    -fx-text-fill: #FFFFFF;
+}
+
+.toast-success {
+    -fx-background-color: #0F172A;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #10B981 transparent transparent transparent;
+    -fx-border-width: 0 0 0 3;
+}
+
+.toast-warning {
+    -fx-background-color: #1E293B;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #F59E0B transparent transparent transparent;
+    -fx-border-width: 0 0 0 3;
+}
+
+.toast-error {
+    -fx-background-color: #1E293B;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #EF4444 transparent transparent transparent;
+    -fx-border-width: 0 0 0 3;
+}
+
+/* 10. View Specific */
+.view {
+    -fx-spacing: 14;
+    -fx-padding: 20 24;
+}
+
+.stat-grid {
+    -fx-hgap: 12;
+    -fx-vgap: 12;
+}
+
+.recent-table {
+    -fx-pref-height: 280;
+}
+
+.feed-list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-font-size: 12px;
+}
+
+.feed-list-view .list-cell {
+    -fx-padding: 7 12;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #374151;
+    -fx-border-color: transparent transparent #F1F1EF transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.feed-list-view .list-cell:hover {
+    -fx-background-color: #F7F7F5;
+}
+
+.feed-list-view .list-cell:last-child {
+    -fx-border-color: transparent;
+}
+
+/* 11. Interactive Focus Rings */
+.input:focused,
+.text-area:focused,
+.date-picker:focused,
+.combo-box:focused,
+.btn:focused {
+    -fx-border-color: #0F172A;
+    -fx-border-radius: 5;
+}
+
+/* 11b. Modal Popup Overlay (In-App centered cards) */
+.modal-overlay {
+    -fx-background-color: transparent;
+}
+
+.modal-backdrop {
+    -fx-background-color: rgba(15, 23, 42, 0.40);
+}
+
+.modal-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8;
+    -fx-border-color: #E9E9E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 32, 0, 0, 8);
+}
+
+.modal-header {
+    -fx-padding: 16 22 14 22;
+    -fx-border-color: transparent transparent #F1F1EF transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.modal-title {
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1A1A1A;
+}
+
+.modal-close-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #787774;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-padding: 4 8;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.modal-close-btn:hover {
+    -fx-background-color: #F1F1EF;
+    -fx-text-fill: #1A1A1A;
+}
+
+.modal-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.modal-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.modal-body {
+    -fx-padding: 18 22 18 22;
+    -fx-background-color: transparent;
+}
+
+.modal-message {
+    -fx-font-size: 13px;
+    -fx-text-fill: #37352F;
+    -fx-line-spacing: 3px;
+}
+
+.modal-footer {
+    -fx-padding: 14 22 16 22;
+    -fx-border-color: #F1F1EF transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+/* 12. Notion Dark Theme (.dark-theme) */
+.dark-theme.root {
+    -fx-base: #191919;
+    -fx-background-color: #191919;
+    -fx-text-base-color: #EDEDED;
+}
+
+.dark-theme .sidebar {
+    -fx-background-color: #202020;
+    -fx-border-color: transparent #2E2E2E transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.dark-theme .logo {
+    -fx-text-fill: #EDEDED;
+    -fx-border-color: transparent transparent #2E2E2E transparent;
+}
+
+.dark-theme .nav-btn {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .nav-btn:hover {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .nav-btn.active {
+    -fx-background-color: #303030;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #EDEDED transparent transparent transparent;
+}
+
+
+.dark-theme .main-pane {
+    -fx-background-color: #191919;
+}
+
+.dark-theme .header-bar {
+    -fx-background-color: #191919;
+    -fx-border-color: transparent transparent #2E2E2E transparent;
+}
+
+.dark-theme .header-title {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .header-subtitle {
+    -fx-text-fill: #8A8A8A;
+}
+
+.dark-theme .content-area {
+    -fx-background-color: #191919;
+}
+
+.dark-theme .status-bar {
+    -fx-background-color: #1E1E1E;
+    -fx-border-color: #2E2E2E transparent transparent transparent;
+}
+
+.dark-theme .status-label {
+    -fx-text-fill: #8A8A8A;
+}
+
+.dark-theme .status-text {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .feed-list {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .card {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+}
+
+.dark-theme .card-title {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .stat-label {
+    -fx-text-fill: #8A8A8A;
+}
+
+.dark-theme .stat-value {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .stat-card-indigo,
+.dark-theme .stat-card-teal,
+.dark-theme .stat-card-amber,
+.dark-theme .stat-card-rose,
+.dark-theme .stat-card-indigo-light {
+    -fx-border-color: #2E2E2E;
+}
+
+.dark-theme .btn-primary {
+    -fx-background-color: #EDEDED;
+    -fx-text-fill: #191919;
+}
+
+.dark-theme .btn-primary:hover {
+    -fx-background-color: #FFFFFF;
+}
+
+.dark-theme .btn-ghost {
+    -fx-background-color: #202020;
+    -fx-border-color: #3E3E3E;
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .btn-ghost:hover {
+    -fx-background-color: #282828;
+    -fx-border-color: #555555;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-theme .btn-danger {
+    -fx-background-color: #B91C1C;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-theme .btn-danger:hover {
+    -fx-background-color: #DC2626;
+}
+
+.dark-theme .empty-title {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .empty-hint {
+    -fx-text-fill: #8A8A8A;
+}
+
+.dark-theme .table-view {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+}
+
+.dark-theme .table-view .column-header-background {
+    -fx-background-color: #252525;
+}
+
+.dark-theme .table-view .column-header {
+    -fx-background-color: #252525;
+    -fx-text-fill: #9B9B9B;
+    -fx-border-color: transparent transparent #2E2E2E transparent;
+}
+
+.dark-theme .table-view .column-header .label {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .table-row-cell {
+    -fx-border-color: transparent transparent #262626 transparent;
+}
+
+.dark-theme .table-row-cell:odd {
+    -fx-background-color: #202020;
+}
+
+.dark-theme .table-row-cell:even {
+    -fx-background-color: #1C1C1C;
+}
+
+.dark-theme .table-row-cell:hover {
+    -fx-background-color: #2A2A2A;
+}
+
+.dark-theme .table-row-cell:selected {
+    -fx-background-color: #333333;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-theme .table-row-cell:focused {
+    -fx-background-color: #333333;
+    -fx-border-color: #EDEDED transparent transparent transparent;
+}
+
+.dark-theme .table-cell {
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .form-label {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .input,
+.dark-theme .combo-box,
+.dark-theme .date-picker,
+.dark-theme .spinner,
+.dark-theme .text-area {
+    -fx-background-color: #222222;
+    -fx-border-color: #3E3E3E;
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .input:focused,
+.dark-theme .combo-box:focused,
+.dark-theme .date-picker:focused,
+.dark-theme .text-area:focused {
+    -fx-border-color: #EDEDED;
+}
+
+.dark-theme .combo-box {
+    -fx-background-color: #222222;
+    -fx-border-color: #3E3E3E;
+}
+
+.dark-theme .combo-box:hover {
+    -fx-border-color: #555555;
+}
+
+.dark-theme .combo-box:focused {
+    -fx-border-color: #EDEDED;
+}
+
+.dark-theme .combo-box .cell,
+.dark-theme .combo-box .list-cell,
+.dark-theme .combo-box > .list-cell,
+.dark-theme .combo-box > .combo-box-button-cell,
+.dark-theme .combo-box:focused .cell,
+.dark-theme .combo-box:focused .list-cell,
+.dark-theme .combo-box:focused > .list-cell,
+.dark-theme .combo-box:focused > .combo-box-button-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.dark-theme .combo-box .arrow {
+    -fx-background-color: #9B9B9B;
+}
+
+.dark-theme .combo-box-popup .list-view {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 10, 0, 0, 3);
+}
+
+.dark-theme .combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .combo-box-popup .list-view .list-cell:hover,
+.dark-theme .combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-theme .date-picker {
+    -fx-background-color: #222222;
+    -fx-border-color: #3E3E3E;
+}
+
+.dark-theme .date-picker:hover {
+    -fx-border-color: #555555;
+}
+
+.dark-theme .date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.dark-theme .date-picker .arrow-button .arrow {
+    -fx-background-color: #9B9B9B;
+}
+
+.dark-theme .dialog-pane {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 24, 0, 0, 8);
+}
+
+.dark-theme .dialog-pane .header-panel {
+    -fx-background-color: transparent;
+}
+
+.dark-theme .dialog-pane > .content {
+    -fx-background-color: transparent;
+}
+
+.dark-theme .dialog-pane > .button-bar {
+    -fx-background-color: transparent;
+    -fx-border-color: #2E2E2E transparent transparent transparent;
+}
+
+.dark-theme .dialog-form-box {
+    -fx-background-color: #202020;
+}
+
+.dark-theme .dialog-header-title {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .dialog-header-subtitle {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .dialog-message {
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .dialog-field-label {
+    -fx-text-fill: #A4A4A2;
+}
+
+.dark-theme .dialog-required-mark {
+    -fx-text-fill: #F87171;
+}
+
+.dark-theme .confirm-dialog {
+    -fx-background-color: #202020;
+}
+
+.dark-theme .preview-area {
+    -fx-background-color: #191919;
+    -fx-text-fill: #EDEDED;
+    -fx-border-color: #2E2E2E;
+}
+
+.dark-theme .preview-area .content {
+    -fx-background-color: #191919;
+}
+
+.dark-theme .preview-area .text {
+    -fx-fill: #EDEDED;
+}
+
+.dark-theme .text-area .content {
+    -fx-background-color: #222222;
+}
+
+.dark-theme .text-area .text {
+    -fx-fill: #EDEDED;
+}
+
+.dark-theme .check-box,
+.dark-theme .radio-button {
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .feed-list-view {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+}
+
+.dark-theme .feed-list-view .list-cell {
+    -fx-background-color: #202020;
+    -fx-text-fill: #D4D4D4;
+    -fx-border-color: transparent transparent #262626 transparent;
+}
+
+.dark-theme .feed-list-view .list-cell:hover {
+    -fx-background-color: #2A2A2A;
+}
+
+.dark-theme .input:focused,
+.dark-theme .text-area:focused,
+.dark-theme .date-picker:focused,
+.dark-theme .combo-box:focused,
+.dark-theme .btn:focused {
+    -fx-border-color: #EDEDED;
+}
+
+.dark-theme .modal-backdrop {
+    -fx-background-color: rgba(0, 0, 0, 0.65);
+}
+
+.dark-theme .modal-card {
+    -fx-background-color: #202020;
+    -fx-border-color: #2E2E2E;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 36, 0, 0, 10);
+}
+
+.dark-theme .modal-header {
+    -fx-border-color: transparent transparent #2E2E2E transparent;
+}
+
+.dark-theme .modal-title {
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .modal-close-btn {
+    -fx-text-fill: #9B9B9B;
+}
+
+.dark-theme .modal-close-btn:hover {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #EDEDED;
+}
+
+.dark-theme .modal-message {
+    -fx-text-fill: #D4D4D4;
+}
+
+.dark-theme .modal-footer {
+    -fx-border-color: #2E2E2E transparent transparent transparent;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        -fx-transition-duration: 0ms;
+    }
+}

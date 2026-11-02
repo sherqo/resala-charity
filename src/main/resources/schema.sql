@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payer_type TEXT NOT NULL,
   payer_id INTEGER NOT NULL,
   amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  fee_minor INTEGER NOT NULL DEFAULT 0 CHECK (fee_minor >= 0),
   currency TEXT NOT NULL DEFAULT 'EGP' CHECK (currency = 'EGP'),
   payment_method_id INTEGER NOT NULL REFERENCES payment_methods(id),
   status TEXT NOT NULL CHECK (status IN ('PENDING','PAID','FAILED')),
@@ -114,6 +115,27 @@ CREATE TABLE IF NOT EXISTS event_registrations (
   attendee_email TEXT,
   ticket_ref     TEXT    NOT NULL UNIQUE,
   checked_in     INTEGER NOT NULL DEFAULT 0 CHECK (checked_in IN (0,1))
+);
+
+-- Beneficiary module
+CREATE TABLE IF NOT EXISTS beneficiaries (
+  id             INTEGER PRIMARY KEY,
+  name           TEXT NOT NULL,
+  phone          TEXT,
+  household_size INTEGER NOT NULL DEFAULT 1 CHECK (household_size > 0),
+  need_type_id   INTEGER NOT NULL REFERENCES need_types(id),
+  status         TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CLOSED')),
+  notes          TEXT
+);
+
+CREATE TABLE IF NOT EXISTS distributions (
+  id                INTEGER PRIMARY KEY,
+  beneficiary_id    INTEGER NOT NULL REFERENCES beneficiaries(id),
+  donation_id       INTEGER REFERENCES donations(id),
+  item_description  TEXT NOT NULL,
+  quantity          INTEGER NOT NULL CHECK (quantity > 0),
+  distribution_date TEXT NOT NULL,
+  notes             TEXT
 );
 
 -- admin deletions/edits of lookup rows survive restarts.

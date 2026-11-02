@@ -37,6 +37,7 @@ public class DatabaseManager {
       }
 
       runScript("/schema.sql");
+      migrate(connection);
     } catch (SQLException e) {
       throw new IllegalStateException("Failed to open database: " + url, e);
     }
@@ -75,6 +76,15 @@ public class DatabaseManager {
       } catch (SQLException e) {
         throw new IllegalStateException("Failed to run " + resourcePath + " -> " + statement, e);
       }
+    }
+  }
+
+  /** Best-effort migration for columns added after the initial schema. */
+  private void migrate(Connection connection) {
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE payments ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0");
+    } catch (SQLException ignored) {
+      // Column already exists on fresh databases.
     }
   }
 
