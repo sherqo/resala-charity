@@ -1,7 +1,5 @@
 package com.resala.payment;
 
-import java.util.List;
-
 public class FakePaymentGatewayAdapter implements PaymentGateway {
 
   private final FakePaymentProvider provider;
@@ -11,7 +9,7 @@ public class FakePaymentGatewayAdapter implements PaymentGateway {
   }
 
   @Override
-  public List<PaymentMethod> getAvailableMethods() {
+  public java.util.List<PaymentMethod> getAvailableMethods() {
     return provider.availableMethods();
   }
 
@@ -19,11 +17,13 @@ public class FakePaymentGatewayAdapter implements PaymentGateway {
   public GatewayResult charge(PaymentCommand cmd) {
     try {
       FakePaymentProvider.ProviderTxn txn = provider.makePayment(
-          cmd.idempotencyKey(), cmd.amountMinor(), cmd.paymentMethod(), cmd.currency());
+          cmd.idempotencyKey(), cmd.amountMinor(), cmd.paymentMethod(), cmd.currency(), cmd.token());
 
       return switch (txn.statusCode()) {
         case "00" -> GatewayResult.approved(txn.amountCents(), txn.currency(), txn.message());
         case "51", "54" -> GatewayResult.failed(PaymentError.PROVIDER_DECLINED, txn.message(),
+            txn.amountCents(), txn.currency());
+        case "05" -> GatewayResult.failed(PaymentError.PROVIDER_DECLINED, txn.message(),
             txn.amountCents(), txn.currency());
         default -> GatewayResult.failed(PaymentError.PROVIDER_UNAVAILABLE, txn.message(),
             txn.amountCents(), txn.currency());

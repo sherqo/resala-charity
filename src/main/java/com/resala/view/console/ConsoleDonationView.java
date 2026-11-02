@@ -7,9 +7,14 @@ import com.resala.donation.DonationFilter;
 import com.resala.donation.DonationRequest;
 import com.resala.model.DonationType;
 import com.resala.model.Donor;
+import com.resala.payment.CardDetails;
+import com.resala.payment.CardPaymentMethod;
+import com.resala.payment.PaymentInstrument;
 import com.resala.payment.PaymentMethod;
 import com.resala.payment.PaymentOutcome;
 import com.resala.payment.PaymentStatus;
+import com.resala.payment.WalletDetails;
+import com.resala.payment.WalletPaymentMethod;
 import com.resala.view.DonationView;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -166,8 +171,11 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
 
   private void recordOnlineDonation(long donorId, long amountMinor, String notes) {
     PaymentMethod method = choosePaymentMethod();
+    PaymentInstrument instrument = collectInstrument(method);
+    String token = method.tokenize(instrument);
+    if (token != null) System.out.println("Payment token: " + token);
     String reference = UUID.randomUUID().toString();
-    PaymentOutcome outcome = payments.payDonation(donorId, amountMinor, method, reference, notes);
+    PaymentOutcome outcome = payments.payDonation(donorId, amountMinor, method, token, reference, notes);
     while (outcome.status() == PaymentStatus.PENDING && outcome.canRetry()) {
       printError("Payment is pending: " + outcome.message());
       String retry = readLine("Retry with the same payment reference? (y/N): ");
@@ -175,7 +183,7 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
         System.out.println("Payment reference: " + reference);
         return;
       }
-      outcome = payments.payDonation(donorId, amountMinor, method, reference, notes);
+      outcome = payments.payDonation(donorId, amountMinor, method, token, reference, notes);
     }
     if (!outcome.isPaid()) {
       printError("Payment failed: " + outcome.message());
@@ -187,6 +195,10 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
       return;
     }
     printSuccess("Donation saved: #" + donationId);
+    long fee = payments.getPayment(outcome.paymentId()).getFeeMinor();
+    if (fee > 0) {
+      System.out.println("Processing fee: " + String.format("%.2f EGP", fee / 100.0));
+    }
     System.out.println("\nReceipt:");
     System.out.println(controller.receipt(donationId));
   }
@@ -202,6 +214,25 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
       throw new IllegalArgumentException("Please choose a valid payment method.");
     }
     return methods.get(choice - 1);
+  }
+
+  /** Collects the raw dummy details for the chosen method; the strategy validates them. */
+  private PaymentInstrument collectInstrument(PaymentMethod method) {
+    if (method instanceof CardPaymentMethod) {
+      System.out.println("\n--- Card details (dummy data only, nothing is charged) ---");
+      String holder = requiredLine("Card holder name: ");
+      String number = requiredLine("Card number (e.g. 4242 4242 4242 4242): ");
+      String expiry = requiredLine("Expiry date (MM/YY): ");
+      String cvv = requiredLine("CVV: ");
+      return new CardDetails(holder, number, expiry, cvv);
+    }
+    if (method instanceof WalletPaymentMethod) {
+      System.out.println("\n--- Wallet details (dummy data only) ---");
+      String phone = requiredLine("Wallet phone number (e.g. 01012345678): ");
+      return new WalletDetails(phone);
+    }
+    System.out.println("Cash is collected at the counter; no card details needed.");
+    return null;
   }
 
   private void listDonations() {

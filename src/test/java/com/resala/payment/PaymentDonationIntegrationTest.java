@@ -78,7 +78,10 @@ class PaymentDonationIntegrationTest {
 
       PaymentOutcome outcome = service.pay(new PaymentRequest(
           "pay-1", "DONOR", donor.getId(), 5_001L, "EGP",
-          new CardPaymentMethod(), "Online donation", null));
+          new CardPaymentMethod(),
+          new CardPaymentMethod().tokenize(
+              new CardDetails("Test Donor", "4242 4242 4242 4242", "12/30", "123")),
+          "Online donation", null));
 
       assertTrue(outcome.isPaid());
       assertNotNull(outcome.referenceId());

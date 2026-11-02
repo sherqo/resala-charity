@@ -5,6 +5,7 @@ import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
 import com.resala.gui.components.FormDialog;
+import com.resala.gui.components.ModalOverlay;
 import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
 import com.resala.model.Event;
@@ -14,11 +15,15 @@ import com.resala.model.VolunteerEventAssignment;
 import com.resala.volunteer.helpers.VolunteerSummary;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -32,21 +37,23 @@ public class VolunteerView extends BaseView {
     private final AppShell appShell;
     private final VolunteerController volunteerController;
 
-    private DataTable<Volunteer> volunteersTable;
+    private final DataTable<Volunteer> volunteersTable;
 
+    @SuppressWarnings("unchecked")
     public VolunteerView(AppShell appShell, VolunteerController volunteerController) {
         super(createToolbar(), createVolunteersTable());
 
         this.appShell = appShell;
         this.volunteerController = volunteerController;
+        this.volunteersTable = (DataTable<Volunteer>) this.table;
 
-        this.volunteersTable = (DataTable<Volunteer>) getTableView().getProperties().get("dataTable");
-        if (this.volunteersTable == null) {
-            this.volunteersTable = createVolunteersTable();
-            getTableView().getProperties().put("dataTable", this.volunteersTable);
-        }
+        Button assignBtn = Toolbar.ghost("Assign to Event", e -> showAssignDialog());
+        Button logHoursBtn = Toolbar.ghost("Log Hours", e -> showLogHoursDialog());
+        Button certBtn = Toolbar.ghost("Certificate", e -> showCertificateDialog());
+        Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
+        toolbar.getChildren().addAll(assignBtn, logHoursBtn, certBtn, deleteBtn);
 
-        this.primaryActionButton = Toolbar.primary("+ Add Volunteer", e -> showAddVolunteerDialog());
+        this.primaryActionButton = Toolbar.primary("Add Volunteer", e -> showAddVolunteerDialog());
     }
 
     private Button primaryActionButton;
@@ -94,7 +101,7 @@ public class VolunteerView extends BaseView {
                 volunteer.setAvailable(available);
 
                 volunteerController.create(volunteer);
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Volunteer added successfully!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -131,7 +138,7 @@ public class VolunteerView extends BaseView {
                 int skillId = Integer.parseInt(((String) map.get("skillId")).split(":")[0]);
 
                 volunteerController.assign(selected.getId(), eventId, skillId);
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Volunteer assigned!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -165,7 +172,7 @@ public class VolunteerView extends BaseView {
                 int hours = Integer.parseInt(map.get("hours").toString());
 
                 volunteerController.logHours(assignmentId, hours);
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Hours logged!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -189,18 +196,82 @@ public class VolunteerView extends BaseView {
     }
 
     private void showCertificatePreview(String text) {
-        TextArea area = new TextArea(text);
-        area.setEditable(false);
-        area.setWrapText(true);
-        area.setPrefRowCount(20);
-        area.setPrefColumnCount(60);
+        if (appShell != null && appShell.getModalOverlay() != null) {
+            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
+                private java.util.function.Consumer<Void> closeCallback;
 
+                @Override
+                public Node getNode() {
+                    VBox card = new VBox();
+                    card.getStyleClass().add("modal-card");
+                    card.setMaxWidth(560);
+                    card.setMinWidth(480);
+                    card.setMaxHeight(560);
+
+                    // Header
+                    HBox header = new HBox();
+                    header.getStyleClass().add("modal-header");
+                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                    Label titleLabel = new Label("Volunteer Certificate");
+                    titleLabel.getStyleClass().add("modal-title");
+
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    Button closeBtn = new Button("✕");
+                    closeBtn.getStyleClass().add("modal-close-btn");
+                    closeBtn.setOnAction(e -> {
+                        if (closeCallback != null) closeCallback.accept(null);
+                    });
+
+                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
+
+                    // Body
+                    VBox body = new VBox(10);
+                    body.getStyleClass().add("modal-body");
+
+                    TextArea area = new TextArea(text);
+                    area.setEditable(false);
+                    area.setWrapText(true);
+                    area.getStyleClass().add("preview-area");
+                    VBox.setVgrow(area, Priority.ALWAYS);
+                    body.getChildren().add(area);
+                    VBox.setVgrow(body, Priority.ALWAYS);
+
+                    // Footer
+                    HBox footer = new HBox(8);
+                    footer.getStyleClass().add("modal-footer");
+                    footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+
+                    Region footerSpacer = new Region();
+                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
+
+                    Button doneBtn = new Button("Close");
+                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
+                    doneBtn.setOnAction(e -> {
+                        if (closeCallback != null) closeCallback.accept(null);
+                    });
+
+                    footer.getChildren().addAll(footerSpacer, doneBtn);
+                    card.getChildren().addAll(header, body, footer);
+                    return card;
+                }
+
+                @Override
+                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
+                    this.closeCallback = closeCallback;
+                }
+            });
+            return;
+        }
+
+        // Fallback
         Dialog<Void> dialog = new Dialog<>();
         dialog.initOwner(appShell.getStage());
         dialog.setTitle("Volunteer Certificate");
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(area);
-        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        dialog.getDialogPane().setContent(new TextArea(text));
         dialog.showAndWait();
     }
 
@@ -214,7 +285,7 @@ public class VolunteerView extends BaseView {
         if (appShell.getConfirmDialog().ask(appShell.getStage(),
                 "Delete volunteer '" + selected.getName() + "'?")) {
             volunteerController.delete(selected.getId());
-            refresh();
+            appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(), "Volunteer deleted.", Toast.Type.SUCCESS);
         }
     }

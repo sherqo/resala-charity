@@ -2,8 +2,10 @@ package com.resala.gui;
 
 import com.resala.gui.components.DataTable;
 import com.resala.gui.components.Toolbar;
+import javafx.beans.binding.Bindings;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
@@ -20,15 +22,33 @@ public abstract class BaseView extends VBox implements Refreshable {
         this.table = table;
 
         getStyleClass().add("view");
-        getChildren().addAll(toolbar, table.getTableView());
-        VBox.setVgrow(table.getTableView(), javafx.scene.layout.Priority.ALWAYS);
+
+        if (toolbar != null) {
+            getChildren().add(toolbar);
+            // Collapse empty toolbar to avoid dead padding
+            toolbar.visibleProperty().bind(Bindings.isNotEmpty(toolbar.getChildren()));
+            toolbar.managedProperty().bind(toolbar.visibleProperty());
+        }
+
+        if (table != null) {
+            getChildren().add(table.getTableView());
+            VBox.setVgrow(table.getTableView(), Priority.ALWAYS);
+        }
     }
 
     /**
      * Returns the underlying TableView for advanced customization.
      */
     public javafx.scene.control.TableView<?> getTableView() {
-        return table.getTableView();
+        return table != null ? table.getTableView() : null;
+    }
+
+    /**
+     * Returns the underlying DataTable instance.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> DataTable<T> getDataTable() {
+        return (DataTable<T>) table;
     }
 
     /**
@@ -45,7 +65,7 @@ public abstract class BaseView extends VBox implements Refreshable {
     }
 
     /**
-     * Convenience factory method for creating a toolbar with primary action.
+     * Convenience factory method for creating a toolbar with action buttons.
      */
     protected static HBox createToolbar(Button... buttons) {
         return Toolbar.of(buttons);

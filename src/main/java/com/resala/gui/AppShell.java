@@ -1,5 +1,6 @@
 package com.resala.gui;
 
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.controller.PaymentController;
@@ -43,6 +44,7 @@ public class AppShell {
     private final VolunteerController volunteerController;
     private final PaymentController paymentController;
     private final PaymentService paymentService;
+    private final BeneficiaryController beneficiaryController;
 
     // Observer subjects
     private final DonationSubject donationSubject;
@@ -61,6 +63,19 @@ public class AppShell {
                     PaymentService paymentService,
                     DonationSubject donationSubject,
                     EventSubject eventSubject) {
+        this(stage, donationController, eventController, volunteerController,
+             paymentController, paymentService, donationSubject, eventSubject, null);
+    }
+
+    public AppShell(Stage stage,
+                    DonationController donationController,
+                    EventController eventController,
+                    VolunteerController volunteerController,
+                    PaymentController paymentController,
+                    PaymentService paymentService,
+                    DonationSubject donationSubject,
+                    EventSubject eventSubject,
+                    BeneficiaryController beneficiaryController) {
         this.stage = stage;
         this.donationController = donationController;
         this.eventController = eventController;
@@ -69,6 +84,7 @@ public class AppShell {
         this.paymentService = paymentService;
         this.donationSubject = donationSubject;
         this.eventSubject = eventSubject;
+        this.beneficiaryController = beneficiaryController;
         this.feedObserver = new FeedObserver(feedList, statusLabel);
 
         // Attach feed observer
@@ -77,15 +93,38 @@ public class AppShell {
     }
 
     // Helper methods for views
+    private static AppShell instance;
+    private StackPane rootPane;
+    private BorderPane mainLayout;
+    private StackPane modalOverlay;
+
+    public static AppShell getInstance() { return instance; }
     public Stage getStage() { return stage; }
     public Toast getToast() { return toast; }
     public ConfirmDialog getConfirmDialog() { return confirmDialog; }
+    public ListView<String> getFeedList() { return feedList; }
+    public StackPane getModalOverlay() { return modalOverlay; }
 
     public void show() {
+        instance = this;
         buildViews();
         Scene scene = new Scene(buildRoot(), 1280, 800);
+        scene.setUserData(this);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setTitle("Resala Charity System");
+
+        // Application icon (for window & dock)
+        try {
+            var icon256 = getClass().getResourceAsStream("/app-icon.png");
+            if (icon256 != null) {
+                stage.getIcons().add(new javafx.scene.image.Image(icon256));
+            }
+            var icon32 = getClass().getResourceAsStream("/app-icon-32.png");
+            if (icon32 != null) {
+                stage.getIcons().add(new javafx.scene.image.Image(icon32));
+            }
+        } catch (Exception ignored) {}
+
         stage.setScene(scene);
         stage.show();
 
@@ -93,45 +132,54 @@ public class AppShell {
         showView("Dashboard");
     }
 
-    private BorderPane buildRoot() {
-        BorderPane root = new BorderPane();
-        root.getStyleClass().add("root");
-        root.setLeft(buildSidebar());
-        root.setCenter(buildMainPane());
-        root.setBottom(buildStatusBar());
-        return root;
+    private StackPane buildRoot() {
+        mainLayout = new BorderPane();
+        mainLayout.getStyleClass().add("root");
+        mainLayout.setLeft(buildSidebar());
+        mainLayout.setCenter(buildMainPane());
+        mainLayout.setBottom(buildStatusBar());
+
+        modalOverlay = new StackPane();
+        modalOverlay.getStyleClass().add("modal-overlay");
+        modalOverlay.setVisible(false);
+        modalOverlay.setManaged(false);
+
+        rootPane = new StackPane(mainLayout, modalOverlay);
+        rootPane.getStyleClass().add("root");
+        return rootPane;
     }
 
     private VBox buildSidebar() {
         VBox sidebar = new VBox();
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(260);
-        sidebar.setMaxWidth(260);
-        sidebar.setMinWidth(260);
+        sidebar.setPrefWidth(220);
+        sidebar.setMaxWidth(220);
+        sidebar.setMinWidth(220);
 
         // Logo/Title
-        Label logo = new Label("🏛 Resala");
+        Label logo = new Label("Resala");
         logo.getStyleClass().add("logo");
         sidebar.getChildren().add(logo);
 
         // Navigation buttons
-        VBox navBox = new VBox(4);
-        navBox.setPadding(new Insets(16));
+        VBox navBox = new VBox(2);
+        navBox.setPadding(new Insets(12, 8, 12, 8));
         VBox.setVgrow(navBox, Priority.ALWAYS);
 
         List<NavItem> navItems = List.of(
-            new NavItem("Dashboard", "📊", DashboardView.class),
-            new NavItem("Donations", "💝", DonationView.class),
-            new NavItem("Donors", "👥", DonorView.class),
-            new NavItem("Volunteers", "🤝", VolunteerView.class),
-            new NavItem("Events", "📅", EventView.class),
-            new NavItem("Beneficiaries", "🎁", BeneficiaryView.class),
-            new NavItem("Messages", "💬", CommView.class),
-            new NavItem("Lookups", "🔧", LookupView.class)
+            new NavItem("Dashboard", DashboardView.class),
+            new NavItem("Donations", DonationView.class),
+            new NavItem("Payments", PaymentView.class),
+            new NavItem("Donors", DonorView.class),
+            new NavItem("Volunteers", VolunteerView.class),
+            new NavItem("Events", EventView.class),
+            new NavItem("Beneficiaries", BeneficiaryView.class),
+            new NavItem("Messages", CommView.class),
+            new NavItem("Lookups", LookupView.class)
         );
 
         for (NavItem item : navItems) {
-            Button btn = new Button(item.icon + "  " + item.name);
+            Button btn = new Button(item.name);
             btn.getStyleClass().add("nav-btn");
             btn.setMaxWidth(Double.MAX_VALUE);
             btn.setOnAction(e -> showView(item.name));
@@ -141,11 +189,29 @@ public class AppShell {
 
         sidebar.getChildren().add(navBox);
 
-        // Version label at bottom
-        Label version = new Label("v1.0.0");
-        version.getStyleClass().add("version");
-        version.setPadding(new Insets(16));
-        sidebar.getChildren().add(version);
+        // Footer with dark theme toggle
+        VBox footerBox = new VBox(6);
+        footerBox.setPadding(new Insets(8, 8, 12, 8));
+
+        Button themeBtn = new Button("Dark Theme");
+        themeBtn.getStyleClass().addAll("btn", "btn-ghost");
+        themeBtn.setMaxWidth(Double.MAX_VALUE);
+        themeBtn.setOnAction(e -> {
+            Scene scene = stage.getScene();
+            if (scene != null && scene.getRoot() != null) {
+                boolean isDark = scene.getRoot().getStyleClass().contains("dark-theme");
+                if (isDark) {
+                    scene.getRoot().getStyleClass().remove("dark-theme");
+                    themeBtn.setText("Dark Theme");
+                } else {
+                    scene.getRoot().getStyleClass().add("dark-theme");
+                    themeBtn.setText("Light Theme");
+                }
+            }
+        });
+
+        footerBox.getChildren().add(themeBtn);
+        sidebar.getChildren().add(footerBox);
 
         // Store nav items for active state management
         this.navItems = navItems;
@@ -183,34 +249,37 @@ public class AppShell {
     private StackPane contentStack;
 
     private HBox buildStatusBar() {
-        HBox statusBar = new HBox(16);
+        HBox statusBar = new HBox(12);
         statusBar.getStyleClass().add("status-bar");
-        statusBar.setPadding(new Insets(8, 16, 8, 16));
         statusBar.setAlignment(Pos.CENTER_LEFT);
 
-        // Feed summary on left
-        Label feedTitle = new Label("Activity Feed:");
-        feedTitle.getStyleClass().add("status-label");
-        feedList.setPrefHeight(60);
-        feedList.setMaxHeight(60);
-        feedList.getStyleClass().add("feed-list");
-
-        VBox feedBox = new VBox(4, feedTitle, feedList);
-        HBox.setHgrow(feedBox, Priority.ALWAYS);
-
-        // Status label on right
         statusLabel.getStyleClass().add("status-text");
 
-        statusBar.getChildren().addAll(feedBox, statusLabel);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label systemStatus = new Label("Connected");
+        systemStatus.getStyleClass().add("status-label");
+
+        statusBar.getChildren().addAll(statusLabel, spacer, systemStatus);
         return statusBar;
     }
 
     private void buildViews() {
-        // Dashboard
-        views.put("Dashboard", new DashboardView(this, donationController, eventController, volunteerController));
+        // Dashboard observes donations and events
+        DashboardView dashboard = new DashboardView(this, donationController, eventController, volunteerController);
+        donationSubject.addObserver(dashboard);
+        eventSubject.addObserver(dashboard);
+        views.put("Dashboard", dashboard);
 
-        // Donations
-        views.put("Donations", new DonationView(this, donationController, paymentController, paymentService));
+        // Donations view observes donations
+        DonationView donationView = new DonationView(this, donationController, paymentController);
+        donationSubject.addObserver(donationView);
+        views.put("Donations", donationView);
+
+        // Payments view
+        PaymentView paymentView = new PaymentView(this, paymentController);
+        views.put("Payments", paymentView);
 
         // Donors
         views.put("Donors", new DonorView(this, donationController));
@@ -218,17 +287,30 @@ public class AppShell {
         // Volunteers
         views.put("Volunteers", new VolunteerView(this, volunteerController));
 
-        // Events
-        views.put("Events", new EventView(this, eventController));
+        // Events view observes events
+        EventView eventView = new EventView(this, eventController);
+        eventSubject.addObserver(eventView);
+        views.put("Events", eventView);
 
         // Beneficiaries
-        views.put("Beneficiaries", new BeneficiaryView(this));
+        views.put("Beneficiaries", new BeneficiaryView(this, beneficiaryController));
 
         // Messages
         views.put("Messages", new CommView(this));
 
         // Lookups
         views.put("Lookups", new LookupView(this, volunteerController, eventController));
+    }
+
+    /**
+     * Refreshes all active views across the application instantly on the JavaFX thread.
+     */
+    public void refreshAll() {
+        javafx.application.Platform.runLater(() -> {
+            for (BaseView view : views.values()) {
+                view.refresh();
+            }
+        });
     }
 
     public void showView(String name) {
@@ -286,13 +368,11 @@ public class AppShell {
 
     private static class NavItem {
         final String name;
-        final String icon;
         final Class<? extends BaseView> viewClass;
         Button button;
 
-        NavItem(String name, String icon, Class<? extends BaseView> viewClass) {
+        NavItem(String name, Class<? extends BaseView> viewClass) {
             this.name = name;
-            this.icon = icon;
             this.viewClass = viewClass;
         }
     }

@@ -27,19 +27,14 @@ public class FeedObserver implements DonationObserver, EventObserver {
     @Override
     public void onDonationRecorded(Donation donation, Donor donor) {
         String time = LocalDateTime.now().format(timeFormatter);
-        String typeIcon = switch (donation.getType()) {
-            case ONLINE -> "💳";
-            case CHECK -> "📝";
-            case IN_KIND -> "🎁";
-        };
         String amount = donation.getAmountMinor() > 0
-            ? String.format("%,.2f EGP", donation.getAmountMinor() / 100.0)
+            ? String.format(" — %,.2f EGP", donation.getAmountMinor() / 100.0)
             : "";
         String item = donation.getItemDescription() != null
             ? " (" + donation.getItemDescription() + ")"
             : "";
-        String entry = String.format("[%s] %s New %s donation from %s%s%s",
-            time, typeIcon, donation.getType().name().toLowerCase(), donor.getName(), amount, item);
+        String entry = String.format("[%s] New %s donation from %s%s%s",
+            time, donation.getType().name().toLowerCase(), donor.getName(), amount, item);
         addToFeed(entry);
         statusLabel.setText("Last: Donation from " + donor.getName() + " at " + time);
     }
@@ -47,7 +42,7 @@ public class FeedObserver implements DonationObserver, EventObserver {
     @Override
     public void onEventUpdated(Event event, String message) {
         String time = LocalDateTime.now().format(timeFormatter);
-        String entry = String.format("[%s] 📅 Event: %s - %s", time, event.getTitle(), message);
+        String entry = String.format("[%s] Event: %s — %s", time, event.getTitle(), message);
         addToFeed(entry);
         statusLabel.setText("Last: Event update - " + event.getTitle() + " at " + time);
     }

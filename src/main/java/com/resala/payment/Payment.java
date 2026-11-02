@@ -9,6 +9,7 @@ public final class Payment {
   private final String payerType;
   private final long payerId;
   private final long amountMinor;
+  private final long feeMinor;
   private final String currency;
   private final String paymentMethodCode;
   private final String idempotencyKey;
@@ -24,11 +25,12 @@ public final class Payment {
   private Instant updatedAt;
   private Instant paidAt;
 
-  private Payment(String payerType, long payerId, long amountMinor, String currency,
+  private Payment(String payerType, long payerId, long amountMinor, long feeMinor, String currency,
                   String paymentMethodCode, String idempotencyKey, String notes, Instant now) {
     this.payerType = payerType;
     this.payerId = payerId;
     this.amountMinor = amountMinor;
+    this.feeMinor = feeMinor;
     this.currency = currency;
     this.paymentMethodCode = paymentMethodCode;
     this.idempotencyKey = idempotencyKey;
@@ -50,7 +52,8 @@ public final class Payment {
     if (idempotencyKey == null || idempotencyKey.isBlank()) {
       throw new IllegalArgumentException("idempotencyKey is required");
     }
-    Payment p = new Payment(payerType, payerId, amountMinor, currency, paymentMethod.code(),
+    long feeMinor = Math.round(amountMinor * paymentMethod.feeRate());
+    Payment p = new Payment(payerType, payerId, amountMinor, feeMinor, currency, paymentMethod.code(),
         idempotencyKey, notes, Instant.now());
     p.validate();
     return p;
@@ -58,11 +61,11 @@ public final class Payment {
 
   public static Payment restore(
       long id, String payerType, long payerId, Long referenceId, String referenceType,
-      long amountMinor, String currency, String paymentMethodCode, String idempotencyKey,
+      long amountMinor, long feeMinor, String currency, String paymentMethodCode, String idempotencyKey,
       PaymentStatus status, PaymentError failureReason, String failureMessage, String notes,
       Instant createdAt, Instant updatedAt, Instant paidAt) {
 
-    Payment payment = new Payment(payerType, payerId, amountMinor, currency, paymentMethodCode,
+    Payment payment = new Payment(payerType, payerId, amountMinor, feeMinor, currency, paymentMethodCode,
         idempotencyKey, notes, createdAt);
     payment.id = id;
     payment.status = Objects.requireNonNull(status, "status");
@@ -70,7 +73,6 @@ public final class Payment {
     payment.referenceId = referenceId;
     payment.failureReason = failureReason;
     payment.failureMessage = failureMessage;
-    payment.notes = notes;
     payment.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
     payment.paidAt = paidAt;
     payment.validate();
@@ -134,6 +136,7 @@ public final class Payment {
     if (payerType == null || payerType.isBlank()) throw new IllegalStateException("Missing payer type");
     if (payerId <= 0) throw new IllegalStateException("Persisted payment must have a payer");
     if (amountMinor <= 0) throw new IllegalStateException("Persisted payment must have a positive amount");
+    if (feeMinor < 0) throw new IllegalStateException("Persisted payment cannot have a negative fee");
     if (currency == null || currency.isBlank()) throw new IllegalStateException("Missing currency");
     if (paymentMethodCode == null || paymentMethodCode.isBlank()) throw new IllegalStateException("Missing payment method");
     if (idempotencyKey == null || idempotencyKey.isBlank()) {
@@ -153,6 +156,7 @@ public final class Payment {
   public String getPayerType() { return payerType; }
   public long getPayerId() { return payerId; }
   public long getAmountMinor() { return amountMinor; }
+  public long getFeeMinor() { return feeMinor; }
   public String getCurrency() { return currency; }
   public String getPaymentMethodCode() { return paymentMethodCode; }
   public PaymentMethod getPaymentMethod() { return PaymentMethods.fromCode(paymentMethodCode); }
