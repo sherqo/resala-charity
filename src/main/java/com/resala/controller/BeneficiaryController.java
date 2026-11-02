@@ -4,6 +4,7 @@ import com.resala.beneficiary.BeneficiaryService;
 import com.resala.beneficiary.Distribution;
 import com.resala.beneficiary.policy.DistributionPolicy;
 import com.resala.model.Beneficiary;
+import com.resala.model.NeedType;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -82,5 +83,27 @@ public class BeneficiaryController {
       String notes
   ) {
     return service.distributeByPolicy(itemDescription, totalItems, donationId, distributionDate, notes);
+  }
+
+  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
+
+  public List<NeedType> listNeedTypes() {
+    return service.listNeedTypes();
+  }
+
+  public NeedType getNeedType(int id) {
+    return service.getNeedType(id);
+  }
+
+  public NeedType addNeedType(String name) {
+    return service.addNeedType(name);
+  }
+
+  public NeedType updateNeedType(int id, String name) {
+    return service.updateNeedType(id, name);
+  }
+
+  public void deleteNeedType(int id) {
+    service.deleteNeedType(id);
   }
 }

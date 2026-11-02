@@ -3,6 +3,7 @@ package com.resala.persistence.sqlite;
 import com.resala.beneficiary.BeneficiaryRepository;
 import com.resala.beneficiary.Distribution;
 import com.resala.model.Beneficiary;
+import com.resala.model.NeedType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -209,5 +210,80 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
       LocalDate.parse(rs.getString("distribution_date")),
       rs.getString("notes")
     );
+  }
+
+  // ── Need Types Lookup CRUD ────────────────────────────────────────────────
+
+  @Override
+  public List<NeedType> findAllNeedTypes() {
+    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM need_types ORDER BY id")) {
+      try (ResultSet rs = ps.executeQuery()) {
+        List<NeedType> list = new ArrayList<>();
+        while (rs.next()) {
+          list.add(new NeedType(rs.getInt("id"), rs.getString("name")));
+        }
+        return list;
+      }
+    } catch (SQLException e) {
+      throw new IllegalStateException("Could not list need types", e);
+    }
+  }
+
+  @Override
+  public Optional<NeedType> findNeedTypeById(int id) {
+    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM need_types WHERE id=?")) {
+      ps.setInt(1, id);
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() ? Optional.of(new NeedType(rs.getInt("id"), rs.getString("name"))) : Optional.empty();
+      }
+    } catch (SQLException e) {
+      throw new IllegalStateException("Could not load need type", e);
+    }
+  }
+
+  @Override
+  public NeedType saveNeedType(NeedType nt) {
+    if (nt.getId() <= 0) {
+      try (
+        PreparedStatement ps = connection.prepareStatement(
+          "INSERT INTO need_types (name) VALUES (?)",
+          Statement.RETURN_GENERATED_KEYS
+        )
+      ) {
+        ps.setString(1, nt.getName());
+        ps.executeUpdate();
+        try (ResultSet keys = ps.getGeneratedKeys()) {
+          if (!keys.next()) throw new SQLException("No generated ID for need type");
+          nt.setId(keys.getInt(1));
+          return nt;
+        }
+      } catch (SQLException e) {
+        throw new IllegalStateException("Could not create need type: " + e.getMessage(), e);
+      }
+    } else {
+      try (PreparedStatement ps = connection.prepareStatement("UPDATE need_types SET name=? WHERE id=?")) {
+        ps.setString(1, nt.getName());
+        ps.setInt(2, nt.getId());
+        ps.executeUpdate();
+        return nt;
+      } catch (SQLException e) {
+        throw new IllegalStateException("Could not update need type: " + e.getMessage(), e);
+      }
+    }
+  }
+
+  @Override
+  public void deleteNeedType(int id) {
+    try (PreparedStatement ps = connection.prepareStatement("DELETE FROM need_types WHERE id=?")) {
+      ps.setInt(1, id);
+      if (ps.executeUpdate() == 0) {
+        throw new IllegalArgumentException("Need type not found: #" + id);
+      }
+    } catch (SQLException e) {
+      if (e.getMessage() != null && e.getMessage().contains("FOREIGN KEY")) {
+        throw new IllegalStateException("Cannot delete need type #" + id + " because active beneficiaries are assigned to it.", e);
+      }
+      throw new IllegalStateException("Could not delete need type: " + e.getMessage(), e);
+    }
   }
 }
