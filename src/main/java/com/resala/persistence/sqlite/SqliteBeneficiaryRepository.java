@@ -76,7 +76,12 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
       ps.setLong(1, id);
       if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Beneficiary not found");
     } catch (SQLException e) {
-      throw new IllegalStateException("Could not delete beneficiary", e);
+      if (e.getMessage() != null && e.getMessage().contains("FOREIGN KEY")) {
+        throw new IllegalStateException(
+          "Cannot delete beneficiary #" + id + " because they have recorded aid distributions. Please set status to CLOSED instead."
+        );
+      }
+      throw new IllegalStateException("Could not delete beneficiary: " + e.getMessage(), e);
     }
   }
 
