@@ -1,16 +1,18 @@
 package com.resala.view.console;
 
-import com.resala.controller.BeneficiaryController;
-import com.resala.beneficiary.Distribution;
-import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
-import com.resala.beneficiary.policy.EqualDistributionPolicy;
-import com.resala.beneficiary.policy.FifoDistributionPolicy;
-import com.resala.model.Beneficiary;
-import com.resala.view.BeneficiaryView;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+
+import com.resala.beneficiary.Distribution;
+import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
+import com.resala.beneficiary.policy.EqualDistributionPolicy;
+import com.resala.beneficiary.policy.FifoDistributionPolicy;
+import com.resala.controller.BeneficiaryController;
+import com.resala.model.Beneficiary;
+import com.resala.model.NeedType;
+import com.resala.view.BeneficiaryView;
 
 public class ConsoleBeneficiaryView extends AbstractConsoleView implements BeneficiaryView {
 
@@ -35,6 +37,7 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("5) Record distribution");
       System.out.println("6) View beneficiary distribution history");
       System.out.println("7) Distribute aid via Policy (Strategy Pattern)");
+      System.out.println("8) Manage Need Types");
       System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
@@ -48,6 +51,7 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
           case "5" -> recordDistribution();
           case "6" -> viewDistributionHistory();
           case "7" -> distributeWithPolicy();
+          case "8" -> manageNeedTypes();
           case "0" -> running = false;
           default  -> System.out.println("Invalid option.");
         }
@@ -106,7 +110,9 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
     String sizeStr = value("Household size", String.valueOf(current.getHouseholdSize()));
     int size = Integer.parseInt(sizeStr);
 
-    String needStr = value("Need Type ID (1:Food, 2:Clothing, 3:Medical, 4:Education)", String.valueOf(current.getNeedTypeId()));
+    System.out.println("Current Need Type: " + needTypeName(current.getNeedTypeId()) + " (ID: " + current.getNeedTypeId() + ")");
+    printNeedTypesInline();
+    String needStr = value("Need Type ID", String.valueOf(current.getNeedTypeId()));
     int needTypeId = Integer.parseInt(needStr);
 
     String statusStr = value("Status (ACTIVE/CLOSED)", current.getStatus().name()).toUpperCase();
@@ -241,21 +247,109 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
     }
   }
 
+  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
+
+  private void manageNeedTypes() {
+    boolean inSubMenu = true;
+    while (inSubMenu) {
+      System.out.println("\n" + LINE);
+      System.out.println("Resala Charity - Need Types Management");
+      System.out.println(LINE);
+      System.out.println("1) List all need types");
+      System.out.println("2) Add need type");
+      System.out.println("3) Edit need type");
+      System.out.println("4) Delete need type");
+      System.out.println("0) Back to Beneficiary Module");
+      System.out.println(LINE);
+      System.out.print("Choose an option: ");
+
+      try {
+        switch (readLine().trim()) {
+          case "1" -> listNeedTypes();
+          case "2" -> addNeedType();
+          case "3" -> editNeedType();
+          case "4" -> deleteNeedType();
+          case "0" -> inSubMenu = false;
+          default  -> System.out.println("Invalid option.");
+        }
+      } catch (IllegalArgumentException | IllegalStateException e) {
+        printError(e.getMessage());
+      }
+    }
+  }
+
+  private void listNeedTypes() {
+    List<NeedType> types = controller.listNeedTypes();
+    if (types.isEmpty()) {
+      System.out.println("No need types found.");
+      return;
+    }
+    System.out.println("\nID  | Need Type Name");
+    System.out.println(LINE);
+    for (NeedType nt : types) {
+      System.out.printf("%-3d | %s%n", nt.getId(), nt.getName());
+    }
+  }
+
+  private void addNeedType() {
+    System.out.println("\n--- Add Need Type ---");
+    String name = requiredLine("Need Type Name (e.g. Housing, Winter Supplies): ");
+    NeedType created = controller.addNeedType(name);
+    printSuccess("Need Type #" + created.getId() + " (" + created.getName() + ") added.");
+  }
+
+  private void editNeedType() {
+    System.out.println("\n--- Edit Need Type ---");
+    listNeedTypes();
+    int id = readInt("Need Type ID to edit: ");
+    NeedType existing = controller.getNeedType(id);
+    String newName = value("Name", existing.getName());
+    NeedType updated = controller.updateNeedType(id, newName);
+    printSuccess("Need Type #" + id + " updated to \"" + updated.getName() + "\".");
+  }
+
+  private void deleteNeedType() {
+    System.out.println("\n--- Delete Need Type ---");
+    listNeedTypes();
+    int id = readInt("Need Type ID to delete: ");
+    NeedType existing = controller.getNeedType(id);
+    if (readLine("Delete \"" + existing.getName() + "\"? (yes/no): ").equalsIgnoreCase("yes")) {
+      controller.deleteNeedType(id);
+      printSuccess("Need Type #" + id + " deleted.");
+    } else {
+      System.out.println("Delete cancelled.");
+    }
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
+  private void printNeedTypesInline() {
+    List<NeedType> types = controller.listNeedTypes();
+    if (types.isEmpty()) return;
+    System.out.print("Available Need Types: ");
+    for (int i = 0; i < types.size(); i++) {
+      NeedType nt = types.get(i);
+      System.out.print(nt.getId() + ") " + nt.getName() + (i < types.size() - 1 ? "  " : "\n"));
+    }
+  }
+
   private int readNeedTypeId() {
-    System.out.println("Need Types: 1) Food  2) Clothing  3) Medical  4) Education");
-    String choice = readLine("Choose need type (1-4, default 1): ");
-    return choice.isBlank() ? 1 : Integer.parseInt(choice);
+    List<NeedType> types = controller.listNeedTypes();
+    if (types.isEmpty()) {
+      System.out.println("Warning: No need types defined in database. Defaulting to 1.");
+      return 1;
+    }
+    printNeedTypesInline();
+    int defaultId = types.get(0).getId();
+    String choice = readLine("Choose need type ID (default " + defaultId + "): ");
+    return choice.isBlank() ? defaultId : Integer.parseInt(choice);
   }
 
   private String needTypeName(int id) {
-    return switch (id) {
-      case 1 -> "Food";
-      case 2 -> "Clothing";
-      case 3 -> "Medical";
-      case 4 -> "Education";
-      default -> "Type #" + id;
-    };
+    return controller.listNeedTypes().stream()
+        .filter(nt -> nt.getId() == id)
+        .findFirst()
+        .map(NeedType::getName)
+        .orElse("Type #" + id);
   }
 }

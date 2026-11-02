@@ -31,7 +31,8 @@ public class ConsoleUiFactory implements UiFactory {
   @Override
   public BeneficiaryView createBeneficiaryView(BeneficiaryController controller) {
     return new ConsoleBeneficiaryView(controller, input);
-  
+  }
+
   @Override
   public VolunteerView createVolunteerView(VolunteerController controller) {
     return new ConsoleVolunteerView(controller, input);
