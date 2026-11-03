@@ -93,6 +93,14 @@ public class DatabaseManager {
     } catch (SQLException ignored) {
       // Column already exists on fresh databases.
     }
+
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE event_registrations ADD COLUMN volunteer_id INTEGER REFERENCES volunteers(id)");
+    } catch (SQLException ignored) {}
+
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE event_registrations ADD COLUMN skill_id INTEGER REFERENCES skills(id)");
+    } catch (SQLException ignored) {}
   }
 
   private String readResource(String resourcePath) {

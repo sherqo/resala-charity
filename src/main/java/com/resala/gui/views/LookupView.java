@@ -11,10 +11,8 @@ import com.resala.gui.components.Toast;
 import com.resala.model.EventType;
 import com.resala.model.Skill;
 import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,11 +70,10 @@ public class LookupView extends BaseView {
 
     private static HBox createToolbar() { return Toolbar.of(); }
 
-    @SuppressWarnings("unchecked")
     private static DataTable<Object> createGenericTable() {
-        return (DataTable<Object>) (DataTable<?>) DataTable.<Skill>builder()
-            .column("ID",   60,  (java.util.function.Function<Skill, String>) s -> String.valueOf(s.getId()))
-            .column("Name", 300, Skill::getName)
+        return DataTable.<Object>builder()
+            .column("ID",   60,  row -> row == null ? "" : String.valueOf(idOf(row)))
+            .column("Name", 300, row -> row == null ? "" : nameOf(row))
             .items(FXCollections.observableArrayList())
             .build();
     }
@@ -125,10 +122,8 @@ public class LookupView extends BaseView {
     }
 
     // --------------------------------------------------------------- Rename
-    @SuppressWarnings("unchecked")
     private void showRenameDialog() {
-        Object selected = ((DataTable<Object>) lookupTable).getTableView()
-            .getSelectionModel().getSelectedItem();
+        Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
             appShell.getToast().show(appShell.getStage(),
                 "Select an item first.", Toast.Type.WARNING);
@@ -163,10 +158,8 @@ public class LookupView extends BaseView {
     }
 
     // --------------------------------------------------------------- Delete
-    @SuppressWarnings("unchecked")
     private void deleteSelected() {
-        Object selected = ((DataTable<Object>) lookupTable).getTableView()
-            .getSelectionModel().getSelectedItem();
+        Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
             appShell.getToast().show(appShell.getStage(),
                 "Select an item first.", Toast.Type.WARNING);
@@ -191,25 +184,26 @@ public class LookupView extends BaseView {
 
     // --------------------------------------------------------------- Refresh
     @Override
+    @SuppressWarnings("unchecked")
     public void refresh() {
         List<?> items = switch (currentTable) {
             case SKILLS      -> volunteerController.listSkills();
             case EVENT_TYPES -> eventController.listEventTypes();
         };
         lookupTable.getTableView().setItems(
-            FXCollections.observableArrayList(items));
+            FXCollections.observableArrayList((List<Object>) items));
     }
 
     // ------------------------------------------------- Helpers to unbox rows
-    private int idOf(Object row) {
+    private static int idOf(Object row) {
         if (row instanceof Skill s)     return s.getId();
         if (row instanceof EventType t) return t.getId();
-        throw new IllegalStateException("Unknown row type: " + row.getClass());
+        throw new IllegalStateException("Unknown row type: " + (row == null ? "null" : row.getClass().getName()));
     }
 
-    private String nameOf(Object row) {
+    private static String nameOf(Object row) {
         if (row instanceof Skill s)     return s.getName();
         if (row instanceof EventType t) return t.getName();
-        throw new IllegalStateException("Unknown row type: " + row.getClass());
+        throw new IllegalStateException("Unknown row type: " + (row == null ? "null" : row.getClass().getName()));
     }
 }
