@@ -26,6 +26,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,11 +67,13 @@ public class EventView extends BaseView implements EventObserver {
 
         // Secondary actions
         Button registerBtn = Toolbar.ghost("Register Attendee", e -> showRegisterDialog());
+        Button editBtn = Toolbar.ghost("Edit Event", e -> showEditDialog());
+        Button openBtn = Toolbar.ghost("Open Event", e -> openSelected());
+        Button closeBtn = Toolbar.ghost("Close Event", e -> closeSelected());
         Button reportBtn = Toolbar.ghost("Attendance Report", e -> showAttendanceReport());
-        Button rescheduleBtn = Toolbar.ghost("Reschedule", e -> showRescheduleDialog());
         Button remindBtn = Toolbar.ghost("Send Reminder", e -> showRemindDialog());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
-        toolbar.getChildren().addAll(registerBtn, reportBtn, rescheduleBtn, remindBtn, deleteBtn);
+        toolbar.getChildren().addAll(registerBtn, editBtn, openBtn, closeBtn, reportBtn, remindBtn, deleteBtn);
 
         this.primaryActionButton = Toolbar.primary("Create Event", e -> showCreateEventDialog());
     }
@@ -86,7 +89,7 @@ public class EventView extends BaseView implements EventObserver {
     private static HBox createToolbar() { return Toolbar.of(); }
 
     // -------------------------------------------------------------------------
-    // Dialogs
+    // Dialogs & Actions
     // -------------------------------------------------------------------------
 
     private void showCreateEventDialog() {
@@ -115,12 +118,98 @@ public class EventView extends BaseView implements EventObserver {
 
                 eventController.create(new EventRequest(title, eventTypeId, date, capacity, description));
                 appShell.refreshAll();
-                appShell.getToast().show(appShell.getStage(), "Event created!", Toast.Type.SUCCESS);
+                appShell.getToast().show(appShell.getStage(), "Event created! (Status: DRAFT — use 'Open Event' to start registrations)", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
                     "Error: " + ex.getMessage(), Toast.Type.ERROR);
             }
         });
+    }
+
+    private void showEditDialog() {
+        Event selected = eventsTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select an event first.", Toast.Type.WARNING);
+            return;
+        }
+
+        List<EventType> types = eventController.listEventTypes();
+        String currentTypeOption = selected.getEventTypeId() + ": " + eventTypeNames.getOrDefault(selected.getEventTypeId(), "Type #" + selected.getEventTypeId());
+
+        List<String> typeOptionsList = new ArrayList<>();
+        typeOptionsList.add(currentTypeOption);
+        for (EventType t : types) {
+            String opt = t.getId() + ": " + t.getName();
+            if (!opt.equals(currentTypeOption)) {
+                typeOptionsList.add(opt);
+            }
+        }
+        String[] typeOptions = typeOptionsList.toArray(String[]::new);
+
+        var fields = List.of(
+            new FormDialog.Field("title",       "Title",            FormDialog.Type.TEXT,     true, selected.getTitle()),
+            new FormDialog.Field("eventTypeId", "Event Type",       FormDialog.Type.COMBO,    true, (Object[]) typeOptions),
+            new FormDialog.Field("date",        "Date (YYYY-MM-DD)",FormDialog.Type.DATE,     true, selected.getDate().toString()),
+            new FormDialog.Field("capacity",    "Capacity",         FormDialog.Type.NUMBER,   true, String.valueOf(selected.getCapacity())),
+            new FormDialog.Field("description", "Description",      FormDialog.Type.TEXTAREA, false, selected.getDescription() != null ? selected.getDescription() : "")
+        );
+
+        Optional<java.util.Map<String, Object>> result =
+            FormDialog.show(appShell.getStage(), "Edit " + selected.getTitle(), fields);
+        result.ifPresent(map -> {
+            try {
+                String title        = (String) map.get("title");
+                int    eventTypeId  = Integer.parseInt(((String) map.get("eventTypeId")).split(":")[0].trim());
+                java.time.LocalDate date = java.time.LocalDate.parse((String) map.get("date"));
+                int    capacity     = Integer.parseInt(map.get("capacity").toString());
+                String description  = (String) map.get("description");
+
+                eventController.update(selected.getId(), new EventRequest(title, eventTypeId, date, capacity, description));
+                appShell.refreshAll();
+                appShell.getToast().show(appShell.getStage(), "Event updated!", Toast.Type.SUCCESS);
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(),
+                    "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
+    }
+
+    private void openSelected() {
+        Event selected = eventsTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select an event first.", Toast.Type.WARNING);
+            return;
+        }
+        if (selected.getStatus() == Event.Status.OPEN) {
+            appShell.getToast().show(appShell.getStage(), "Event is already open.", Toast.Type.INFO);
+            return;
+        }
+        try {
+            eventController.open(selected.getId());
+            appShell.refreshAll();
+            appShell.getToast().show(appShell.getStage(), "Event \"" + selected.getTitle() + "\" is now OPEN for registration!", Toast.Type.SUCCESS);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
+    }
+
+    private void closeSelected() {
+        Event selected = eventsTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select an event first.", Toast.Type.WARNING);
+            return;
+        }
+        if (selected.getStatus() == Event.Status.CLOSED) {
+            appShell.getToast().show(appShell.getStage(), "Event is already closed.", Toast.Type.INFO);
+            return;
+        }
+        try {
+            eventController.close(selected.getId());
+            appShell.refreshAll();
+            appShell.getToast().show(appShell.getStage(), "Event \"" + selected.getTitle() + "\" is now CLOSED.", Toast.Type.SUCCESS);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
     }
 
     private void showRegisterDialog() {
@@ -131,7 +220,7 @@ public class EventView extends BaseView implements EventObserver {
         }
         if (selected.getStatus() != Event.Status.OPEN) {
             appShell.getToast().show(appShell.getStage(),
-                "Event is not open for registration.", Toast.Type.WARNING);
+                "Event is not open for registration. Use 'Open Event' first.", Toast.Type.WARNING);
             return;
         }
 
@@ -249,34 +338,6 @@ public class EventView extends BaseView implements EventObserver {
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.getDialogPane().setContent(new TextArea(text));
         dialog.showAndWait();
-    }
-
-    private void showRescheduleDialog() {
-        Event selected = eventsTable.getTableView().getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            appShell.getToast().show(appShell.getStage(), "Select an event first.", Toast.Type.WARNING);
-            return;
-        }
-
-        var fields = List.of(
-            new FormDialog.Field("date", "New Date (YYYY-MM-DD)", FormDialog.Type.DATE, true)
-        );
-
-        Optional<java.util.Map<String, Object>> result =
-            FormDialog.show(appShell.getStage(), "Reschedule " + selected.getTitle(), fields);
-        result.ifPresent(map -> {
-            try {
-                java.time.LocalDate newDate = java.time.LocalDate.parse((String) map.get("date"));
-                eventController.update(selected.getId(), new EventRequest(
-                    selected.getTitle(), selected.getEventTypeId(), newDate,
-                    selected.getCapacity(), selected.getDescription()));
-                appShell.refreshAll();
-                appShell.getToast().show(appShell.getStage(), "Event rescheduled!", Toast.Type.SUCCESS);
-            } catch (Exception ex) {
-                appShell.getToast().show(appShell.getStage(),
-                    "Error: " + ex.getMessage(), Toast.Type.ERROR);
-            }
-        });
     }
 
     private void showRemindDialog() {
