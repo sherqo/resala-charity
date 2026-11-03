@@ -26,21 +26,20 @@ public class DonorView extends BaseView {
     private final AppShell appShell;
     private final DonationController donationController;
 
-    private DataTable<Donor> donorsTable;
+    private final DataTable<Donor> donorsTable;
 
+    @SuppressWarnings("unchecked")
     public DonorView(AppShell appShell, DonationController donationController) {
         super(createToolbar(), createDonorsTable());
 
         this.appShell = appShell;
         this.donationController = donationController;
+        this.donorsTable = (DataTable<Donor>) this.table;
 
-        this.donorsTable = (DataTable<Donor>) getTableView().getProperties().get("dataTable");
-        if (this.donorsTable == null) {
-            this.donorsTable = createDonorsTable();
-            getTableView().getProperties().put("dataTable", this.donorsTable);
-        }
+        Button deleteBtn = Toolbar.ghost("Archive Donor", e -> deleteSelected());
+        toolbar.getChildren().add(deleteBtn);
 
-        this.primaryActionButton = Toolbar.primary("+ Add Donor", e -> showAddDonorDialog());
+        this.primaryActionButton = Toolbar.primary("Add Donor", e -> showAddDonorDialog());
     }
 
     private Button primaryActionButton;
@@ -91,7 +90,7 @@ public class DonorView extends BaseView {
                 donor.setActive(true);
 
                 donationController.saveDonor(donor);
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Donor added successfully!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -119,7 +118,7 @@ public class DonorView extends BaseView {
         if (appShell.getConfirmDialog().ask(appShell.getStage(),
                 "Delete donor '" + selected.getName() + "'?")) {
             donationController.archiveDonor(selected.getId());
-            refresh();
+            appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(), "Donor archived.", Toast.Type.SUCCESS);
         }
     }

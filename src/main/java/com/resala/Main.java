@@ -1,5 +1,8 @@
 package com.resala;
 
+import com.resala.beneficiary.BeneficiaryRepository;
+import com.resala.beneficiary.BeneficiaryService;
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.controller.PaymentController;
@@ -17,6 +20,7 @@ import com.resala.notification.Notifier;
 import com.resala.notification.ThankYouNotificationObserver;
 import com.resala.payment.FakePaymentGatewayAdapter;
 import com.resala.payment.FakePaymentProvider;
+import com.resala.persistence.sqlite.SqliteBeneficiaryRepository;
 import com.resala.payment.PaymentService;
 import com.resala.persistence.sqlite.SqliteDonationRepository;
 import com.resala.persistence.sqlite.SqliteDonorRepository;
@@ -68,16 +72,23 @@ public class Main {
     EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
     EventController eventController = new EventController(eventService, eventTypeService);
 
+    // ── Beneficiary module ──────────────────────────────────────────────
+    BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
+    BeneficiaryService beneficiaryService = new BeneficiaryService(beneficiaryRepo);
+    BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
+    
+    // ── Top-level module menu ──────────────────────────────────────────────
     // Volunteer module
     VolunteerService volunteerService = new VolunteerService(
       new SqliteVolunteerRepository(conn),
-      new SqliteEventRepository(conn)
+      new SqliteEventRepository(conn),
+      eventRegistrationRepo
     );
     VolunteerController volunteerController = new VolunteerController(volunteerService);
 
     // Top-level module menu
-    UiFactory uiFactory = new ConsoleUiFactory();
     Scanner input = new Scanner(System.in);
+    UiFactory uiFactory = new ConsoleUiFactory(input);
     boolean running = true;
     System.out.println("Welcome to Resala Charity System");
 
@@ -87,7 +98,8 @@ public class Main {
       System.out.println("========================================");
       System.out.println("1) Donation Management");
       System.out.println("2) Event Management");
-      System.out.println("3) Volunteer Management");
+      System.out.println("3) Beneficiary Management");
+      System.out.println("4) Volunteer Management");
       System.out.println("0) Exit");
       System.out.println("========================================");
       System.out.print("Choose a module: ");
@@ -96,7 +108,8 @@ public class Main {
       switch (choice) {
         case "1" -> uiFactory.createDonationView(donationController, paymentController).start();
         case "2" -> uiFactory.createEventView(eventController).start();
-        case "3" -> uiFactory.createVolunteerView(volunteerController).start();
+        case "3" -> uiFactory.createBeneficiaryView(beneficiaryController).start();
+        case "4" -> uiFactory.createVolunteerView(volunteerController).start();
         case "0" -> {
           System.out.println("Goodbye.");
           running = false;

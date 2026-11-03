@@ -9,6 +9,8 @@ import com.resala.payment.PaymentRepository;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 // business logic
 public class DonationService implements DonationSubject {
@@ -43,6 +45,7 @@ public class DonationService implements DonationSubject {
     if (request.type() == DonationType.ONLINE) {
       requireCompletedPayment(request);
     }
+    checkDuplicateReference(request);
     Donation donation = new DonationFactory().create(request);
     donations.save(donation);
     notifyObservers(donation, donor);
@@ -57,9 +60,24 @@ public class DonationService implements DonationSubject {
       throw new IllegalArgumentException("recordConfirmed is only for paid online donations");
     }
     requireCompletedPayment(request);
+    checkDuplicateReference(request);
     Donation donation = new DonationFactory().create(request);
     donations.save(donation);
     return donation;
+  }
+
+  /**
+   * Rejects a donation if another donation already uses the same reference number.
+   * Reference numbers must be unique across all donations.
+   */
+  private void checkDuplicateReference(DonationRequest request) {
+    String reference = request.referenceNumber();
+    if (reference == null || reference.isBlank()) return;
+    Optional<Donation> existing = donations.findByReferenceNumber(reference);
+    if (existing.isPresent()) {
+      throw new IllegalArgumentException(
+        "Reference number " + reference + " is already used by donation #" + existing.get().getId());
+    }
   }
 
   /**
@@ -113,6 +131,45 @@ public class DonationService implements DonationSubject {
 
   public void archiveDonor(long id) {
     donors.archive(id);
+  }
+
+  /**
+   * Updates an existing donation. Only PENDING or COMPLETED donations can be edited.
+   * For online donations, re-validates the payment if the amount changed.
+   */
+  public Donation updateDonation(DonationRequest request, long donationId) {
+    Donation existing = getDonation(donationId);
+    if (existing.getStatus() != DonationStatus.PENDING
+        && existing.getStatus() != DonationStatus.COMPLETED) {
+      throw new IllegalStateException(
+        "Cannot edit donation #" + donationId + " in status " + existing.getStatus());
+    }
+    boolean amountChanged =
+      request.type() == DonationType.ONLINE
+      && !Objects.equals(request.amountMinor(), existing.getAmountMinor());
+    if (amountChanged) {
+      requireCompletedPayment(request);
+    }
+    return donations.update(request, donationId);
+  }
+
+  /**
+   * Deletes a donation. Rejects if a completed payment references this donation
+   * (to avoid orphaning a settled transaction).
+   */
+  public void deleteDonation(long id) {
+    Donation donation = getDonation(id);
+    if (payments != null) {
+      for (Payment payment : payments.findAll()) {
+        if ("DONATION".equals(payment.getReferenceType())
+            && payment.getReferenceId() != null
+            && payment.getReferenceId() == id) {
+          throw new IllegalStateException(
+            "Cannot delete donation #" + id + ": payment #" + payment.getId() + " references it");
+        }
+      }
+    }
+    donations.delete(id);
   }
 
   public String receipt(long donationId) {

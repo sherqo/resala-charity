@@ -93,13 +93,27 @@ public class SqlitePaymentRepository implements PaymentRepository {
     }
   }
 
+  @Override
+  public List<Payment> findAll() {
+    try (PreparedStatement ps = connection.prepareStatement(
+        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id ORDER BY p.id DESC")) {
+      try (ResultSet rs = ps.executeQuery()) {
+        List<Payment> payments = new ArrayList<>();
+        while (rs.next()) payments.add(map(rs));
+        return payments;
+      }
+    } catch (SQLException e) {
+      throw new IllegalStateException("Could not list all payments", e);
+    }
+  }
+
   private Payment insert(Payment payment) throws SQLException {
     try (PreparedStatement ps = connection.prepareStatement(
         """
-        INSERT INTO payments (payer_type, payer_id, amount_minor, currency, payment_method_id,
+        INSERT INTO payments (payer_type, payer_id, amount_minor, fee_minor, currency, payment_method_id,
           status, idempotency_key, failure_code, failure_message, notes, reference_type, reference_id,
           created_at, updated_at, paid_at)
-        VALUES (?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         Statement.RETURN_GENERATED_KEYS)) {
       bindInsert(ps, payment);
@@ -115,7 +129,7 @@ public class SqlitePaymentRepository implements PaymentRepository {
   private void update(Payment payment) throws SQLException {
     try (PreparedStatement ps = connection.prepareStatement(
         """
-        UPDATE payments SET payer_type=?, payer_id=?, amount_minor=?, currency=?, payment_method_id=(SELECT id FROM payment_methods WHERE name=?),
+        UPDATE payments SET payer_type=?, payer_id=?, amount_minor=?, fee_minor=?, currency=?, payment_method_id=(SELECT id FROM payment_methods WHERE name=?),
           status=?, idempotency_key=?, failure_code=?, failure_message=?, notes=?,
           reference_type=?, reference_id=?, created_at=?, updated_at=?, paid_at=?
         WHERE id=?
@@ -124,6 +138,7 @@ public class SqlitePaymentRepository implements PaymentRepository {
       ps.setString(i++, payment.getPayerType());
       ps.setLong(i++, payment.getPayerId());
       ps.setLong(i++, payment.getAmountMinor());
+      ps.setLong(i++, payment.getFeeMinor());
       ps.setString(i++, payment.getCurrency());
       ps.setString(i++, payment.getPaymentMethod().code());
       ps.setString(i++, payment.getStatus().name());
@@ -150,6 +165,7 @@ public class SqlitePaymentRepository implements PaymentRepository {
     ps.setString(i++, payment.getPayerType());
     ps.setLong(i++, payment.getPayerId());
     ps.setLong(i++, payment.getAmountMinor());
+    ps.setLong(i++, payment.getFeeMinor());
     ps.setString(i++, payment.getCurrency());
     ps.setString(i++, payment.getPaymentMethod().code());
     ps.setString(i++, payment.getStatus().name());
@@ -177,6 +193,7 @@ public class SqlitePaymentRepository implements PaymentRepository {
         nullableLong(rs, "reference_id"),
         rs.getString("reference_type"),
         rs.getLong("amount_minor"),
+        rs.getLong("fee_minor"),
         rs.getString("currency"),
         rs.getString("method_name"),
         rs.getString("idempotency_key"),

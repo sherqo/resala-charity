@@ -62,36 +62,57 @@ class ConfigManager {
     +get(String key) String
 }
 
-%% ===================== FACTORY + DECORATOR (P2, Phase 1) =====================
+%% ===================== FACTORY + DECORATOR (Phase 1) =====================
 class Donation {
-    <<interface>>
-    +getAmount() double
-    +getDescription() String
-    +getDonor() Donor
+    <<abstract>>
+    -long id
+    -long donorId
+    -DonationType type
+    -java.time.LocalDate donationDate
+    -String notes
+    -String referenceNumber
+    -String status
+    +getId() long
+    +getDonorId() long
+    +getType() DonationType
+    +getDonationDate() LocalDate
+    +getNotes() String
+    +getReferenceNumber() String
+    +setReferenceNumber(String)
+    +getStatus() String
+    +getAmountMinor() long
+    +getItemDescription() String
+    +getQuantity() Integer
+    +getEstimatedValueMinor() Long
 }
 class OnlineDonation
 class CheckDonation
 class InKindDonation
 class DonationFactory {
-    +create(String type, double amount, Donor d)$ Donation
+    +create(DonationRequest) Donation
 }
-class DonationDecorator {
+class Receipt {
+    <<interface>>
+    +render() String
+}
+class BasicReceipt
+class ReceiptDecorator {
     <<abstract>>
-    #Donation wrapped
-    +getAmount() double
-    +getDescription() String
+    #Receipt wrapped
+    +render() String
 }
 class TaxReceiptDecorator
-class ThankYouDecorator
+class ThankYouReceiptDecorator
 
 Donation <|.. OnlineDonation
 Donation <|.. CheckDonation
 Donation <|.. InKindDonation
-Donation <|.. DonationDecorator
-DonationDecorator o-- Donation : wraps
-DonationDecorator <|-- TaxReceiptDecorator
-DonationDecorator <|-- ThankYouDecorator
 DonationFactory ..> Donation : creates
+Receipt <|.. BasicReceipt
+Receipt <|.. ReceiptDecorator
+ReceiptDecorator o-- Receipt : wraps
+ReceiptDecorator <|-- TaxReceiptDecorator
+ReceiptDecorator <|-- ThankYouReceiptDecorator
 
 %% ===================== ADAPTER (P2, Phase 2) =====================
 class PaymentProcessor {

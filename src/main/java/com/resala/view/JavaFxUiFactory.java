@@ -1,5 +1,6 @@
 package com.resala.view;
 
+import com.resala.controller.BeneficiaryController;
 import com.resala.controller.DonationController;
 import com.resala.controller.EventController;
 import com.resala.controller.PaymentController;
@@ -51,6 +52,11 @@ public class JavaFxUiFactory implements UiFactory {
         return new GuiVolunteerView(controller);
     }
 
+    @Override
+    public BeneficiaryView createBeneficiaryView(BeneficiaryController controller) {
+        return new GuiBeneficiaryView(controller);
+    }
+
     // JavaFX-specific view wrappers that implement the console view interfaces
     // These are thin adapters - the real views are in AppShell
 
@@ -86,6 +92,19 @@ public class JavaFxUiFactory implements UiFactory {
         private final VolunteerController controller;
 
         GuiVolunteerView(VolunteerController controller) {
+            this.controller = controller;
+        }
+
+        @Override
+        public void start() {
+            // Not used in JavaFX
+        }
+    }
+
+    private static class GuiBeneficiaryView implements BeneficiaryView {
+        private final BeneficiaryController controller;
+
+        GuiBeneficiaryView(BeneficiaryController controller) {
             this.controller = controller;
         }
 

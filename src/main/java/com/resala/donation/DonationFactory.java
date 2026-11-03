@@ -1,14 +1,23 @@
 package com.resala.donation;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 // Factory Method creator
 public class DonationFactory {
 
+  private static final int MIN_DONATION_YEAR = 2000;
+
   public Donation create(DonationRequest request) {
     Objects.requireNonNull(request, "Donation details are required");
     if (request.donorId() <= 0) throw new IllegalArgumentException("Choose a donor");
     if (request.donationDate() == null) throw new IllegalArgumentException("Donation date is required");
+    if (request.donationDate().isAfter(LocalDate.now())) {
+      throw new IllegalArgumentException("Donation date cannot be in the future");
+    }
+    if (request.donationDate().getYear() < MIN_DONATION_YEAR) {
+      throw new IllegalArgumentException("Donation date must be " + MIN_DONATION_YEAR + " or later");
+    }
     if (request.type() == null) throw new IllegalArgumentException("Choose a donation type");
 
     return switch (request.type()) {

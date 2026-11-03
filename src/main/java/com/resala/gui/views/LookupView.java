@@ -11,10 +11,8 @@ import com.resala.gui.components.Toast;
 import com.resala.model.EventType;
 import com.resala.model.Skill;
 import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,14 +55,13 @@ public class LookupView extends BaseView {
         this.appShell            = appShell;
         this.volunteerController = volunteerController;
         this.eventController     = eventController;
+        this.lookupTable         = (DataTable<Object>) this.table;
 
-        this.lookupTable = (DataTable<Object>) getTableView().getProperties().get("dataTable");
-        if (this.lookupTable == null) {
-            this.lookupTable = createGenericTable();
-            getTableView().getProperties().put("dataTable", this.lookupTable);
-        }
+        Button renameBtn = Toolbar.ghost("Rename", e -> showRenameDialog());
+        Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
+        toolbar.getChildren().addAll(renameBtn, deleteBtn);
 
-        this.primaryActionButton = Toolbar.primary("+ Add", e -> showAddDialog());
+        this.primaryActionButton = Toolbar.primary("Add", e -> showAddDialog());
         buildTableSelector();
     }
 
@@ -73,11 +70,10 @@ public class LookupView extends BaseView {
 
     private static HBox createToolbar() { return Toolbar.of(); }
 
-    @SuppressWarnings("unchecked")
     private static DataTable<Object> createGenericTable() {
-        return (DataTable<Object>) (DataTable<?>) DataTable.<Skill>builder()
-            .column("ID",   60,  (java.util.function.Function<Skill, String>) s -> String.valueOf(s.getId()))
-            .column("Name", 300, Skill::getName)
+        return DataTable.<Object>builder()
+            .column("ID",   60,  row -> row == null ? "" : String.valueOf(idOf(row)))
+            .column("Name", 300, row -> row == null ? "" : nameOf(row))
             .items(FXCollections.observableArrayList())
             .build();
     }
@@ -86,7 +82,6 @@ public class LookupView extends BaseView {
         tableSelector = new ComboBox<>();
         for (LookupTable t : LookupTable.values()) tableSelector.getItems().add(t.label);
         tableSelector.getSelectionModel().selectFirst();
-        tableSelector.getStyleClass().add("input");
         tableSelector.setPrefWidth(200);
 
         tableSelector.getSelectionModel().selectedItemProperty().addListener((obs, old, nw) -> {
@@ -117,7 +112,7 @@ public class LookupView extends BaseView {
                     case SKILLS      -> volunteerController.createSkill(name);
                     case EVENT_TYPES -> eventController.createEventType(name);
                 }
-                refresh();
+                appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Added!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(),
@@ -127,10 +122,8 @@ public class LookupView extends BaseView {
     }
 
     // --------------------------------------------------------------- Rename
-    @SuppressWarnings("unchecked")
     private void showRenameDialog() {
-        Object selected = ((DataTable<Object>) lookupTable).getTableView()
-            .getSelectionModel().getSelectedItem();
+        Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
             appShell.getToast().show(appShell.getStage(),
                 "Select an item first.", Toast.Type.WARNING);
@@ -152,7 +145,7 @@ public class LookupView extends BaseView {
                         "Rename not supported for Skills yet.", Toast.Type.INFO);
                     case EVENT_TYPES -> {
                         eventController.renameEventType(idOf(selected), newName);
-                        refresh();
+                        appShell.refreshAll();
                         appShell.getToast().show(appShell.getStage(),
                             "Renamed to \"" + newName + "\".", Toast.Type.SUCCESS);
                     }
@@ -165,10 +158,8 @@ public class LookupView extends BaseView {
     }
 
     // --------------------------------------------------------------- Delete
-    @SuppressWarnings("unchecked")
     private void deleteSelected() {
-        Object selected = ((DataTable<Object>) lookupTable).getTableView()
-            .getSelectionModel().getSelectedItem();
+        Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
             appShell.getToast().show(appShell.getStage(),
                 "Select an item first.", Toast.Type.WARNING);
@@ -183,7 +174,7 @@ public class LookupView extends BaseView {
                 case SKILLS      -> volunteerController.deleteSkill(idOf(selected));
                 case EVENT_TYPES -> eventController.deleteEventType(idOf(selected));
             }
-            refresh();
+            appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(), "Deleted.", Toast.Type.SUCCESS);
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(),
@@ -193,25 +184,26 @@ public class LookupView extends BaseView {
 
     // --------------------------------------------------------------- Refresh
     @Override
+    @SuppressWarnings("unchecked")
     public void refresh() {
         List<?> items = switch (currentTable) {
             case SKILLS      -> volunteerController.listSkills();
             case EVENT_TYPES -> eventController.listEventTypes();
         };
         lookupTable.getTableView().setItems(
-            FXCollections.observableArrayList(items));
+            FXCollections.observableArrayList((List<Object>) items));
     }
 
     // ------------------------------------------------- Helpers to unbox rows
-    private int idOf(Object row) {
+    private static int idOf(Object row) {
         if (row instanceof Skill s)     return s.getId();
         if (row instanceof EventType t) return t.getId();
-        throw new IllegalStateException("Unknown row type: " + row.getClass());
+        throw new IllegalStateException("Unknown row type: " + (row == null ? "null" : row.getClass().getName()));
     }
 
-    private String nameOf(Object row) {
+    private static String nameOf(Object row) {
         if (row instanceof Skill s)     return s.getName();
         if (row instanceof EventType t) return t.getName();
-        throw new IllegalStateException("Unknown row type: " + row.getClass());
+        throw new IllegalStateException("Unknown row type: " + (row == null ? "null" : row.getClass().getName()));
     }
 }

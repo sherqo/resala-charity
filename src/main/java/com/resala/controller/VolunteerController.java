@@ -1,5 +1,6 @@
 package com.resala.controller;
 
+import com.resala.event.EventRegistration;
 import com.resala.model.Event;
 import com.resala.model.Skill;
 import com.resala.model.Volunteer;
@@ -7,6 +8,7 @@ import com.resala.model.VolunteerEventAssignment;
 import com.resala.volunteer.VolunteerService;
 import com.resala.volunteer.helpers.VolunteerSummary;
 import java.util.List;
+import java.util.Optional;
 
 public class VolunteerController {
 
@@ -80,8 +82,17 @@ public class VolunteerController {
     return service.listEvents();
   }
 
+  /** Returns only OPEN events — the ones a volunteer can register for. */
+  public List<Event> listOpenEvents() {
+    return service.listOpenEvents();
+  }
+
   public VolunteerEventAssignment assign(int volunteerId, int eventId, int skillId) {
     return service.assign(volunteerId, eventId, skillId);
+  }
+
+  public Optional<EventRegistration> getEventRegistration(int volunteerId, long eventId) {
+    return service.getEventRegistration(volunteerId, eventId);
   }
 
   public List<VolunteerEventAssignment> listAssignments(int volunteerId) {

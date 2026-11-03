@@ -18,10 +18,15 @@ public class FakePaymentProvider {
 
   public List<PaymentMethod> availableMethods() { return availableMethods; }
 
-  public ProviderTxn makePayment(String idempotencyKey, long cents, PaymentMethod method, String currency)
-      throws ProviderException {
+  public ProviderTxn makePayment(String idempotencyKey, long cents, PaymentMethod method, String currency,
+                                 String token) throws ProviderException {
     if (latencyMillis > 0) {
       try { Thread.sleep(latencyMillis); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+
+    // A real gateway refuses card/wallet charges that arrive without a token.
+    if (method.requiresToken() && (token == null || token.isBlank())) {
+      return new ProviderTxn("FAKE-REJECT", "05", "Missing payment token", cents, currency);
     }
 
     ProviderTxn existing = byKey.get(idempotencyKey);
@@ -35,8 +40,8 @@ public class FakePaymentProvider {
     else if (tail == 7) { throw new ProviderException(ProviderError.NETWORK); }
     else { code = "00"; message = "Approved"; }
 
-    String refPrefix = "CASH".equals(method.code()) ? "FAKE-CASH" : "FAKE-TXN";
-    ProviderTxn txn = new ProviderTxn(refPrefix + "-" + sequence.incrementAndGet(), code, message, cents, currency);
+    ProviderTxn txn = new ProviderTxn("FAKE-" + method.code() + "-" + sequence.incrementAndGet(),
+        code, message, cents, currency);
     byKey.put(idempotencyKey, txn);
     return txn;
   }

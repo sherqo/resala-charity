@@ -281,11 +281,12 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
   private void viewRegistrationsFor(long eventId) {
     List<EventRegistration> regs = controller.getRegistrations(eventId);
     if (regs.isEmpty()) { System.out.println("No registrations found."); return; }
-    System.out.println("ID  | Ticket   | Checked-in | Name");
+    System.out.println("ID  | Ticket   | Checked-in | Type      | Name");
     System.out.println(LINE);
     for (EventRegistration r : regs) {
-      System.out.printf("%-3d | %-8s | %-10s | %s%n",
-        r.getId(), r.getTicketRef(), r.isCheckedIn() ? "Yes" : "No", r.getAttendeeName());
+      String type = r.isVolunteer() ? "Volunteer" : "Attendee";
+      System.out.printf("%-3d | %-8s | %-10s | %-9s | %s%n",
+        r.getId(), r.getTicketRef(), r.isCheckedIn() ? "Yes" : "No", type, r.getAttendeeName());
     }
   }
 }

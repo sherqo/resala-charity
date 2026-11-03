@@ -269,17 +269,20 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     printVolunteers(controller.listVolunteers());
     int volunteerId = readInt("Volunteer ID: ");
 
-    printEvents(controller.listEvents());
+    printEvents(controller.listOpenEvents());
     int eventId = readInt("Event ID: ");
 
     printSkills(controller.listSkills());
     int skillId = readInt("Skill the volunteer will use: ");
 
     VolunteerEventAssignment assignment = controller.assign(volunteerId, eventId, skillId);
+    java.util.Optional<com.resala.event.EventRegistration> reg = controller.getEventRegistration(volunteerId, eventId);
+    String ticket = reg.map(r -> " | Ticket: " + r.getTicketRef()).orElse("");
     printSuccess(
       "Assigned. Assignment ID: #" + assignment.getId() +
       " | " + assignment.getEventTitle() +
-      " | " + assignment.getWorkDate()
+      " | " + assignment.getWorkDate() +
+      ticket
     );
   }
 

@@ -14,6 +14,9 @@ import com.resala.gui.components.Toolbar;
 import com.resala.model.Donor;
 import com.resala.model.Event;
 import com.resala.model.Volunteer;
+import com.resala.notification.DonationObserver;
+import com.resala.notification.EventObserver;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -27,8 +30,9 @@ import java.util.List;
 
 /**
  * Dashboard view showing stats, recent donations, and activity feed.
+ * Implements DonationObserver and EventObserver for real-time frontend updates.
  */
-public class DashboardView extends BaseView {
+public class DashboardView extends BaseView implements DonationObserver, EventObserver {
 
     private final AppShell appShell;
     private final DonationController donationController;
@@ -42,11 +46,12 @@ public class DashboardView extends BaseView {
     private final VBox totalEventsCard;
     private final VBox upcomingEventsCard;
 
-    private DataTable<Donation> recentDonationsTable;
+    private final DataTable<Donation> recentDonationsTable;
     private final ListView<String> feedList;
 
     private Button primaryActionButton;
 
+    @SuppressWarnings("unchecked")
     public DashboardView(AppShell appShell,
                          DonationController donationController,
                          EventController eventController,
@@ -57,34 +62,38 @@ public class DashboardView extends BaseView {
         this.donationController = donationController;
         this.eventController = eventController;
         this.volunteerController = volunteerController;
+        this.recentDonationsTable = (DataTable<Donation>) this.table;
 
-        // Capture the table reference
-        this.recentDonationsTable = (DataTable<Donation>) getTableView().getProperties().get("dataTable");
-        if (this.recentDonationsTable == null) {
-            this.recentDonationsTable = createRecentDonationsTable();
-            getTableView().getProperties().put("dataTable", this.recentDonationsTable);
-        }
+        // Create stat cards (neutral Notion aesthetic)
+        this.totalDonationsCard = StatCard.of("Total Donations", "0");
+        this.totalDonorsCard = StatCard.of("Total Donors", "0");
+        this.totalVolunteersCard = StatCard.of("Total Volunteers", "0");
+        this.totalEventsCard = StatCard.of("Total Events", "0");
+        this.upcomingEventsCard = StatCard.of("Upcoming Events", "0");
 
-        // Create stat cards
-        this.totalDonationsCard = StatCard.of("Total Donations", "0", javafx.scene.paint.Color.web("#3F3D99"));
-        this.totalDonorsCard = StatCard.of("Total Donors", "0", javafx.scene.paint.Color.web("#14B8A6"));
-        this.totalVolunteersCard = StatCard.of("Total Volunteers", "0", javafx.scene.paint.Color.web("#F59E0B"));
-        this.totalEventsCard = StatCard.of("Total Events", "0", javafx.scene.paint.Color.web("#E11D48"));
-        this.upcomingEventsCard = StatCard.of("Upcoming Events", "0", javafx.scene.paint.Color.web("#6366F1"));
-
-        // Feed list (bound to appShell's feed)
-        this.feedList = new ListView<>();
+        // Feed list (connected to shared feed in appShell)
+        this.feedList = appShell.getFeedList();
         feedList.getStyleClass().add("feed-list-view");
-        feedList.setPrefHeight(200);
+        feedList.setPrefHeight(180);
 
         // Build layout
         buildLayout();
 
         // Primary action button for header
-        this.primaryActionButton = Toolbar.primary("+ Add Donation", e -> appShell.showView("Donations"));
+        this.primaryActionButton = Toolbar.primary("Add Donation", e -> appShell.showView("Donations"));
 
         // Initial refresh
         refresh();
+    }
+
+    @Override
+    public void onDonationRecorded(Donation donation, Donor donor) {
+        Platform.runLater(this::refresh);
+    }
+
+    @Override
+    public void onEventUpdated(Event event, String message) {
+        Platform.runLater(this::refresh);
     }
 
     @Override
@@ -136,7 +145,8 @@ public class DashboardView extends BaseView {
         content.setPadding(new Insets(0, 0, 24, 0));
         content.getChildren().addAll(statGrid, recentSection, feedSection);
 
-        getChildren().add(1, content);
+        getChildren().clear();
+        getChildren().add(content);
     }
 
     @Override

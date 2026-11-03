@@ -3,7 +3,7 @@ package com.resala.donation;
 import com.resala.model.DonationType;
 import java.time.LocalDate;
 
-// Factory
+// abstract product — DonationFactory is the Creator
 public abstract class Donation {
 
   private long id;
@@ -12,13 +12,20 @@ public abstract class Donation {
   private final LocalDate donationDate;
   private final String notes;
   private String referenceNumber;
+  private DonationStatus status;
 
   protected Donation(long donorId, DonationType type, LocalDate donationDate, String referenceNumber, String notes) {
+    this(donorId, type, donationDate, referenceNumber, notes, DonationStatus.COMPLETED);
+  }
+
+  protected Donation(long donorId, DonationType type, LocalDate donationDate, String referenceNumber, String notes,
+                     DonationStatus status) {
     this.donorId = donorId;
     this.type = type;
     this.donationDate = donationDate;
     this.referenceNumber = referenceNumber;
     this.notes = notes;
+    this.status = status;
   }
 
   public long getId() {
@@ -47,6 +54,14 @@ public abstract class Donation {
 
   public void setReferenceNumber(String referenceNumber) {
     this.referenceNumber = referenceNumber;
+  }
+
+  public DonationStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(DonationStatus status) {
+    this.status = status;
   }
 
   public String getNotes() {

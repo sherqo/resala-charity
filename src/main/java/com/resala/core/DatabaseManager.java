@@ -37,6 +37,7 @@ public class DatabaseManager {
       }
 
       runScript("/schema.sql");
+      migrate(connection);
     } catch (SQLException e) {
       throw new IllegalStateException("Failed to open database: " + url, e);
     }
@@ -76,6 +77,30 @@ public class DatabaseManager {
         throw new IllegalStateException("Failed to run " + resourcePath + " -> " + statement, e);
       }
     }
+  }
+
+  /** Best-effort migration for columns added after the initial schema. */
+  private void migrate(Connection connection) {
+    try (Statement st = connection.createStatement()) {
+      st.execute("""
+        CREATE TABLE IF NOT EXISTS donation_types (
+            id    INTEGER PRIMARY KEY AUTOINCREMENT,
+            name  TEXT NOT NULL UNIQUE,
+            code  TEXT NOT NULL UNIQUE CHECK (code IN ('ONLINE','CHECK','IN_KIND'))
+        )
+        """);
+      st.execute("ALTER TABLE payments ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0");
+    } catch (SQLException ignored) {
+      // Column already exists on fresh databases.
+    }
+
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE event_registrations ADD COLUMN volunteer_id INTEGER REFERENCES volunteers(id)");
+    } catch (SQLException ignored) {}
+
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE event_registrations ADD COLUMN skill_id INTEGER REFERENCES skills(id)");
+    } catch (SQLException ignored) {}
   }
 
   private String readResource(String resourcePath) {

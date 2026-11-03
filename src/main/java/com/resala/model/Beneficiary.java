@@ -16,6 +16,7 @@ public class Beneficiary {
   private int needTypeId; // the id of the need they need
   private Status status;
   private String notes;
+  private int impactScore; // 0-10 impact score assigned to this beneficiary
 
   // constructors
   public Beneficiary() {}
@@ -29,6 +30,19 @@ public class Beneficiary {
     Status status,
     String notes
   ) {
+    this(id, name, phone, householdSize, needTypeId, status, notes, 0);
+  }
+
+  public Beneficiary(
+    long id,
+    String name,
+    String phone,
+    int householdSize,
+    int needTypeId,
+    Status status,
+    String notes,
+    int impactScore
+  ) {
     this.id = id;
     this.name = name;
     this.phone = phone;
@@ -36,6 +50,7 @@ public class Beneficiary {
     this.needTypeId = needTypeId;
     this.status = status;
     this.notes = notes;
+    this.impactScore = impactScore;
   }
 
   // getters and setters
@@ -93,5 +108,13 @@ public class Beneficiary {
 
   public void setNotes(String notes) {
     this.notes = notes;
+  }
+
+  public int getImpactScore() {
+    return impactScore;
+  }
+
+  public void setImpactScore(int impactScore) {
+    this.impactScore = impactScore;
   }
 }
