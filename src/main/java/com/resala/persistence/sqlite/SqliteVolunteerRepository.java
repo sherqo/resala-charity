@@ -81,11 +81,6 @@ public class SqliteVolunteerRepository extends JdbcRepository implements Volunte
   }
 
   @Override
-  public List<Volunteer> findAvailable() {
-    return query("SELECT * FROM volunteers WHERE available=1 ORDER BY name", VOLUNTEER_MAPPER);
-  }
-
-  @Override
   public List<Volunteer> findBySkill(int skillId) {
     return query(
       "SELECT DISTINCT v.* FROM volunteers v JOIN volunteer_skills vs ON vs.volunteer_id = v.id WHERE vs.skill_id = ? ORDER BY v.name",
@@ -194,6 +189,15 @@ public class SqliteVolunteerRepository extends JdbcRepository implements Volunte
     List<Integer> rows = query("SELECT 1 FROM volunteer_hours WHERE volunteer_id=? AND event_id=?",
       rs -> rs.getInt(1), volunteerId, eventId);
     return !rows.isEmpty();
+  }
+
+  @Override
+  public int creditEventHours(int eventId, int hours) {
+    if (hours <= 0) return 0;
+    return execute(
+      "UPDATE volunteer_hours SET hours=? WHERE event_id=? AND hours<?",
+      hours, eventId, hours
+    );
   }
 
   private Volunteer insertVolunteer(Volunteer volunteer) throws java.sql.SQLException {

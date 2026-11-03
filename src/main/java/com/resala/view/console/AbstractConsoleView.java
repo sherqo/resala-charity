@@ -2,10 +2,6 @@ package com.resala.view.console;
 
 import java.util.Scanner;
 
-/**
- * Shared I/O helpers for all console views.
- * Every ConsoleXxxView extends this class; no view duplicates these utilities.
- */
 public abstract class AbstractConsoleView {
 
   protected static final String LINE = "----------------------------------------";
@@ -45,10 +41,6 @@ public abstract class AbstractConsoleView {
     return Integer.parseInt(requiredLine(prompt));
   }
 
-  /**
-   * Prompts showing the current value in parentheses.
-   * If the user presses Enter, the current value is kept.
-   */
   protected String value(String label, String current) {
     String suffix = current == null ? "" : " (current: " + current + ")";
     System.out.print(label + suffix + ": ");

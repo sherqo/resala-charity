@@ -25,11 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Main application shell - replaces MainShell.
- * Owns the stage, sidebar navigation, header bar, content area (StackPane), and status bar.
- * Constructs all views once at startup and switches visibility.
- */
 public class AppShell {
 
     private final Stage stage;
@@ -306,9 +301,6 @@ public class AppShell {
         views.put("Audit Log", new AuditLogView(this));
     }
 
-    /**
-     * Refreshes all active views across the application instantly on the JavaFX thread.
-     */
     public void refreshAll() {
         javafx.application.Platform.runLater(() -> {
             for (BaseView view : views.values()) {
@@ -381,9 +373,6 @@ public class AppShell {
         }
     }
 
-    /**
-     * Header bar shown at top of content area.
-     */
     public static class HeaderBar extends HBox {
         private final Label title = new Label();
         private final Label subtitle = new Label();

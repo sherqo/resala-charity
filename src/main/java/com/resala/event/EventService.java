@@ -7,20 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Business logic for the event module.
- * Implements EventSubject so that observers (such as EventNotificationObserver)
- * receive notifications when event details change or status transitions occur.
- *
- * Lifecycle rules:
- *   DRAFT → OPEN   (via open)   — allows registrations
- *   OPEN  → CLOSED (via close)  — stops registrations
- *   Events in any status can have their date, title, or capacity updated
- *   (capacity cannot be reduced below already-registered attendee count).
- *
- * All business-rule violations are reported as {@link EventException} so that
- * callers can distinguish them from unexpected runtime failures.
- */
 public class EventService implements EventSubject {
 
   private final EventRepository events;
@@ -60,6 +46,7 @@ public class EventService implements EventSubject {
         request.eventTypeId(),
         request.date(),
         request.capacity(),
+        request.hours(),
         Event.Status.DRAFT,
         request.description()
       ));
@@ -68,12 +55,6 @@ public class EventService implements EventSubject {
     }
   }
 
-  /**
-   * Updates an event (DRAFT, OPEN, or CLOSED).
-   * Supports changing date (e.g. rescheduling) or increasing capacity.
-   * Ensures capacity cannot be reduced below current registrations.
-   * Registered attendees are notified of any updates via the Observer pattern.
-   */
   public Event update(long id, EventRequest request) {
     Event event = getEvent(id);
     validate(request);
@@ -91,6 +72,7 @@ public class EventService implements EventSubject {
     event.setEventTypeId(request.eventTypeId());
     event.setDate(request.date());
     event.setCapacity(request.capacity());
+    event.setHours(request.hours());
     event.setDescription(request.description());
 
     Event saved;
@@ -122,7 +104,7 @@ public class EventService implements EventSubject {
   }
 
   // Lifecycle
-  /** DRAFT / CLOSED → OPEN: starts accepting registrations. */
+  /** DRAFT → OPEN: starts accepting registrations. CLOSED events are final. */
   public Event open(long id) {
     Event event = getEvent(id);
     if (event.getStatus() == Event.Status.OPEN) {
@@ -157,10 +139,6 @@ public class EventService implements EventSubject {
   }
 
   // Registration
-  /**
-   * Registers an attendee for an OPEN event.
-   * Enforces capacity limit and generates a unique ticket reference (E4).
-   */
   public EventRegistration register(long eventId, String attendeeName, String attendeeEmail) {
     Event event = getEvent(eventId);
     if (event.getStatus() != Event.Status.OPEN) {
@@ -202,6 +180,11 @@ public class EventService implements EventSubject {
     }
   }
 
+  public EventRegistration getRegistration(long id) {
+    return registrations.findById(id)
+      .orElseThrow(() -> new EventException(EventError.REGISTRATION_NOT_FOUND, "#" + id));
+  }
+
   // Queries
   public List<Event> findAll() {
     try {
@@ -230,10 +213,6 @@ public class EventService implements EventSubject {
     }
   }
 
-  /**
-   * Produces a plain-text attendance report (E7):
-   * registered / attended / no-show counts.
-   */
   public String attendanceReport(long eventId) {
     Event event = getEvent(eventId);
     List<EventRegistration> regs;
@@ -269,5 +248,7 @@ public class EventService implements EventSubject {
       throw new EventException(EventError.INVALID_EVENT_TYPE, null);
     if (req.capacity() <= 0)
       throw new EventException(EventError.INVALID_CAPACITY, null);
+    if (req.hours() <= 0)
+      throw new EventException(EventError.INVALID_HOURS, null);
   }
 }

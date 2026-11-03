@@ -17,9 +17,5 @@ public interface DonationRepository {
 
   Donation update(DonationRequest request, long donationId);
 
-  /**
-   * Finds an existing donation by its reference number. Used to prevent duplicate
-   * reference numbers across donations.
-   */
   Optional<Donation> findByReferenceNumber(String referenceNumber);
 }

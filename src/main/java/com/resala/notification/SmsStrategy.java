@@ -1,9 +1,5 @@
 package com.resala.notification;
 
-/**
- * Concrete Strategy — SMS channel (mocked).
- * A real implementation would call an SMS gateway (e.g. Twilio) here.
- */
 public class SmsStrategy implements NotificationStrategy {
 
   @Override

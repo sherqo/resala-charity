@@ -1,8 +1,5 @@
 package com.resala.model;
 
-/**
- * A need type lookup entity (e.g. Food, Clothing, Medical, Education).
- */
 public class NeedType {
 
   private int id;

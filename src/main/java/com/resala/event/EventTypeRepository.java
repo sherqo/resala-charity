@@ -4,10 +4,6 @@ import com.resala.model.EventType;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Persistence contract for the event_types lookup table.
- * Only {@link com.resala.persistence.sqlite.SqliteEventTypeRepository} implements this.
- */
 public interface EventTypeRepository {
   /** Returns all event types ordered by name. */
   List<EventType> findAll();
@@ -24,10 +20,6 @@ public interface EventTypeRepository {
   /** Renames an existing event type. */
   void rename(int id, String newName);
 
-  /**
-   * Deletes an event type by id.
-   * The caller is responsible for ensuring no events reference this type first.
-   */
   void delete(int id);
 
   /** Returns true if any event row references this event type. */

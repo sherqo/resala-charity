@@ -8,10 +8,6 @@ import com.resala.controller.VolunteerController;
 import com.resala.donation.DonationService;
 import com.resala.event.EventService;
 
-/**
- * Abstract Factory for JavaFX views.
- * Creates the JavaFX family of views (Dashboard, Donations, Donors, etc.)
- */
 public class JavaFxUiFactory implements UiFactory {
 
     private final DonationController donationController;

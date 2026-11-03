@@ -2,10 +2,6 @@ package com.resala.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents a single audit log entry tracking pattern executions,
- * outgoing notifications, and system events.
- */
 public class AuditLog {
 
     private final long id;

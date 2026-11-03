@@ -23,11 +23,6 @@ import javafx.scene.layout.VBox;
 
 import java.time.format.DateTimeFormatter;
 
-/**
- * Audit & Pattern Log view.
- * Visualizes runtime design pattern execution (Observer, Strategy, Command),
- * outgoing notifications, unified registrations, and payment operations.
- */
 public class AuditLogView extends BaseView {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");

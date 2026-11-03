@@ -17,9 +17,6 @@ import javafx.scene.layout.HBox;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Lookups view - admin CRUD for lookup tables (Skills, Event Types, Need Types, Donation Types).
- */
 public class LookupView extends BaseView {
 
     // Supported tables

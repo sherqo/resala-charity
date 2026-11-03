@@ -70,14 +70,7 @@ public class Main {
     );
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
     EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
-    EventController eventController = new EventController(eventService, eventTypeService);
 
-    // ── Beneficiary module ──────────────────────────────────────────────
-    BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
-    BeneficiaryService beneficiaryService = new BeneficiaryService(beneficiaryRepo);
-    BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
-    
-    // ── Top-level module menu ──────────────────────────────────────────────
     // Volunteer module
     VolunteerService volunteerService = new VolunteerService(
       new SqliteVolunteerRepository(conn),
@@ -85,6 +78,16 @@ public class Main {
       eventRegistrationRepo
     );
     VolunteerController volunteerController = new VolunteerController(volunteerService);
+    EventController eventController = new EventController(
+      eventService,
+      eventTypeService,
+      volunteerService
+    );
+
+    // ── Beneficiary module ──────────────────────────────────────────────
+    BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
+    BeneficiaryService beneficiaryService = new BeneficiaryService(beneficiaryRepo);
+    BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
 
     // Top-level module menu
     Scanner input = new Scanner(System.in);

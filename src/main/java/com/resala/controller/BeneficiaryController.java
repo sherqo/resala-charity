@@ -9,11 +9,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-/**
- * MVC Controller for the beneficiary module.
- * Translates view input into BeneficiaryService calls.
- * No I/O, no SQL.
- */
 public class BeneficiaryController {
 
   private final BeneficiaryService service;
