@@ -3,12 +3,6 @@ package com.resala.event;
 import com.resala.model.EventType;
 import java.util.List;
 
-/**
- * Business logic for the event_types lookup table.
- * Rules:
- *  - Name is required and must be unique (case-insensitive).
- *  - An event type that is referenced by at least one event cannot be deleted.
- */
 public class EventTypeService {
 
   private final EventTypeRepository repo;
@@ -28,20 +22,12 @@ public class EventTypeService {
         .orElseThrow(() -> new IllegalArgumentException("Event type not found: #" + id));
   }
 
-  /**
-   * Creates a new event type.
-   * @throws IllegalArgumentException if name is blank or already exists.
-   */
   public EventType create(String name) {
     String clean = requireName(name);
     checkUnique(clean, -1);
     return repo.save(new EventType(0, clean));
   }
 
-  /**
-   * Renames an existing event type.
-   * @throws IllegalArgumentException if name is blank, not found, or already taken by another type.
-   */
   public EventType rename(int id, String newName) {
     getById(id); // existence check
     String clean = requireName(newName);
@@ -50,10 +36,6 @@ public class EventTypeService {
     return repo.findById(id).orElseThrow();
   }
 
-  /**
-   * Deletes an event type.
-   * @throws IllegalStateException if any event still references this type.
-   */
   public void delete(int id) {
     getById(id); // existence check
     if (repo.isInUse(id)) {

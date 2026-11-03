@@ -19,12 +19,6 @@ public class PaymentController {
     return payments.availableMethods();
   }
 
-  /**
-   * Charges a donation through the payment gateway.
-   *
-   * @param paymentToken one-time token produced from the card/wallet details; null for cash
-   * @param idempotencyKey caller reference; reusing it resumes the same payment
-   */
   public PaymentOutcome payDonation(
       long donorId, long amountMinor, PaymentMethod method, String paymentToken,
       String idempotencyKey, String notes) {

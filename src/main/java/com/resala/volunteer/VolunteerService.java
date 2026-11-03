@@ -145,11 +145,6 @@ public class VolunteerService {
     return volunteers.findBySkill(skillId);
   }
 
-  public List<Volunteer> listAvailableVolunteers() {
-    return volunteers.findAvailable();
-  }
-
-
   // Assignments & Event Registrations
   public List<Event> listEvents() {
     return events.findAll();
@@ -169,7 +164,7 @@ public class VolunteerService {
     Event event = getEvent(eventId);
     Skill skill = getSkill(skillId);
 
-    validateAssignment(volunteer, event);
+    validateAssignment(volunteer, event, skill);
 
     // Enforce event capacity across registrations
     if (eventRegistrations != null) {
@@ -177,12 +172,6 @@ public class VolunteerService {
       if (registered >= event.getCapacity()) {
         throw new IllegalStateException("Event is full (" + event.getCapacity() + " spots)");
       }
-    }
-
-    // Auto-mark the volunteer as available if they aren't already
-    if (!volunteer.isAvailable()) {
-      volunteers.setAvailability(volunteerId, true);
-      volunteer.setAvailable(true);
     }
 
     // Connect to event registration: register volunteer as an attendee for the event
@@ -216,16 +205,6 @@ public class VolunteerService {
     assignment.setSkillName(skill.getName());
     VolunteerEventAssignment saved = volunteers.saveAssignment(assignment);
 
-    // Auto-add the chosen skill to the volunteer's profile if not already there
-    boolean hasSkill = volunteers
-      .findSkillsForVolunteer(volunteerId)
-      .stream()
-      .map(Skill::getId)
-      .anyMatch(id -> id == skillId);
-    if (!hasSkill) {
-      volunteers.addSkill(volunteerId, skillId);
-    }
-
     AuditLogManager.getInstance().log(
         "Unified Registration",
         "Volunteers / Events",
@@ -235,7 +214,8 @@ public class VolunteerService {
         "Volunteer registered for Event #" + event.getId() + " (" + event.getTitle() + ")\n"
         + "Assigned Skill: " + skill.getName() + " (ID: #" + skill.getId() + ")\n"
         + "Capacity Check: passed\n"
-        + "Volunteer Availability: marked available (true)"
+        + "Volunteer Availability: confirmed (true)\n"
+        + "Skill Requirement: confirmed"
     );
 
     return saved;
@@ -259,25 +239,32 @@ public class VolunteerService {
     return eventRegistrations.findByVolunteerAndEvent(volunteerId, eventId);
   }
 
-  //add event hours to volunteer and automatically check in registration
-  public VolunteerEventAssignment logHours(int assignmentId, int hours) {
-    if (hours <= 0) throw new IllegalArgumentException("Hours must be greater than zero");
-
-    VolunteerEventAssignment assignment = getAssignment(assignmentId);
-    assignment.setHours(hours);
-    VolunteerEventAssignment saved = volunteers.saveAssignment(assignment);
-
-    // When hours are logged, mark the event registration checked in
-    if (eventRegistrations != null) {
-      eventRegistrations.findByVolunteerAndEvent(assignment.getVolunteerId(), assignment.getEventId())
-        .ifPresent(r -> {
-          if (!r.isCheckedIn()) {
-            eventRegistrations.checkIn(r.getId());
-          }
-        });
+  public int creditEventHours(Event event) {
+    if (event == null || event.getHours() <= 0) {
+      return 0;
     }
 
-    return saved;
+    int credited = volunteers.creditEventHours((int) event.getId(), event.getHours());
+    if (credited > 0) {
+      // Volunteers who earned hours attended the event, so keep attendance in sync.
+      if (eventRegistrations != null) {
+        eventRegistrations.findByEvent(event.getId()).stream()
+          .filter(EventRegistration::isVolunteer)
+          .filter(r -> !r.isCheckedIn())
+          .forEach(r -> eventRegistrations.checkIn(r.getId()));
+      }
+
+      AuditLogManager.getInstance().log(
+          "Event Closed",
+          "Volunteers / Events",
+          "Observer Triggers",
+          credited + " volunteer assignment(s)",
+          "Hours credited for " + event.getTitle(),
+          "Event #" + event.getId() + " (" + event.getTitle() + ") closed.\n"
+          + "Credited " + event.getHours() + " hour(s) to " + credited + " assigned volunteer(s)."
+      );
+    }
+    return credited;
   }
 
   // Summaries and certificate
@@ -312,7 +299,20 @@ public class VolunteerService {
       .orElseThrow(() -> new IllegalArgumentException("Event not found: #" + eventId));
   }
 
-  private void validateAssignment(Volunteer volunteer, Event event) {
+  private void validateAssignment(Volunteer volunteer, Event event, Skill skill) {
+    if (!volunteer.isAvailable()) {
+      throw new IllegalStateException("Volunteer is not available for assignment");
+    }
+    boolean hasSkill = volunteers
+      .findSkillsForVolunteer(volunteer.getId())
+      .stream()
+      .map(Skill::getId)
+      .anyMatch(id -> id == skill.getId());
+    if (!hasSkill) {
+      throw new IllegalStateException(
+        "Volunteer does not have the required skill: " + skill.getName()
+      );
+    }
     if (event.getStatus() == Event.Status.DRAFT) {
       throw new IllegalStateException("Cannot register a volunteer for a draft event");
     }

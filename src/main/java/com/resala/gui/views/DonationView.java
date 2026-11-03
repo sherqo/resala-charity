@@ -44,10 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Donations view - manage donations and receipts.
- * Implements DonationObserver for real-time reactive table updates.
- */
 public class DonationView extends BaseView implements DonationObserver {
 
     private final AppShell appShell;

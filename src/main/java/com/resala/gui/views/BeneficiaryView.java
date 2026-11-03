@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Beneficiaries view - manage beneficiaries, aid distribution, impact tracking.
- */
 public class BeneficiaryView extends BaseView {
 
     private static final Map<Integer, String> NEED_TYPES = Map.of(

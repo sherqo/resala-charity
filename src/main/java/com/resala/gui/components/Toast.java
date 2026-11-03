@@ -13,21 +13,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
-/**
- * Non-blocking toast notifications that slide in quietly from bottom-right.
- * Styled in Notion minimal aesthetic: crisp dark pill, muted typography, gentle transitions.
- */
 public class Toast {
 
     public enum Type { INFO, SUCCESS, WARNING, ERROR }
 
-    /**
-     * Shows a toast message.
-     *
-     * @param owner the owner stage (for positioning)
-     * @param msg   the message text
-     * @param type  the toast type
-     */
     public void show(Stage owner, String msg, Type type) {
         if (owner == null) return;
 

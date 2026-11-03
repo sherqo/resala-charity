@@ -151,12 +151,6 @@ public class BeneficiaryService {
 
   // ── Strategy-based Distribution ───────────────────────────────────────────
 
-  /**
-   * Previews how available aid will be allocated under the active policy without persisting.
-   *
-   * @param totalItems total quantity of aid to distribute
-   * @return map of active Beneficiary to allocated quantity
-   */
   public Map<Beneficiary, Integer> previewDistribution(int totalItems) {
     if (totalItems <= 0) {
       throw new IllegalArgumentException("Total items must be greater than 0.");
@@ -167,16 +161,6 @@ public class BeneficiaryService {
     return distributionPolicy.allocate(activeBeneficiaries, totalItems);
   }
 
-  /**
-   * Executes and persists distributions according to the active strategy policy.
-   *
-   * @param itemDescription aid/item description
-   * @param totalItems total quantity to allocate
-   * @param donationId optional in-kind donation link
-   * @param distributionDate date of distribution (defaults to today if null)
-   * @param notes optional notes
-   * @return list of newly created Distribution records
-   */
   public List<Distribution> distributeByPolicy(
       String itemDescription,
       int totalItems,

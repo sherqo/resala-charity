@@ -17,18 +17,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Declarative in-app form modal styled in Notion minimal aesthetic.
- * Centered modal card inside the application window with translucent backdrop.
- * Eliminates OS window chrome, double titles, ComboBox clipping, and window overflow.
- */
 public final class FormDialog {
 
     private FormDialog() {}
 
-    /**
-     * Field definition for the form.
-     */
     public record Field(String key, String label, Type type, boolean required, Object... options) {}
 
     public enum Type {

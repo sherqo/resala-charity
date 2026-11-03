@@ -15,10 +15,6 @@ import javafx.stage.Window;
 
 import java.util.function.Consumer;
 
-/**
- * Confirmation dialog utility styled in Notion minimal aesthetic.
- * Renders as an in-app centered modal card overlay without OS window chrome or clipping.
- */
 public class ConfirmDialog {
 
     public boolean ask(Window owner, String message) {

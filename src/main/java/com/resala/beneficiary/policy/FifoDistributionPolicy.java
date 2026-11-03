@@ -6,10 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Concrete Strategy — allocates aid sequentially in order of registration (FIFO).
- * Beneficiaries registered earlier (lowest ID) receive aid first up to a specified quota.
- */
 public class FifoDistributionPolicy implements DistributionPolicy {
 
   private final int quotaPerBeneficiary;

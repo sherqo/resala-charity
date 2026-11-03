@@ -74,10 +74,6 @@ public class VolunteerController {
     return service.searchBySkill(skillId);
   }
 
-  public List<Volunteer> listAvailableVolunteers() {
-    return service.listAvailableVolunteers();
-  }
-
   public List<Event> listEvents() {
     return service.listEvents();
   }
@@ -97,10 +93,6 @@ public class VolunteerController {
 
   public List<VolunteerEventAssignment> listAssignments(int volunteerId) {
     return service.listAssignments(volunteerId);
-  }
-
-  public VolunteerEventAssignment logHours(int assignmentId, int hours) {
-    return service.logHours(assignmentId, hours);
   }
 
   public VolunteerSummary summary(int volunteerId) {

@@ -12,7 +12,6 @@ public interface VolunteerRepository {
   void delete(int id);
   void setAvailability(int id, boolean available);
   List<Volunteer> findBySkill(int skillId);
-  List<Volunteer> findAvailable();
 
   List<Skill> findAllSkills();
   Skill findSkillById(int skillId);
@@ -28,4 +27,6 @@ public interface VolunteerRepository {
   VolunteerEventAssignment findAssignmentById(int id);
   List<VolunteerEventAssignment> findAssignments(int volunteerId);
   boolean hasAssignment(int volunteerId, int eventId);
+
+  int creditEventHours(int eventId, int hours);
 }

@@ -5,11 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Concrete Strategy — allocates aid based on need severity.
- * In this implementation, household size reflects need:
- * larger families are prioritized and receive a proportionally larger share of aid.
- */
 public class ByNeedDistributionPolicy implements DistributionPolicy {
 
   @Override

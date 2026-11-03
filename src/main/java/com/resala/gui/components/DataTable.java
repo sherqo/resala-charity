@@ -13,9 +13,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * Fluent builder for creating styled TableView instances in Notion database aesthetic.
- */
 public final class DataTable<T> {
 
     private final TableView<T> tableView;
@@ -24,16 +21,10 @@ public final class DataTable<T> {
         this.tableView = tableView;
     }
 
-    /**
-     * Starts a new builder for the given row type.
-     */
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
 
-    /**
-     * Returns the underlying TableView.
-     */
     public TableView<T> getTableView() {
         return tableView;
     }
@@ -43,38 +34,21 @@ public final class DataTable<T> {
         private ObservableList<T> items = FXCollections.observableArrayList();
         private Consumer<T> onRowDoubleClick = null;
 
-        /**
-         * Adds a column.
-         *
-         * @param name   column header text
-         * @param width  preferred width in pixels
-         * @param mapper function to extract cell value as String from row item
-         * @return this builder
-         */
         public Builder<T> column(String name, int width, Function<T, String> mapper) {
             columns.add(new ColumnSpec<>(name, width, mapper));
             return this;
         }
 
-        /**
-         * Sets the items to display.
-         */
         public Builder<T> items(ObservableList<T> items) {
             this.items = items;
             return this;
         }
 
-        /**
-         * Sets a double-click handler on rows.
-         */
         public Builder<T> onRowDoubleClick(Consumer<T> handler) {
             this.onRowDoubleClick = handler;
             return this;
         }
 
-        /**
-         * Builds and returns the configured DataTable wrapper.
-         */
         public DataTable<T> build() {
             TableView<T> table = new TableView<>(items);
             table.getStyleClass().add("table-view");

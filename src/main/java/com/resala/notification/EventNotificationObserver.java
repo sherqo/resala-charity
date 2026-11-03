@@ -7,10 +7,6 @@ import com.resala.model.Event;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Concrete Observer that notifies registered attendees whenever an event is updated or closed.
- * Dispatches messages via the active NotificationStrategy configured in Notifier.
- */
 public class EventNotificationObserver implements EventObserver {
 
   private final EventRegistrationRepository registrationRepository;

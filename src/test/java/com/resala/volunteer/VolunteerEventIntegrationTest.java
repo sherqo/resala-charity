@@ -2,15 +2,20 @@ package com.resala.volunteer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.resala.controller.EventController;
+import com.resala.event.EventError;
+import com.resala.event.EventException;
 import com.resala.event.EventRegistration;
 import com.resala.event.EventRequest;
 import com.resala.event.EventService;
+import com.resala.event.EventTypeService;
 import com.resala.model.Event;
 import com.resala.model.Skill;
 import com.resala.model.Volunteer;
 import com.resala.model.VolunteerEventAssignment;
 import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
 import com.resala.persistence.sqlite.SqliteEventRepository;
+import com.resala.persistence.sqlite.SqliteEventTypeRepository;
 import com.resala.persistence.sqlite.SqliteVolunteerRepository;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +36,7 @@ class VolunteerEventIntegrationTest {
   private SqliteEventRepository eventRepo;
   private SqliteEventRegistrationRepository registrationRepo;
   private EventService eventService;
+  private EventController eventController;
   private VolunteerService volunteerService;
 
   @BeforeEach
@@ -47,6 +53,11 @@ class VolunteerEventIntegrationTest {
 
     eventService = new EventService(eventRepo, registrationRepo);
     volunteerService = new VolunteerService(volunteerRepo, eventRepo, registrationRepo);
+    eventController = new EventController(
+      eventService,
+      new EventTypeService(new SqliteEventTypeRepository(conn)),
+      volunteerService
+    );
   }
 
   @AfterEach
@@ -57,14 +68,14 @@ class VolunteerEventIntegrationTest {
   }
 
   @Test
-  void volunteerRegistrationCreatesEventRegistrationAndAssignsSkill() {
-    // 1. Create volunteer (without initial skills, unavailable)
-    Volunteer volunteer = new Volunteer("Sarah Ahmed", "sarah@example.com", "0100000000", false);
+  void volunteerRegistrationCreatesEventRegistrationForAvailableSkilledVolunteer() {
+    // 1. Create an available volunteer
+    Volunteer volunteer = new Volunteer("Sarah Ahmed", "sarah@example.com", "0100000000", true);
     volunteer = volunteerRepo.save(volunteer);
-    assertFalse(volunteer.isAvailable());
+    assertTrue(volunteer.isAvailable());
 
-    // 2. Create skill
-    Skill skill = volunteerService.createSkill("Packing Aid");
+    // 2. Create a skill and add it to the volunteer's profile
+    Skill skill = createSkillFor(volunteer, "Packing Aid");
 
     // 3. Create open event
     Event event = eventService.create(new EventRequest(
@@ -72,6 +83,7 @@ class VolunteerEventIntegrationTest {
       1,
       LocalDate.now().plusDays(5),
       50,
+      4,
       "Food drive packing"
     ));
     eventService.open(event.getId());
@@ -87,11 +99,11 @@ class VolunteerEventIntegrationTest {
     assertEquals(event.getId(), assignment.getEventId());
     assertEquals(skill.getId(), assignment.getSkillId());
 
-    // 5. Verify volunteer is now available
+    // 5. Verify volunteer remains available
     Volunteer updatedVolunteer = volunteerService.getVolunteer(volunteer.getId());
-    assertTrue(updatedVolunteer.isAvailable(), "Volunteer should automatically be marked available");
+    assertTrue(updatedVolunteer.isAvailable(), "Volunteer must be available when assigned");
 
-    // 6. Verify skill was automatically added to volunteer
+    // 6. Verify the assignment uses a skill the volunteer already has
     List<Skill> volunteerSkills = volunteerService.getVolunteerSkills(volunteer.getId());
     assertEquals(1, volunteerSkills.size());
     assertEquals("Packing Aid", volunteerSkills.get(0).getName());
@@ -123,6 +135,7 @@ class VolunteerEventIntegrationTest {
       1,
       LocalDate.now().plusDays(2),
       1,
+      3,
       "Limited spots"
     ));
     eventService.open(event.getId());
@@ -133,7 +146,7 @@ class VolunteerEventIntegrationTest {
 
     // 3. Volunteer attempts to register
     Volunteer volunteer = volunteerRepo.save(new Volunteer("Vol One", "vol@example.com", "123", true));
-    Skill skill = volunteerService.createSkill("Tutoring Kids");
+    Skill skill = createSkillFor(volunteer, "Tutoring Kids");
 
     IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
       volunteerService.assign(volunteer.getId(), (int) event.getId(), skill.getId())
@@ -142,48 +155,136 @@ class VolunteerEventIntegrationTest {
   }
 
   @Test
-  void loggingHoursAutomaticallyChecksInEventRegistration() {
-    // 1. Create volunteer and skill
-    Volunteer volunteer = volunteerRepo.save(new Volunteer("Omar Ali", "omar@example.com", "123", true));
-    Skill skill = volunteerService.createSkill("Logistics");
+  void checkInCreditsHoursAndUnlocksCertificateAtTwenty() {
+    Volunteer volunteer = volunteerRepo.save(
+      new Volunteer("Mona Hassan", "mona@example.com", "0100000001", true)
+    );
+    Skill skill = createSkillFor(volunteer, "Event Support");
 
-    // 2. Create open event
     Event event = eventService.create(new EventRequest(
-      "Charity Marathon",
+      "Community Day",
       1,
-      LocalDate.now().plusDays(1),
+      LocalDate.now().plusDays(3),
+      30,
       20,
-      "Annual Marathon"
+      "Full-day community event"
     ));
     eventService.open(event.getId());
 
-    // 3. Register volunteer
     VolunteerEventAssignment assignment = volunteerService.assign(
       volunteer.getId(),
       (int) event.getId(),
       skill.getId()
     );
 
-    // Initial check-in should be false
-    EventRegistration regBefore = registrationRepo
+    // Hours are 0 before check-in
+    assertEquals(0.0, volunteerService.summary(volunteer.getId()).getTotalHours(),
+      "Hours are 0 before volunteer checks in");
+
+    // Retrieve registration and check in
+    EventRegistration reg = registrationRepo
       .findByVolunteerAndEvent(volunteer.getId(), event.getId())
       .orElseThrow();
-    assertFalse(regBefore.isCheckedIn());
+    eventController.checkIn(reg.getId());
 
-    // 4. Log hours
-    volunteerService.logHours(assignment.getId(), 4);
+    // Hours should now be credited
+    assertEquals(20.0, volunteerService.summary(volunteer.getId()).getTotalHours());
+    assertEquals(20.0, volunteerService.getAssignment(assignment.getId()).getHours());
 
-    // 5. Verify registration is now checked-in
-    EventRegistration regAfter = registrationRepo
+    // Registration should be checked in
+    EventRegistration refreshed = registrationRepo.findByVolunteerAndEvent(volunteer.getId(), event.getId()).orElseThrow();
+    assertTrue(refreshed.isCheckedIn(), "Checking in should mark registration as checked in");
+
+    // Certificate should be printable with 20+ hours
+    String certificate = volunteerService.certificate(volunteer.getId());
+    assertTrue(certificate.contains("Mona Hassan"));
+    assertTrue(certificate.contains("20.0"));
+  }
+
+  @Test
+  void certificateIsRejectedWhenHoursBelowTwentyAfterCheckIn() {
+    Volunteer volunteer = volunteerRepo.save(
+      new Volunteer("Ali Mostafa", "ali@example.com", "0100000002", true)
+    );
+    Skill skill = createSkillFor(volunteer, "Logistics Support");
+
+    Event event = eventService.create(new EventRequest(
+      "Half-Day Drive",
+      1,
+      LocalDate.now().plusDays(2),
+      10,
+      10,
+      "Short event"
+    ));
+    eventService.open(event.getId());
+    volunteerService.assign(volunteer.getId(), (int) event.getId(), skill.getId());
+
+    // Check in to credit hours
+    EventRegistration reg = registrationRepo
       .findByVolunteerAndEvent(volunteer.getId(), event.getId())
       .orElseThrow();
-    assertTrue(regAfter.isCheckedIn(), "Event registration should be checked in after logging hours");
+    eventController.checkIn(reg.getId());
 
-    // 6. Verify Attendance Report reflects this
-    String report = eventService.attendanceReport(event.getId());
-    assertTrue(report.contains("Registered : 1 / 20"));
-    assertTrue(report.contains("Attended   : 1"));
-    assertTrue(report.contains("No-show    : 0"));
+    // Hours should be 10.0
+    assertEquals(10.0, volunteerService.summary(volunteer.getId()).getTotalHours());
+
+    // Certificate should be rejected because below 20
+    assertThrows(IllegalStateException.class, () -> volunteerService.certificate(volunteer.getId()));
+  }
+
+  @Test
+  void assignmentRequiresAvailabilityAndMatchingSkill() {
+    Event event = eventService.create(new EventRequest(
+      "Skills Workshop",
+      1,
+      LocalDate.now().plusDays(2),
+      10,
+      5,
+      "Skills-based assignment"
+    ));
+    eventService.open(event.getId());
+
+    Volunteer unavailable = volunteerRepo.save(
+      new Volunteer("Busy Volunteer", "busy@example.com", "111", false)
+    );
+    Skill firstAid = createSkillFor(unavailable, "First Aid");
+    IllegalStateException unavailableEx = assertThrows(IllegalStateException.class, () ->
+      volunteerService.assign(unavailable.getId(), (int) event.getId(), firstAid.getId())
+    );
+    assertTrue(unavailableEx.getMessage().contains("not available"));
+
+    Volunteer available = volunteerRepo.save(
+      new Volunteer("Ready Volunteer", "ready@example.com", "222", true)
+    );
+    Skill untrained = volunteerService.createSkill("Untrained Skill");
+    IllegalStateException skillEx = assertThrows(IllegalStateException.class, () ->
+      volunteerService.assign(available.getId(), (int) event.getId(), untrained.getId())
+    );
+    assertTrue(skillEx.getMessage().contains("required skill"));
+  }
+
+  @Test
+  void eventCanBeReopenedAfterClose() {
+    Event event = eventService.create(new EventRequest(
+      "Final Event",
+      1,
+      LocalDate.now().plusDays(1),
+      10,
+      5,
+      "Closed events are final"
+    ));
+    eventService.open(event.getId());
+    eventController.close(event.getId());
+
+    // Event should be reopenable
+    eventService.open(event.getId());
+    assertEquals(Event.Status.OPEN, eventService.getEvent(event.getId()).getStatus());
+  }
+
+  private Skill createSkillFor(Volunteer volunteer, String name) {
+    Skill skill = volunteerService.createSkill(name);
+    volunteerService.addSkill(volunteer.getId(), skill.getId());
+    return skill;
   }
 
   private void runSchema(Connection conn) throws Exception {

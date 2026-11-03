@@ -28,10 +28,6 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
-/**
- * Dashboard view showing stats, recent donations, and activity feed.
- * Implements DonationObserver and EventObserver for real-time frontend updates.
- */
 public class DashboardView extends BaseView implements DonationObserver, EventObserver {
 
     private final AppShell appShell;

@@ -1,10 +1,5 @@
 package com.resala.volunteer;
 
-/**
- * Data entered by the view when creating or editing a volunteer.
- * This is a normal class (not a record) so it can be extended later
- * without changing the controller or service signatures.
- */
 public class Volunteer {
 
   private String name;
