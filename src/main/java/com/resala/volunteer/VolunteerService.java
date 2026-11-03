@@ -1,5 +1,6 @@
 package com.resala.volunteer;
 
+import com.resala.core.AuditLogManager;
 import com.resala.event.EventRegistration;
 import com.resala.event.EventRegistrationRepository;
 import com.resala.event.EventRepository;
@@ -224,6 +225,18 @@ public class VolunteerService {
     if (!hasSkill) {
       volunteers.addSkill(volunteerId, skillId);
     }
+
+    AuditLogManager.getInstance().log(
+        "Unified Registration",
+        "Volunteers / Events",
+        "Observer Triggers",
+        volunteer.getName() + " (" + volunteer.getEmail() + ")",
+        "Volunteer registered to " + event.getTitle(),
+        "Volunteer registered for Event #" + event.getId() + " (" + event.getTitle() + ")\n"
+        + "Assigned Skill: " + skill.getName() + " (ID: #" + skill.getId() + ")\n"
+        + "Capacity Check: passed\n"
+        + "Volunteer Availability: marked available (true)"
+    );
 
     return saved;
   }
