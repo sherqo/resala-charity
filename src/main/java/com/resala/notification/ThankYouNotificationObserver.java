@@ -1,5 +1,6 @@
 package com.resala.notification;
 
+import com.resala.core.AuditLogManager;
 import com.resala.donation.Donation;
 import com.resala.model.Donor;
 
@@ -19,6 +20,18 @@ public class ThankYouNotificationObserver implements DonationObserver {
   @Override
   public void onDonationRecorded(Donation donation, Donor donor) {
     if (donor.getEmail() == null || donor.getEmail().isBlank()) return;
+
+    AuditLogManager.getInstance().log(
+        "Observer",
+        "Donations",
+        "Observer Triggers",
+        donor.getName() + " (" + donor.getEmail() + ")",
+        "Donation receipt generated: #" + donation.getId(),
+        "Observer Pattern triggered via DonationSubject.\nDonor: " + donor.getName()
+        + "\nDonation ID: #" + donation.getId()
+        + "\nAmount: " + (donation.getAmountMinor() / 100.0) + " EGP"
+        + "\nType: " + donation.getType()
+    );
 
     String subject = "Thank you for your donation!";
     String body    = "Dear " + donor.getName() +

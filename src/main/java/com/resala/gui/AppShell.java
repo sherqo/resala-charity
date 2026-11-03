@@ -175,7 +175,8 @@ public class AppShell {
             new NavItem("Events", EventView.class),
             new NavItem("Beneficiaries", BeneficiaryView.class),
             new NavItem("Messages", CommView.class),
-            new NavItem("Lookups", LookupView.class)
+            new NavItem("Lookups", LookupView.class),
+            new NavItem("Audit Log", AuditLogView.class)
         );
 
         for (NavItem item : navItems) {
@@ -300,6 +301,9 @@ public class AppShell {
 
         // Lookups
         views.put("Lookups", new LookupView(this, volunteerController, eventController));
+
+        // Audit Log
+        views.put("Audit Log", new AuditLogView(this));
     }
 
     /**

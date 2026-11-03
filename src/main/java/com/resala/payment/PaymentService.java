@@ -1,5 +1,6 @@
 package com.resala.payment;
 
+import com.resala.core.AuditLogManager;
 import com.resala.core.TransactionManager;
 
 import java.util.List;
@@ -102,11 +103,38 @@ public class PaymentService {
         // The payment is already committed; a notification failure must not turn it into a failure.
         LOGGER.warning("afterCommit failed for payment " + payment.getId() + ": " + e);
       }
+      AuditLogManager.getInstance().log(
+          "Strategy & Command",
+          "Payments",
+          "Payment Operations",
+          payment.getPayerType() + " #" + payment.getPayerId(),
+          "Payment " + payment.getPaymentMethod().displayName() + " — " + (payment.getAmountMinor() / 100.0) + " " + payment.getCurrency(),
+          "Payment Strategy: " + payment.getPaymentMethod().displayName() + "\n"
+          + "Command: PaymentCommand\n"
+          + "Settled with: " + settlement.referenceType() + " #" + recordId + "\n"
+          + "Amount: " + (payment.getAmountMinor() / 100.0) + " " + payment.getCurrency() + "\n"
+          + "Fee: " + (payment.getFeeMinor() / 100.0) + " " + payment.getCurrency() + "\n"
+          + "Idempotency Key: " + payment.getIdempotencyKey() + "\n"
+          + "Status: " + payment.getStatus()
+      );
       return PaymentOutcome.paid(payment);
     }
 
     payment.markPaid("NONE", 0);
     payments.save(payment);
+    AuditLogManager.getInstance().log(
+        "Strategy & Command",
+        "Payments",
+        "Payment Operations",
+        payment.getPayerType() + " #" + payment.getPayerId(),
+        "Payment " + payment.getPaymentMethod().displayName() + " — " + (payment.getAmountMinor() / 100.0) + " " + payment.getCurrency(),
+        "Payment Strategy: " + payment.getPaymentMethod().displayName() + "\n"
+        + "Command: PaymentCommand\n"
+        + "Amount: " + (payment.getAmountMinor() / 100.0) + " " + payment.getCurrency() + "\n"
+        + "Fee: " + (payment.getFeeMinor() / 100.0) + " " + payment.getCurrency() + "\n"
+        + "Idempotency Key: " + payment.getIdempotencyKey() + "\n"
+        + "Status: " + payment.getStatus()
+    );
     return PaymentOutcome.paid(payment);
   }
 
