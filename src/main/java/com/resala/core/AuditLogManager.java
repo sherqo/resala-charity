@@ -8,10 +8,6 @@ import javafx.collections.ObservableList;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Thread-safe central manager that collects audit logs for pattern execution,
- * outbound notifications, and system events.
- */
 public class AuditLogManager {
 
     private static final AuditLogManager INSTANCE = new AuditLogManager();

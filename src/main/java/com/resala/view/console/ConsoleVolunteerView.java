@@ -28,20 +28,44 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println(LINE);
       System.out.println("Resala Charity - Volunteer Module");
       System.out.println(LINE);
-      System.out.println("1) Volunteers Management");
-      System.out.println("2) Volunteer Event Assignment");
-      System.out.println("3) Volunteer Skills Management");
+      System.out.println("1) List all volunteers");
+      System.out.println("2) Create volunteer");
+      System.out.println("3) Edit volunteer");
+      System.out.println("4) Delete volunteer");
+      System.out.println("5) Set availability");
+      System.out.println("6) Assign volunteer to event");
+      System.out.println("7) View assignments");
+      System.out.println("8) Show volunteer skills");
+      System.out.println("9) Add skill to volunteer");
+      System.out.println("10) Remove skill from volunteer");
+      System.out.println("11) Search volunteers by skill");
+      System.out.println("12) Add a new skill type");
+      System.out.println("13) Delete a skill type");
+      System.out.println("14) Hours summary for Volunteer");
+      System.out.println("15) Generate certificate");
       System.out.println("0) Main Menu");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
 
       try {
         switch (readLine().toUpperCase()) {
-          case "1" -> volunteerList();
-          case "2" -> assignList();
-          case "3" -> skillsList();
-          case "0" -> running = false;
-          default  -> System.out.println("Invalid option.");
+          case "1"  -> listVolunteers();
+          case "2"  -> createVolunteer();
+          case "3"  -> editVolunteer();
+          case "4"  -> deleteVolunteer();
+          case "5"  -> setAvailability();
+          case "6"  -> assignVolunteer();
+          case "7"  -> viewAssignments();
+          case "8"  -> showVolunteerSkills();
+          case "9"  -> addSkill();
+          case "10" -> removeSkill();
+          case "11" -> searchBySkill();
+          case "12" -> createSkill();
+          case "13" -> deleteSkill();
+          case "14" -> showSummary();
+          case "15" -> showCertificate();
+          case "0"  -> running = false;
+          default   -> System.out.println("Invalid option.");
         }
       } catch (IllegalArgumentException | IllegalStateException e) {
         printError(e.getMessage());
@@ -49,112 +73,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println();
     }
   }
-
-
-  // In main menu
-  private void volunteerList(){
-    boolean running = true;
-    while (running) {
-      System.out.println(LINE);
-      System.out.println("Resala Charity - Volunteer Module");
-      System.out.println("Volunteers Management");
-      System.out.println(LINE);
-      System.out.println("1) List all volunteers");
-      System.out.println("2) Create volunteer");
-      System.out.println("3) Edit volunteer");
-      System.out.println("4) Delete volunteer");
-      System.out.println("5) Set availability");
-      System.out.println("6) List available volunteers");
-      System.out.println("7) Log hours for Volunteer");
-      System.out.println("8) Hours summary for Volunteer");
-      System.out.println("9) Generate certificate");
-      System.out.println("0) Back");
-      System.out.println(LINE);
-      System.out.print("Choose an option: ");
-
-      try {
-        switch (readLine().toUpperCase()) {
-          case "1" -> listVolunteers();
-          case "2" -> createVolunteer();
-          case "3" -> editVolunteer();
-          case "4" -> deleteVolunteer();
-          case "5" -> setAvailability();
-          case "6" -> listAvailableVolunteers();
-          case "7" -> logHours();
-          case "8" -> showSummary();
-          case "9" -> showCertificate();
-          case "0" -> running = false;
-          default  -> System.out.println("Invalid option.");
-        }
-      } catch (IllegalArgumentException | IllegalStateException e) {
-        printError(e.getMessage());
-      }
-      System.out.println();
-    }
-  }
-
-  private void assignList(){
-    boolean running = true;
-    while (running) {
-      System.out.println(LINE);
-      System.out.println("Resala Charity - Volunteer Module");
-      System.out.println("Volunteer Event Assignment");
-      System.out.println(LINE);
-      System.out.println("1) Assign volunteer to event");
-      System.out.println("2) View assignments");
-      System.out.println("0) Back");
-      System.out.println(LINE);
-      System.out.print("Choose an option: ");
-
-      try {
-        switch (readLine().toUpperCase()) {
-          case "1" -> assignVolunteer();
-          case "2" -> viewAssignments();
-          case "0" -> running = false;
-          default  -> System.out.println("Invalid option.");
-        }
-      } catch (IllegalArgumentException | IllegalStateException e) {
-        printError(e.getMessage());
-      }
-      System.out.println();
-    }
-  }
-
-  private void skillsList(){
-    boolean running = true;
-    while (running) {
-      System.out.println(LINE);
-      System.out.println("Resala Charity - Volunteer Module");
-      System.out.println("Volunteer Skills Management");
-      System.out.println(LINE);
-      System.out.println("1) Show volunteer skills");
-      System.out.println("2) Add skill to volunteer");
-      System.out.println("3) Remove skill from volunteer");
-      System.out.println("4) Search volunteers by skill");
-      System.out.println("5) Add a new skill type");
-      System.out.println("6) Delete a skill type");
-      System.out.println("0) Back");
-      System.out.println(LINE);
-      System.out.print("Choose an option: ");
-
-      try {
-        switch (readLine().toUpperCase()) {
-          case "1" -> showVolunteerSkills();
-          case "2" -> addSkill();
-          case "3" -> removeSkill();
-          case "4" -> searchBySkill();
-          case "5" -> createSkill();
-          case "6" -> deleteSkill();
-          case "0" -> running = false;
-          default  -> System.out.println("Invalid option.");
-        }
-      } catch (IllegalArgumentException | IllegalStateException e) {
-        printError(e.getMessage());
-      }
-      System.out.println();
-    }
-  }
-
 
   // Volunteer CRUD
   private void listVolunteers() {
@@ -258,21 +176,24 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  private void listAvailableVolunteers() {
-    System.out.println("\n--- Available Volunteers ---");
-    printVolunteers(controller.listAvailableVolunteers());
-  }
-
   // Assignments and hours
   private void assignVolunteer() {
     System.out.println("\n--- Assign Volunteer to Event ---");
     printVolunteers(controller.listVolunteers());
     int volunteerId = readInt("Volunteer ID: ");
+    Volunteer volunteer = controller.getVolunteer(volunteerId);
+    if (!volunteer.isAvailable()) {
+      throw new IllegalStateException("Volunteer is not available for assignment");
+    }
 
     printEvents(controller.listOpenEvents());
     int eventId = readInt("Event ID: ");
 
-    printSkills(controller.listSkills());
+    List<Skill> skills = controller.getVolunteerSkills(volunteerId);
+    if (skills.isEmpty()) {
+      throw new IllegalStateException("Volunteer has no skills to assign");
+    }
+    printSkills(skills);
     int skillId = readInt("Skill the volunteer will use: ");
 
     VolunteerEventAssignment assignment = controller.assign(volunteerId, eventId, skillId);
@@ -290,19 +211,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     System.out.println("\n--- View Assignments ---");
     int volunteerId = readInt("Volunteer ID: ");
     printAssignments(controller.listAssignments(volunteerId));
-  }
-
-  private void logHours() {
-    System.out.println("\n--- Log Hours ---");
-    int volunteerId = readInt("Volunteer ID: ");
-    List<VolunteerEventAssignment> assignments = controller.listAssignments(volunteerId);
-    printAssignments(assignments);
-    if (assignments.isEmpty()) return;
-
-    int assignmentId = readInt("Assignment ID: ");
-    int hours = readInt("Hours worked: ");
-    VolunteerEventAssignment assignment = controller.logHours(assignmentId, hours);
-    printSuccess("Logged " + formatHours(assignment.getHours()) + " hours.");
   }
 
   private void showSummary() {
@@ -360,14 +268,15 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println("No events found.");
       return;
     }
-    System.out.println("ID  | Status  | Date       | Title");
+    System.out.println("ID  | Status  | Date       | Hours | Title");
     System.out.println(LINE);
     for (Event event : events) {
       System.out.printf(
-        "%-3d | %-7s | %-10s | %s%n",
+        "%-3d | %-7s | %-10s | %-5d | %s%n",
         event.getId(),
         event.getStatus(),
         event.getDate(),
+        event.getHours(),
         event.getTitle()
       );
     }

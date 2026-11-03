@@ -18,9 +18,6 @@ import javafx.scene.layout.VBox;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Donors view - manage donor directory.
- */
 public class DonorView extends BaseView {
 
     private final AppShell appShell;

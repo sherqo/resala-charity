@@ -159,7 +159,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     List<EventType> types = controller.listEventTypes();
     List<Event> events = controller.listEvents();
     if (events.isEmpty()) { System.out.println("No events found."); return; }
-    System.out.println("ID  | Status  | Date       | Cap  | Type             | Title");
+    System.out.println("ID  | Status  | Date       | Cap  | Hours | Type             | Title");
     System.out.println(LINE);
     for (Event e : events) {
       String typeName = types.stream()
@@ -167,8 +167,8 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
           .map(EventType::getName)
           .findFirst()
           .orElse("Type #" + e.getEventTypeId());
-      System.out.printf("%-3d | %-7s | %-10s | %-4d | %-16s | %s%n",
-        e.getId(), e.getStatus(), e.getDate(), e.getCapacity(), typeName, e.getTitle());
+      System.out.printf("%-3d | %-7s | %-10s | %-4d | %-5d | %-16s | %s%n",
+        e.getId(), e.getStatus(), e.getDate(), e.getCapacity(), e.getHours(), typeName, e.getTitle());
     }
   }
 
@@ -216,7 +216,8 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n--- Close Event ---");
     long id = readLong("Event ID to close: ");
     Event event = controller.close(id);
-    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED.");
+    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED. "
+      + event.getHours() + " volunteer hour(s) credited to assigned volunteers.");
   }
 
   // Registration
@@ -259,6 +260,8 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     String typeStr = value("Event type ID",      current == null ? null : String.valueOf(current.getEventTypeId()));
     String dateStr = value("Date (YYYY-MM-DD)",  current == null ? null : current.getDate().toString());
     String capStr  = value("Capacity",           current == null ? null : String.valueOf(current.getCapacity()));
+    String hoursStr = value("Volunteer hours credited after event closes",
+                            current == null ? null : String.valueOf(current.getHours()));
     String desc    = value("Description",        current == null ? null : current.getDescription());
 
     try {
@@ -267,10 +270,11 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
         Integer.parseInt(typeStr),
         LocalDate.parse(dateStr),
         Integer.parseInt(capStr),
+        Integer.parseInt(hoursStr),
         blankToNull(desc)
       );
     } catch (NumberFormatException e) {
-      throw new NumberFormatException("Event type ID and Capacity must be valid integers.");
+      throw new NumberFormatException("Event type ID, Capacity, and Hours must be valid integers.");
     } catch (DateTimeParseException e) {
       throw new DateTimeParseException(
         "Date must be in YYYY-MM-DD format (e.g. 2026-06-15).",

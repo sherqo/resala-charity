@@ -6,21 +6,22 @@ import com.resala.event.EventService;
 import com.resala.event.EventTypeService;
 import com.resala.model.Event;
 import com.resala.model.EventType;
+import com.resala.volunteer.VolunteerService;
 import java.util.List;
 
-/**
- * MVC Controller for the event module.
- * Translates view input into EventService / EventTypeService calls.
- * No I/O, no SQL, no role checks with if/else.
- */
 public class EventController {
 
   private final EventService     service;
   private final EventTypeService eventTypeService;
+  private final VolunteerService volunteerService;
 
-  public EventController(EventService service, EventTypeService eventTypeService) {
+  public EventController(
+      EventService service,
+      EventTypeService eventTypeService,
+      VolunteerService volunteerService) {
     this.service          = service;
     this.eventTypeService = eventTypeService;
+    this.volunteerService = volunteerService;
   }
 
   // --- Events ---
@@ -28,7 +29,10 @@ public class EventController {
   public Event update(long id, EventRequest request)     { return service.update(id, request); }
   public void  delete(long id)                           { service.delete(id); }
   public Event open(long id)                             { return service.open(id); }
-  public Event close(long id)                            { return service.close(id); }
+  public Event close(long id) {
+    Event closed = service.close(id);
+    return closed;
+  }
   public List<Event> listEvents()                        { return service.findAll(); }
   public Event getEvent(long id)                         { return service.getEvent(id); }
 
@@ -36,7 +40,14 @@ public class EventController {
     return service.register(eventId, name, email);
   }
 
-  public void checkIn(long registrationId)               { service.checkIn(registrationId); }
+  public void checkIn(long registrationId) {
+    service.checkIn(registrationId);
+    EventRegistration reg = service.getRegistration(registrationId);
+    if (reg.isVolunteer()) {
+      Event event = service.getEvent(reg.getEventId());
+      volunteerService.creditEventHours(event);
+    }
+  }
   public String attendanceReport(long eventId)           { return service.attendanceReport(eventId); }
 
   public List<EventRegistration> getRegistrations(long eventId) {

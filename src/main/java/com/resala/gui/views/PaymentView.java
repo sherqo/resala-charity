@@ -23,9 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Payments view - displays all recorded financial transactions and settlement status.
- */
 public class PaymentView extends BaseView {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =

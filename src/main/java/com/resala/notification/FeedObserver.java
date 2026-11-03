@@ -10,9 +10,6 @@ import javafx.scene.control.ListView;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Observer that updates a feed ListView and status label with donation/event activities.
- */
 public class FeedObserver implements DonationObserver, EventObserver {
 
     private final ListView<String> feedList;

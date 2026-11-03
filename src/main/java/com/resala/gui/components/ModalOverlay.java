@@ -14,11 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-/**
- * In-app modal overlay manager.
- * Renders centered modal cards inside the application window with a translucent backdrop,
- * preventing new floating OS windows and window overflow.
- */
 public final class ModalOverlay {
 
     private ModalOverlay() {}
@@ -29,10 +24,6 @@ public final class ModalOverlay {
         default void onOpened() {}
     }
 
-    /**
-     * Displays an in-app modal card synchronously using a nested event loop.
-     * Blocks caller thread until dismissed, while keeping the JavaFX UI reactive.
-     */
     public static <T> T show(AppShell appShell, ModalCard<T> card) {
         if (appShell == null) return null;
         StackPane overlay = appShell.getModalOverlay();

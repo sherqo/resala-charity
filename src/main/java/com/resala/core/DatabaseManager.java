@@ -10,9 +10,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * Singleton that owns the one SQLite connection used by the application.
- */
 public class DatabaseManager {
 
   private static final String SQLITE_PREFIX = "jdbc:sqlite:";
@@ -100,6 +97,10 @@ public class DatabaseManager {
 
     try (Statement st = connection.createStatement()) {
       st.execute("ALTER TABLE event_registrations ADD COLUMN skill_id INTEGER REFERENCES skills(id)");
+    } catch (SQLException ignored) {}
+
+    try (Statement st = connection.createStatement()) {
+      st.execute("ALTER TABLE events ADD COLUMN hours INTEGER NOT NULL DEFAULT 0");
     } catch (SQLException ignored) {}
   }
 

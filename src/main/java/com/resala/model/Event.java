@@ -17,6 +17,7 @@ public class Event {
   private int eventTypeId; // DB: event_types.id
   private LocalDate date;
   private int capacity;
+  private int hours; // volunteer hours credited to each assigned volunteer on close
   private Status status;
   private String description;
 
@@ -29,6 +30,7 @@ public class Event {
     int eventTypeId,
     LocalDate date,
     int capacity,
+    int hours,
     Status status,
     String description
   ) {
@@ -37,8 +39,22 @@ public class Event {
     this.eventTypeId = eventTypeId;
     this.date = date;
     this.capacity = capacity;
+    this.hours = hours;
     this.status = status;
     this.description = description;
+  }
+
+  /** Backwards-compatible constructor for events created before volunteer hours existed. */
+  public Event(
+    long id,
+    String title,
+    int eventTypeId,
+    LocalDate date,
+    int capacity,
+    Status status,
+    String description
+  ) {
+    this(id, title, eventTypeId, date, capacity, 0, status, description);
   }
 
   // getters & setters
@@ -80,6 +96,14 @@ public class Event {
 
   public void setCapacity(int capacity) {
     this.capacity = capacity;
+  }
+
+  public int getHours() {
+    return hours;
+  }
+
+  public void setHours(int hours) {
+    this.hours = hours;
   }
 
   public Status getStatus() {

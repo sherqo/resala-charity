@@ -66,10 +66,6 @@ public class DonationService implements DonationSubject {
     return donation;
   }
 
-  /**
-   * Rejects a donation if another donation already uses the same reference number.
-   * Reference numbers must be unique across all donations.
-   */
   private void checkDuplicateReference(DonationRequest request) {
     String reference = request.referenceNumber();
     if (reference == null || reference.isBlank()) return;
@@ -80,10 +76,6 @@ public class DonationService implements DonationSubject {
     }
   }
 
-  /**
-   * A reference number is only a lookup key. The donation may be recorded only when that key
-   * identifies a completed payment for the same donor and the same amount.
-   */
   private void requireCompletedPayment(DonationRequest request) {
     String reference = request.referenceNumber();
     if (reference == null || reference.isBlank()) {
@@ -133,10 +125,6 @@ public class DonationService implements DonationSubject {
     donors.archive(id);
   }
 
-  /**
-   * Updates an existing donation. Only PENDING or COMPLETED donations can be edited.
-   * For online donations, re-validates the payment if the amount changed.
-   */
   public Donation updateDonation(DonationRequest request, long donationId) {
     Donation existing = getDonation(donationId);
     if (existing.getStatus() != DonationStatus.PENDING
@@ -153,10 +141,6 @@ public class DonationService implements DonationSubject {
     return donations.update(request, donationId);
   }
 
-  /**
-   * Deletes a donation. Rejects if a completed payment references this donation
-   * (to avoid orphaning a settled transaction).
-   */
   public void deleteDonation(long id) {
     Donation donation = getDonation(id);
     if (payments != null) {

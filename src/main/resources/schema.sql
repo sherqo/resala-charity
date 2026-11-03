@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS events (
   event_type_id INTEGER NOT NULL REFERENCES event_types(id),
   date          TEXT    NOT NULL,
   capacity      INTEGER NOT NULL CHECK (capacity > 0),
+  hours         INTEGER NOT NULL DEFAULT 0 CHECK (hours >= 0),
   status        TEXT    NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','OPEN','CLOSED')),
   description   TEXT
 );

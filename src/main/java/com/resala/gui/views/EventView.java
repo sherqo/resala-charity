@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Events view - manage events, registrations, attendance.
- * Implements EventObserver for real-time reactive table updates.
- */
 public class EventView extends BaseView implements EventObserver {
 
     private final AppShell appShell;
@@ -56,6 +52,7 @@ public class EventView extends BaseView implements EventObserver {
             .column("Type",   120, e -> typeMap.getOrDefault(e.getEventTypeId(), "Type #" + e.getEventTypeId()))
             .column("Date",   120, e -> e.getDate().toString())
             .column("Seats",  100, e -> e.getCapacity() + " spots")
+            .column("Hours",  80,  e -> e.getHours() + " hrs")
             .column("Status", 80,  e -> e.getStatus().name())
             .items(FXCollections.observableArrayList())
             .build());
@@ -103,6 +100,7 @@ public class EventView extends BaseView implements EventObserver {
             new FormDialog.Field("eventTypeId", "Event Type",       FormDialog.Type.COMBO,    true, (Object[]) typeOptions),
             new FormDialog.Field("date",        "Date (YYYY-MM-DD)",FormDialog.Type.DATE,     true),
             new FormDialog.Field("capacity",    "Capacity",         FormDialog.Type.NUMBER,   true),
+            new FormDialog.Field("hours",       "Volunteer Hours",  FormDialog.Type.NUMBER,   true),
             new FormDialog.Field("description", "Description",      FormDialog.Type.TEXTAREA, false)
         );
 
@@ -114,9 +112,10 @@ public class EventView extends BaseView implements EventObserver {
                 int    eventTypeId  = Integer.parseInt(((String) map.get("eventTypeId")).split(":")[0].trim());
                 java.time.LocalDate date = java.time.LocalDate.parse((String) map.get("date"));
                 int    capacity     = Integer.parseInt(map.get("capacity").toString());
+                int    hours        = Integer.parseInt(map.get("hours").toString());
                 String description  = (String) map.get("description");
 
-                eventController.create(new EventRequest(title, eventTypeId, date, capacity, description));
+                eventController.create(new EventRequest(title, eventTypeId, date, capacity, hours, description));
                 appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Event created! (Status: DRAFT — use 'Open Event' to start registrations)", Toast.Type.SUCCESS);
             } catch (Exception ex) {
@@ -151,6 +150,7 @@ public class EventView extends BaseView implements EventObserver {
             new FormDialog.Field("eventTypeId", "Event Type",       FormDialog.Type.COMBO,    true, (Object[]) typeOptions),
             new FormDialog.Field("date",        "Date (YYYY-MM-DD)",FormDialog.Type.DATE,     true, selected.getDate().toString()),
             new FormDialog.Field("capacity",    "Capacity",         FormDialog.Type.NUMBER,   true, String.valueOf(selected.getCapacity())),
+            new FormDialog.Field("hours",       "Volunteer Hours",  FormDialog.Type.NUMBER,   true, String.valueOf(selected.getHours())),
             new FormDialog.Field("description", "Description",      FormDialog.Type.TEXTAREA, false, selected.getDescription() != null ? selected.getDescription() : "")
         );
 
@@ -162,9 +162,10 @@ public class EventView extends BaseView implements EventObserver {
                 int    eventTypeId  = Integer.parseInt(((String) map.get("eventTypeId")).split(":")[0].trim());
                 java.time.LocalDate date = java.time.LocalDate.parse((String) map.get("date"));
                 int    capacity     = Integer.parseInt(map.get("capacity").toString());
+                int    hours        = Integer.parseInt(map.get("hours").toString());
                 String description  = (String) map.get("description");
 
-                eventController.update(selected.getId(), new EventRequest(title, eventTypeId, date, capacity, description));
+                eventController.update(selected.getId(), new EventRequest(title, eventTypeId, date, capacity, hours, description));
                 appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(), "Event updated!", Toast.Type.SUCCESS);
             } catch (Exception ex) {
@@ -182,6 +183,11 @@ public class EventView extends BaseView implements EventObserver {
         }
         if (selected.getStatus() == Event.Status.OPEN) {
             appShell.getToast().show(appShell.getStage(), "Event is already open.", Toast.Type.INFO);
+            return;
+        }
+        if (selected.getStatus() == Event.Status.CLOSED) {
+            appShell.getToast().show(appShell.getStage(),
+                "Closed events cannot be reopened.", Toast.Type.WARNING);
             return;
         }
         try {
@@ -206,7 +212,9 @@ public class EventView extends BaseView implements EventObserver {
         try {
             eventController.close(selected.getId());
             appShell.refreshAll();
-            appShell.getToast().show(appShell.getStage(), "Event \"" + selected.getTitle() + "\" is now CLOSED.", Toast.Type.SUCCESS);
+            appShell.getToast().show(appShell.getStage(),
+                "Event \"" + selected.getTitle() + "\" is now CLOSED. " + selected.getHours() + " volunteer hour(s) credited to assigned volunteers.",
+                Toast.Type.SUCCESS);
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
         }
@@ -258,86 +266,6 @@ public class EventView extends BaseView implements EventObserver {
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
         }
-    }
-
-    private void showReportPreview(String text) {
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
-
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(560);
-                    card.setMinWidth(480);
-                    card.setMaxHeight(560);
-
-                    // Header
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label("Event Attendance Report");
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    // Body
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(text);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    // Footer
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-            return;
-        }
-
-        // Fallback
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(appShell.getStage());
-        dialog.setTitle("Event Attendance Report");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(new TextArea(text));
-        dialog.showAndWait();
     }
 
     private void showRescheduleDialog() {

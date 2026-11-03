@@ -7,10 +7,10 @@ Volunteers, skills, assignments, hours and certificates.
 - [x] V1 volunteer CRUD + availability
 - [x] V2 skills per volunteer + add/delete skill lookup entries
 - [x] V3 assign volunteer to an event (skill + date check)
-- [x] V4 log hours per assignment
+- [x] V4 event hours credited automatically when the event closes
 - [x] V5 summaries: total, per event, per month
 - [x] V6 certificate at >= 20 hours
-- [x] V7 search by skill / availability
+- [x] V7 search by skill
 
 ## Patterns
 

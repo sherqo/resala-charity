@@ -1,9 +1,5 @@
 package com.resala.notification;
 
-/**
- * Concrete Strategy — email channel (mocked).
- * A real implementation would use JavaMail or an SMTP client here.
- */
 public class EmailStrategy implements NotificationStrategy {
 
   @Override

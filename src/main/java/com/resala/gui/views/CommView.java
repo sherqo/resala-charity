@@ -18,10 +18,6 @@ import javafx.scene.layout.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Messages view - demonstrates Strategy pattern for multi-channel notifications.
- * Notion-inspired layout: flat visual hierarchy, cohesive composer, no emojis.
- */
 public class CommView extends BaseView {
 
     private final AppShell appShell;

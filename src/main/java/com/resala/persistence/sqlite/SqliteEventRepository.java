@@ -16,6 +16,7 @@ public class SqliteEventRepository extends JdbcRepository implements EventReposi
     num(rs, "event_type_id"),
     LocalDate.parse(str(rs, "date")),
     num(rs, "capacity"),
+    num(rs, "hours"),
     Event.Status.valueOf(str(rs, "status")),
     str(rs, "description")
   );
@@ -28,17 +29,17 @@ public class SqliteEventRepository extends JdbcRepository implements EventReposi
   public Event save(Event event) {
     if (event.getId() == 0) {
       long id = insertReturnKey(
-        "INSERT INTO events (title, event_type_id, date, capacity, status, description) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO events (title, event_type_id, date, capacity, hours, status, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
         event.getTitle(), event.getEventTypeId(), event.getDate().toString(),
-        event.getCapacity(), event.getStatus().name(), event.getDescription()
+        event.getCapacity(), event.getHours(), event.getStatus().name(), event.getDescription()
       );
       event.setId(id);
       return event;
     }
     int updated = execute(
-      "UPDATE events SET title=?, event_type_id=?, date=?, capacity=?, status=?, description=? WHERE id=?",
+      "UPDATE events SET title=?, event_type_id=?, date=?, capacity=?, hours=?, status=?, description=? WHERE id=?",
       event.getTitle(), event.getEventTypeId(), event.getDate().toString(),
-      event.getCapacity(), event.getStatus().name(), event.getDescription(), event.getId()
+      event.getCapacity(), event.getHours(), event.getStatus().name(), event.getDescription(), event.getId()
     );
     if (updated == 0) throw new IllegalArgumentException("Event not found");
     return event;

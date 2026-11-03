@@ -11,7 +11,6 @@ import com.resala.gui.components.Toast;
 import com.resala.model.Event;
 import com.resala.model.Skill;
 import com.resala.model.Volunteer;
-import com.resala.model.VolunteerEventAssignment;
 import com.resala.volunteer.helpers.VolunteerSummary;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -29,9 +28,6 @@ import javafx.scene.layout.VBox;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Volunteers view - manage volunteers, assignments, hours, certificates.
- */
 public class VolunteerView extends BaseView {
 
     private final AppShell appShell;
@@ -48,10 +44,9 @@ public class VolunteerView extends BaseView {
         this.volunteersTable = (DataTable<Volunteer>) this.table;
 
         Button assignBtn = Toolbar.ghost("Register to Event", e -> showAssignDialog());
-        Button logHoursBtn = Toolbar.ghost("Log Hours", e -> showLogHoursDialog());
-        Button certBtn = Toolbar.ghost("Certificate", e -> showCertificateDialog());
+        Button certBtn = Toolbar.ghost("Print Certificate", e -> showCertificateDialog());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
-        toolbar.getChildren().addAll(assignBtn, logHoursBtn, certBtn, deleteBtn);
+        toolbar.getChildren().addAll(assignBtn, certBtn, deleteBtn);
 
         this.primaryActionButton = Toolbar.primary("Add Volunteer", e -> showAddVolunteerDialog());
     }
@@ -116,17 +111,24 @@ public class VolunteerView extends BaseView {
             return;
         }
 
+        if (!selected.isAvailable()) {
+            appShell.getToast().show(appShell.getStage(),
+                "This volunteer is not available for assignment.", Toast.Type.WARNING);
+            return;
+        }
+
         List<Event> events = volunteerController.listOpenEvents();
-        List<Skill> skills = volunteerController.listSkills();
+        List<Skill> skills = volunteerController.getVolunteerSkills(selected.getId());
 
         if (events.isEmpty() || skills.isEmpty()) {
-            appShell.getToast().show(appShell.getStage(), "No open events or skills available.", Toast.Type.WARNING);
+            appShell.getToast().show(appShell.getStage(),
+                "No open events available, or this volunteer has no skills.", Toast.Type.WARNING);
             return;
         }
 
         var fields = List.of(
             new FormDialog.Field("eventId", "Event", FormDialog.Type.COMBO, true,
-                events.stream().map(e -> e.getId() + ": " + e.getTitle()).toArray()),
+                events.stream().map(e -> e.getId() + ": " + e.getTitle() + " (" + e.getHours() + " hrs)").toArray()),
             new FormDialog.Field("skillId", "Skill", FormDialog.Type.COMBO, true,
                 skills.stream().map(s -> s.getId() + ": " + s.getName()).toArray())
         );
@@ -141,41 +143,10 @@ public class VolunteerView extends BaseView {
                 var reg = volunteerController.getEventRegistration(selected.getId(), eventId);
                 String ticketInfo = reg.map(r -> " (Ticket: " + r.getTicketRef() + ")").orElse("");
                 appShell.refreshAll();
-                appShell.getToast().show(appShell.getStage(), "Volunteer registered to event!" + ticketInfo, Toast.Type.SUCCESS);
-            } catch (Exception ex) {
-                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
-            }
-        });
-    }
-
-    private void showLogHoursDialog() {
-        Volunteer selected = volunteersTable.getTableView().getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            appShell.getToast().show(appShell.getStage(), "Select a volunteer first.", Toast.Type.WARNING);
-            return;
-        }
-
-        List<VolunteerEventAssignment> assignments = volunteerController.listAssignments(selected.getId());
-        if (assignments.isEmpty()) {
-            appShell.getToast().show(appShell.getStage(), "No assignments for this volunteer.", Toast.Type.WARNING);
-            return;
-        }
-
-        var fields = List.of(
-            new FormDialog.Field("assignmentId", "Assignment", FormDialog.Type.COMBO, true,
-                assignments.stream().map(a -> a.getId() + ": " + a.getEventTitle() + " (" + a.getSkillName() + ")").toArray()),
-            new FormDialog.Field("hours", "Hours", FormDialog.Type.NUMBER, true)
-        );
-
-        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Log Hours", fields);
-        result.ifPresent(map -> {
-            try {
-                int assignmentId = Integer.parseInt(((String) map.get("assignmentId")).split(":")[0]);
-                int hours = Integer.parseInt(map.get("hours").toString());
-
-                volunteerController.logHours(assignmentId, hours);
-                appShell.refreshAll();
-                appShell.getToast().show(appShell.getStage(), "Hours logged!", Toast.Type.SUCCESS);
+                appShell.getToast().show(appShell.getStage(),
+                    "Volunteer registered to event!" + ticketInfo
+                        + " Hours will be credited after the event closes.",
+                    Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
             }

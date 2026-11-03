@@ -5,9 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Concrete Strategy — divides available aid equally among all eligible beneficiaries.
- */
 public class EqualDistributionPolicy implements DistributionPolicy {
 
   @Override

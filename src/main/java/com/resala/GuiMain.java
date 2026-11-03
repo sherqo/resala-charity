@@ -35,10 +35,6 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import java.sql.Connection;
 
-/**
- * JavaFX GUI entry point.
- * Run with: mvn javafx:run
- */
 public class GuiMain extends Application {
 
     @Override
@@ -76,7 +72,6 @@ public class GuiMain extends Application {
         );
         eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
         EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
-        EventController eventController = new EventController(eventService, eventTypeService);
 
         // Volunteer module (connected with event registrations)
         VolunteerService volunteerService = new VolunteerService(
@@ -85,6 +80,11 @@ public class GuiMain extends Application {
             eventRegistrationRepo
         );
         VolunteerController volunteerController = new VolunteerController(volunteerService);
+        EventController eventController = new EventController(
+            eventService,
+            eventTypeService,
+            volunteerService
+        );
 
         // Beneficiary module
         BeneficiaryService beneficiaryService = new BeneficiaryService(new SqliteBeneficiaryRepository(conn));

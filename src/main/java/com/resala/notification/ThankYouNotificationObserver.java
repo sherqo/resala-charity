@@ -4,11 +4,6 @@ import com.resala.core.AuditLogManager;
 import com.resala.donation.Donation;
 import com.resala.model.Donor;
 
-/**
- * Observer — reacts to a recorded donation by sending a thank-you notification.
- * Delegates to whichever channel (Strategy) the Notifier currently holds,
- * so the communication channel can be swapped at runtime without touching this class.
- */
 public class ThankYouNotificationObserver implements DonationObserver {
 
   private final Notifier notifier;

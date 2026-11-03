@@ -1,10 +1,5 @@
 package com.resala.event;
 
-/**
- * Catalogue of every error that can originate from the event module.
- * Each entry carries a stable error code, a user-friendly message, and a
- * flag indicating whether the caller may safely retry the operation.
- */
 public enum EventError {
 
   // --- Input / validation ---
@@ -14,6 +9,7 @@ public enum EventError {
   INVALID_CAPACITY      ("EVT-004", "Capacity must be a positive number.",                         false),
   INVALID_DATE_FORMAT   ("EVT-005", "Date format is invalid. Use YYYY-MM-DD.",                     false),
   ATTENDEE_NAME_REQUIRED("EVT-006", "Attendee name is required.",                                  false),
+  INVALID_HOURS         ("EVT-007", "Volunteer hours must be greater than zero.",                  false),
 
   // --- Not-found ---
   EVENT_NOT_FOUND       ("EVT-010", "Event not found.",                                            false),
@@ -26,6 +22,7 @@ public enum EventError {
   CAPACITY_BELOW_REGISTERED("EVT-023", "New capacity cannot be less than existing registrations.", false),
   EVENT_FULL            ("EVT-024", "Event is at full capacity.",                                   false),
   REGISTRATION_CLOSED   ("EVT-025", "Registrations are only accepted for OPEN events.",            false),
+  EVENT_CLOSED_FINAL    ("EVT-026", "A closed event cannot be reopened.",                          false),
 
   // --- Persistence ---
   PERSISTENCE_FAILURE   ("EVT-090", "A database error occurred. Please try again.",                true);

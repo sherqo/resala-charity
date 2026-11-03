@@ -1,9 +1,5 @@
 package com.resala.payment;
 
-/**
- * Dummy wallet details captured by the UI for demonstration purposes.
- * Validation and tokenization are owned by {@link WalletPaymentMethod}.
- */
 public record WalletDetails(String phone) implements PaymentInstrument {
 
   public WalletDetails {
