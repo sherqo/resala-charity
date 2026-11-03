@@ -2,6 +2,7 @@ package com.resala.model;
 
 import java.util.EnumSet;
 
+/** ISA for later please do not touch */
 public enum Role {
   ADMIN(EnumSet.allOf(Permission.class)),
   STAFF(
