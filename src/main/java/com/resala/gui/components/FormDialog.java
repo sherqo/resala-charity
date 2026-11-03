@@ -241,6 +241,9 @@ public final class FormDialog {
             case NUMBER -> {
                 TextField tf = new TextField();
                 tf.setPromptText("0");
+                if (field.options().length > 0 && field.options()[0] != null) {
+                    tf.setText(field.options()[0].toString());
+                }
                 yield tf;
             }
             case COMBO -> {
@@ -260,6 +263,15 @@ public final class FormDialog {
             case DATE -> {
                 DatePicker dp = new DatePicker();
                 dp.setPromptText("YYYY-MM-DD");
+                if (field.options().length > 0 && field.options()[0] != null) {
+                    if (field.options()[0] instanceof LocalDate ld) {
+                        dp.setValue(ld);
+                    } else {
+                        try {
+                            dp.setValue(LocalDate.parse(field.options()[0].toString()));
+                        } catch (Exception ignored) {}
+                    }
+                }
                 yield dp;
             }
             case SPINNER -> {
@@ -274,6 +286,9 @@ public final class FormDialog {
                 TextArea ta = new TextArea();
                 ta.setPrefRowCount(3);
                 ta.setWrapText(true);
+                if (field.options().length > 0 && field.options()[0] != null) {
+                    ta.setText(field.options()[0].toString());
+                }
                 yield ta;
             }
             case CHECKBOX -> {
