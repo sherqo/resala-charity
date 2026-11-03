@@ -1,6 +1,6 @@
 package com.resala.event;
 
-/** A single attendee registration for an event. */
+/** A single attendee or volunteer registration for an event. */
 public class EventRegistration {
 
   private long id;
@@ -9,6 +9,8 @@ public class EventRegistration {
   private String attendeeEmail; // optional
   private String ticketRef;     // unique 8-char code generated on registration
   private boolean checkedIn;
+  private Integer volunteerId;  // null for non-volunteer attendees
+  private Integer skillId;      // null for non-volunteer attendees
 
   public EventRegistration() {}
 
@@ -20,12 +22,27 @@ public class EventRegistration {
     String ticketRef,
     boolean checkedIn
   ) {
+    this(id, eventId, attendeeName, attendeeEmail, ticketRef, checkedIn, null, null);
+  }
+
+  public EventRegistration(
+    long id,
+    long eventId,
+    String attendeeName,
+    String attendeeEmail,
+    String ticketRef,
+    boolean checkedIn,
+    Integer volunteerId,
+    Integer skillId
+  ) {
     this.id = id;
     this.eventId = eventId;
     this.attendeeName = attendeeName;
     this.attendeeEmail = attendeeEmail;
     this.ticketRef = ticketRef;
     this.checkedIn = checkedIn;
+    this.volunteerId = volunteerId;
+    this.skillId = skillId;
   }
 
   public long getId() { return id; }
@@ -45,4 +62,14 @@ public class EventRegistration {
 
   public boolean isCheckedIn() { return checkedIn; }
   public void setCheckedIn(boolean checkedIn) { this.checkedIn = checkedIn; }
+
+  public Integer getVolunteerId() { return volunteerId; }
+  public void setVolunteerId(Integer volunteerId) { this.volunteerId = volunteerId; }
+
+  public Integer getSkillId() { return skillId; }
+  public void setSkillId(Integer skillId) { this.skillId = skillId; }
+
+  public boolean isVolunteer() {
+    return volunteerId != null && volunteerId > 0;
+  }
 }

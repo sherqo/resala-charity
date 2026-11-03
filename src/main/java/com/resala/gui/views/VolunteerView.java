@@ -47,7 +47,7 @@ public class VolunteerView extends BaseView {
         this.volunteerController = volunteerController;
         this.volunteersTable = (DataTable<Volunteer>) this.table;
 
-        Button assignBtn = Toolbar.ghost("Assign to Event", e -> showAssignDialog());
+        Button assignBtn = Toolbar.ghost("Register to Event", e -> showAssignDialog());
         Button logHoursBtn = Toolbar.ghost("Log Hours", e -> showLogHoursDialog());
         Button certBtn = Toolbar.ghost("Certificate", e -> showCertificateDialog());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
@@ -116,11 +116,11 @@ public class VolunteerView extends BaseView {
             return;
         }
 
-        List<Event> events = volunteerController.listEvents();
+        List<Event> events = volunteerController.listOpenEvents();
         List<Skill> skills = volunteerController.listSkills();
 
         if (events.isEmpty() || skills.isEmpty()) {
-            appShell.getToast().show(appShell.getStage(), "Need events and skills first.", Toast.Type.WARNING);
+            appShell.getToast().show(appShell.getStage(), "No open events or skills available.", Toast.Type.WARNING);
             return;
         }
 
@@ -131,15 +131,17 @@ public class VolunteerView extends BaseView {
                 skills.stream().map(s -> s.getId() + ": " + s.getName()).toArray())
         );
 
-        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Assign Volunteer to Event", fields);
+        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Register Volunteer to Event", fields);
         result.ifPresent(map -> {
             try {
                 int eventId = Integer.parseInt(((String) map.get("eventId")).split(":")[0]);
                 int skillId = Integer.parseInt(((String) map.get("skillId")).split(":")[0]);
 
                 volunteerController.assign(selected.getId(), eventId, skillId);
+                var reg = volunteerController.getEventRegistration(selected.getId(), eventId);
+                String ticketInfo = reg.map(r -> " (Ticket: " + r.getTicketRef() + ")").orElse("");
                 appShell.refreshAll();
-                appShell.getToast().show(appShell.getStage(), "Volunteer assigned!", Toast.Type.SUCCESS);
+                appShell.getToast().show(appShell.getStage(), "Volunteer registered to event!" + ticketInfo, Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
             }

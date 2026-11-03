@@ -115,7 +115,9 @@ CREATE TABLE IF NOT EXISTS event_registrations (
   attendee_name  TEXT    NOT NULL,
   attendee_email TEXT,
   ticket_ref     TEXT    NOT NULL UNIQUE,
-  checked_in     INTEGER NOT NULL DEFAULT 0 CHECK (checked_in IN (0,1))
+  checked_in     INTEGER NOT NULL DEFAULT 0 CHECK (checked_in IN (0,1)),
+  volunteer_id   INTEGER REFERENCES volunteers(id) ON DELETE SET NULL,
+  skill_id       INTEGER REFERENCES skills(id)
 );
 
 -- Beneficiary module

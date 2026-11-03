@@ -78,10 +78,11 @@ public class GuiMain extends Application {
         EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
         EventController eventController = new EventController(eventService, eventTypeService);
 
-        // Volunteer module
+        // Volunteer module (connected with event registrations)
         VolunteerService volunteerService = new VolunteerService(
             new SqliteVolunteerRepository(conn),
-            new SqliteEventRepository(conn)
+            new SqliteEventRepository(conn),
+            eventRegistrationRepo
         );
         VolunteerController volunteerController = new VolunteerController(volunteerService);
 

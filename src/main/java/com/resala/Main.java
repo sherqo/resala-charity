@@ -81,7 +81,8 @@ public class Main {
     // Volunteer module
     VolunteerService volunteerService = new VolunteerService(
       new SqliteVolunteerRepository(conn),
-      new SqliteEventRepository(conn)
+      new SqliteEventRepository(conn),
+      eventRegistrationRepo
     );
     VolunteerController volunteerController = new VolunteerController(volunteerService);
 
