@@ -1,87 +1,83 @@
 package com.resala.persistence.sqlite;
 
+import com.resala.core.JdbcRepository;
 import com.resala.beneficiary.BeneficiaryRepository;
 import com.resala.beneficiary.Distribution;
 import com.resala.model.Beneficiary;
 import com.resala.model.NeedType;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
+public class SqliteBeneficiaryRepository extends JdbcRepository implements BeneficiaryRepository {
 
-  private final Connection connection;
+  private static final JdbcRepository.RowMapper<Beneficiary> BENEFICIARY_MAPPER = rs -> new Beneficiary(
+    lng(rs, "id"),
+    str(rs, "name"),
+    str(rs, "phone"),
+    num(rs, "household_size"),
+    num(rs, "need_type_id"),
+    Beneficiary.Status.valueOf(str(rs, "status")),
+    str(rs, "notes"),
+    num(rs, "impact_score")
+  );
+
+  private static final JdbcRepository.RowMapper<Distribution> DISTRIBUTION_MAPPER = rs -> {
+    long donationIdVal = lng(rs, "donation_id");
+    Long donationId = rs.wasNull() ? null : donationIdVal;
+    return new Distribution(
+      lng(rs, "id"),
+      lng(rs, "beneficiary_id"),
+      donationId,
+      str(rs, "item_description"),
+      num(rs, "quantity"),
+      LocalDate.parse(str(rs, "distribution_date")),
+      str(rs, "notes")
+    );
+  };
 
   public SqliteBeneficiaryRepository(Connection connection) {
-    this.connection = connection;
+    super(connection);
   }
 
   @Override
   public Beneficiary save(Beneficiary b) {
-    try {
-      if (b.getId() == 0) return insert(b);
-      try (
-        PreparedStatement ps = connection.prepareStatement(
-          """
-          UPDATE beneficiaries
-          SET name=?, phone=?, household_size=?, need_type_id=?, status=?, notes=?, impact_score=?
-          WHERE id=?
-          """
-        )
-      ) {
-        bind(ps, b);
-        ps.setInt(7, b.getImpactScore());
-        ps.setLong(8, b.getId());
-        ps.executeUpdate();
-        return b;
+    if (b.getId() == 0) {
+      try {
+        return insert(b);
+      } catch (java.sql.SQLException e) {
+        throw new IllegalStateException("Could not insert beneficiary", e);
       }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not save beneficiary", e);
     }
+    int updated = execute(
+      "UPDATE beneficiaries SET name=?, phone=?, household_size=?, need_type_id=?, status=?, notes=?, impact_score=? WHERE id=?",
+      b.getName(), b.getPhone(), b.getHouseholdSize(), b.getNeedTypeId(),
+      b.getStatus().name(), b.getNotes(), b.getImpactScore(), b.getId()
+    );
+    if (updated == 0) throw new IllegalArgumentException("Beneficiary not found");
+    return b;
   }
 
   @Override
   public Optional<Beneficiary> findById(long id) {
-    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM beneficiaries WHERE id=?")) {
-      ps.setLong(1, id);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? Optional.of(map(rs)) : Optional.empty();
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not load beneficiary", e);
-    }
+    return queryOne("SELECT * FROM beneficiaries WHERE id=?", BENEFICIARY_MAPPER, id);
   }
 
   @Override
   public List<Beneficiary> findAll() {
-    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM beneficiaries ORDER BY name")) {
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Beneficiary> list = new ArrayList<>();
-        while (rs.next()) list.add(map(rs));
-        return list;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list beneficiaries", e);
-    }
+    return query("SELECT * FROM beneficiaries ORDER BY name", BENEFICIARY_MAPPER);
   }
 
   @Override
   public void delete(long id) {
-    try (PreparedStatement ps = connection.prepareStatement("DELETE FROM beneficiaries WHERE id=?")) {
-      ps.setLong(1, id);
-      if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Beneficiary not found");
-    } catch (SQLException e) {
+    try {
+      int deleted = execute("DELETE FROM beneficiaries WHERE id=?", id);
+      if (deleted == 0) throw new IllegalArgumentException("Beneficiary not found");
+    } catch (IllegalStateException e) {
       if (e.getMessage() != null && e.getMessage().contains("FOREIGN KEY")) {
         throw new IllegalStateException(
-          "Cannot delete beneficiary #" + id + " because they have recorded aid distributions. Please set status to CLOSED instead."
-        );
+          "Cannot delete beneficiary #" + id + " because they have recorded aid distributions. Please set status to CLOSED instead.");
       }
       throw new IllegalStateException("Could not delete beneficiary: " + e.getMessage(), e);
     }
@@ -89,204 +85,70 @@ public class SqliteBeneficiaryRepository implements BeneficiaryRepository {
 
   @Override
   public Distribution saveDistribution(Distribution d) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        """
-        INSERT INTO distributions (beneficiary_id, donation_id, item_description, quantity, distribution_date, notes)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        Statement.RETURN_GENERATED_KEYS
-      )
-    ) {
-      ps.setLong(1, d.getBeneficiaryId());
-      if (d.getDonationId() != null) {
-        ps.setLong(2, d.getDonationId());
-      } else {
-        ps.setNull(2, Types.INTEGER);
-      }
-      ps.setString(3, d.getItemDescription());
-      ps.setInt(4, d.getQuantity());
-      ps.setString(5, d.getDistributionDate().toString());
-      ps.setString(6, d.getNotes());
-      ps.executeUpdate();
-
-      try (ResultSet keys = ps.getGeneratedKeys()) {
-        if (!keys.next()) throw new SQLException("No distribution id returned");
-        d.setId(keys.getLong(1));
-        return d;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not record distribution", e);
-    }
+    long id = insertReturnKey(
+      "INSERT INTO distributions (beneficiary_id, donation_id, item_description, quantity, distribution_date, notes) VALUES (?, ?, ?, ?, ?, ?)",
+      d.getBeneficiaryId(), d.getDonationId(), d.getItemDescription(), d.getQuantity(),
+      d.getDistributionDate().toString(), d.getNotes()
+    );
+    d.setId(id);
+    return d;
   }
 
   @Override
   public List<Distribution> findDistributionsByBeneficiary(long beneficiaryId) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        "SELECT * FROM distributions WHERE beneficiary_id=? ORDER BY distribution_date DESC, id DESC"
-      )
-    ) {
-      ps.setLong(1, beneficiaryId);
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Distribution> list = new ArrayList<>();
-        while (rs.next()) list.add(mapDistribution(rs));
-        return list;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list distributions for beneficiary", e);
-    }
+    return query("SELECT * FROM distributions WHERE beneficiary_id=? ORDER BY distribution_date DESC, id DESC",
+      DISTRIBUTION_MAPPER, beneficiaryId);
   }
 
   @Override
   public List<Distribution> findAllDistributions() {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        "SELECT * FROM distributions ORDER BY distribution_date DESC, id DESC"
-      )
-    ) {
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Distribution> list = new ArrayList<>();
-        while (rs.next()) list.add(mapDistribution(rs));
-        return list;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list all distributions", e);
-    }
+    return query("SELECT * FROM distributions ORDER BY distribution_date DESC, id DESC", DISTRIBUTION_MAPPER);
   }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
-
-  private Beneficiary insert(Beneficiary b) throws SQLException {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        """
-        INSERT INTO beneficiaries (name, phone, household_size, need_type_id, status, notes, impact_score)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        Statement.RETURN_GENERATED_KEYS
-      )
-    ) {
-      bind(ps, b);
-      ps.executeUpdate();
-      try (ResultSet keys = ps.getGeneratedKeys()) {
-        if (!keys.next()) throw new SQLException("No beneficiary id returned");
-        b.setId(keys.getLong(1));
-        return b;
-      }
-    }
-  }
-
-  private void bind(PreparedStatement ps, Beneficiary b) throws SQLException {
-    ps.setString(1, b.getName());
-    ps.setString(2, b.getPhone());
-    ps.setInt(3, b.getHouseholdSize());
-    ps.setInt(4, b.getNeedTypeId());
-    ps.setString(5, b.getStatus().name());
-    ps.setString(6, b.getNotes());
-    ps.setInt(7, b.getImpactScore());
-  }
-
-  private Beneficiary map(ResultSet rs) throws SQLException {
-    return new Beneficiary(
-      rs.getLong("id"),
-      rs.getString("name"),
-      rs.getString("phone"),
-      rs.getInt("household_size"),
-      rs.getInt("need_type_id"),
-      Beneficiary.Status.valueOf(rs.getString("status")),
-      rs.getString("notes"),
-      rs.getInt("impact_score")
-    );
-  }
-
-  private Distribution mapDistribution(ResultSet rs) throws SQLException {
-    long donationIdVal = rs.getLong("donation_id");
-    Long donationId = rs.wasNull() ? null : donationIdVal;
-
-    return new Distribution(
-      rs.getLong("id"),
-      rs.getLong("beneficiary_id"),
-      donationId,
-      rs.getString("item_description"),
-      rs.getInt("quantity"),
-      LocalDate.parse(rs.getString("distribution_date")),
-      rs.getString("notes")
-    );
-  }
-
-  // ── Need Types Lookup CRUD ────────────────────────────────────────────────
 
   @Override
   public List<NeedType> findAllNeedTypes() {
-    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM need_types ORDER BY id")) {
-      try (ResultSet rs = ps.executeQuery()) {
-        List<NeedType> list = new ArrayList<>();
-        while (rs.next()) {
-          list.add(new NeedType(rs.getInt("id"), rs.getString("name")));
-        }
-        return list;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list need types", e);
-    }
+    return query("SELECT * FROM need_types ORDER BY id",
+      rs -> new NeedType(num(rs, "id"), str(rs, "name")));
   }
 
   @Override
   public Optional<NeedType> findNeedTypeById(int id) {
-    try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM need_types WHERE id=?")) {
-      ps.setInt(1, id);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? Optional.of(new NeedType(rs.getInt("id"), rs.getString("name"))) : Optional.empty();
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not load need type", e);
-    }
+    return queryOne("SELECT * FROM need_types WHERE id=?",
+      rs -> new NeedType(num(rs, "id"), str(rs, "name")), id);
   }
 
   @Override
   public NeedType saveNeedType(NeedType nt) {
     if (nt.getId() <= 0) {
-      try (
-        PreparedStatement ps = connection.prepareStatement(
-          "INSERT INTO need_types (name) VALUES (?)",
-          Statement.RETURN_GENERATED_KEYS
-        )
-      ) {
-        ps.setString(1, nt.getName());
-        ps.executeUpdate();
-        try (ResultSet keys = ps.getGeneratedKeys()) {
-          if (!keys.next()) throw new SQLException("No generated ID for need type");
-          nt.setId(keys.getInt(1));
-          return nt;
-        }
-      } catch (SQLException e) {
-        throw new IllegalStateException("Could not create need type: " + e.getMessage(), e);
-      }
-    } else {
-      try (PreparedStatement ps = connection.prepareStatement("UPDATE need_types SET name=? WHERE id=?")) {
-        ps.setString(1, nt.getName());
-        ps.setInt(2, nt.getId());
-        ps.executeUpdate();
-        return nt;
-      } catch (SQLException e) {
-        throw new IllegalStateException("Could not update need type: " + e.getMessage(), e);
-      }
+      long id = insertReturnKey("INSERT INTO need_types (name) VALUES (?)", nt.getName());
+      nt.setId((int) id);
+      return nt;
     }
+    int updated = execute("UPDATE need_types SET name=? WHERE id=?", nt.getName(), nt.getId());
+    if (updated == 0) throw new IllegalArgumentException("Need type not found: #" + nt.getId());
+    return nt;
   }
 
   @Override
   public void deleteNeedType(int id) {
-    try (PreparedStatement ps = connection.prepareStatement("DELETE FROM need_types WHERE id=?")) {
-      ps.setInt(1, id);
-      if (ps.executeUpdate() == 0) {
-        throw new IllegalArgumentException("Need type not found: #" + id);
-      }
-    } catch (SQLException e) {
+    try {
+      int deleted = execute("DELETE FROM need_types WHERE id=?", id);
+      if (deleted == 0) throw new IllegalArgumentException("Need type not found: #" + id);
+    } catch (IllegalStateException e) {
       if (e.getMessage() != null && e.getMessage().contains("FOREIGN KEY")) {
         throw new IllegalStateException("Cannot delete need type #" + id + " because active beneficiaries are assigned to it.", e);
       }
       throw new IllegalStateException("Could not delete need type: " + e.getMessage(), e);
     }
+  }
+
+  private Beneficiary insert(Beneficiary b) throws java.sql.SQLException {
+    long id = insertReturnKey(
+      "INSERT INTO beneficiaries (name, phone, household_size, need_type_id, status, notes, impact_score) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      b.getName(), b.getPhone(), b.getHouseholdSize(), b.getNeedTypeId(),
+      b.getStatus().name(), b.getNotes(), b.getImpactScore()
+    );
+    b.setId(id);
+    return b;
   }
 }

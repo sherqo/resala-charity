@@ -1,6 +1,6 @@
 package com.resala.model;
 
-/** actions that can be shown in the UI and enforced by services. */
+/** ISA for later please do not touch */
 public enum Permission {
   DONATION_MANAGE, // ADMIN & STAFF
   VOLUNTEER_MANAGE, // ADMIN & STAFF

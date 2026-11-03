@@ -1,28 +1,21 @@
 package com.resala.persistence.sqlite;
 
+import com.resala.core.JdbcRepository;
 import com.resala.payment.Payment;
 import com.resala.payment.PaymentError;
 import com.resala.payment.PaymentMethod;
 import com.resala.payment.PaymentMethods;
 import com.resala.payment.PaymentRepository;
 import com.resala.payment.PaymentStatus;
-
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SqlitePaymentRepository implements PaymentRepository {
-
-  private final Connection connection;
+public class SqlitePaymentRepository extends JdbcRepository implements PaymentRepository {
 
   public SqlitePaymentRepository(Connection connection) {
-    this.connection = connection;
+    super(connection);
   }
 
   @Override
@@ -31,193 +24,122 @@ public class SqlitePaymentRepository implements PaymentRepository {
       if (payment.getId() == 0) return insert(payment);
       update(payment);
       return payment;
-    } catch (SQLException e) {
+    } catch (java.sql.SQLException e) {
       throw new IllegalStateException("Could not save payment", e);
     }
   }
 
   @Override
   public Optional<Payment> findById(long id) {
-    try (PreparedStatement ps = connection.prepareStatement(
-        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.id=?")) {
-      ps.setLong(1, id);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? Optional.of(map(rs)) : Optional.empty();
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not load payment", e);
-    }
+    return queryOne(
+      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.id=?",
+      PAYMENT_MAPPER, id);
   }
 
   @Override
   public Optional<Payment> findByIdempotencyKey(String key) {
-    try (PreparedStatement ps = connection.prepareStatement(
-        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.idempotency_key=?")) {
-      ps.setString(1, key);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? Optional.of(map(rs)) : Optional.empty();
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not load payment", e);
-    }
+    return queryOne(
+      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.idempotency_key=?",
+      PAYMENT_MAPPER, key);
   }
 
   @Override
   public List<Payment> findByPayer(String payerType, long payerId) {
-    try (PreparedStatement ps = connection.prepareStatement(
-        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.payer_type=? AND p.payer_id=? ORDER BY p.created_at DESC")) {
-      ps.setString(1, payerType);
-      ps.setLong(2, payerId);
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Payment> payments = new ArrayList<>();
-        while (rs.next()) payments.add(map(rs));
-        return payments;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list payments", e);
-    }
+    return query(
+      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.payer_type=? AND p.payer_id=? ORDER BY p.created_at DESC",
+      PAYMENT_MAPPER, payerType, payerId);
   }
 
   @Override
   public List<Payment> findByStatus(PaymentStatus status) {
-    try (PreparedStatement ps = connection.prepareStatement(
-        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.status=? ORDER BY p.created_at")) {
-      ps.setString(1, status.name());
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Payment> payments = new ArrayList<>();
-        while (rs.next()) payments.add(map(rs));
-        return payments;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list payments", e);
-    }
+    return query(
+      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.status=? ORDER BY p.created_at",
+      PAYMENT_MAPPER, status.name());
   }
 
   @Override
   public List<Payment> findAll() {
-    try (PreparedStatement ps = connection.prepareStatement(
-        "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id ORDER BY p.id DESC")) {
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Payment> payments = new ArrayList<>();
-        while (rs.next()) payments.add(map(rs));
-        return payments;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list all payments", e);
-    }
+    return query(
+      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id ORDER BY p.id DESC",
+      PAYMENT_MAPPER);
   }
 
-  private Payment insert(Payment payment) throws SQLException {
-    try (PreparedStatement ps = connection.prepareStatement(
-        """
-        INSERT INTO payments (payer_type, payer_id, amount_minor, fee_minor, currency, payment_method_id,
-          status, idempotency_key, failure_code, failure_message, notes, reference_type, reference_id,
-          created_at, updated_at, paid_at)
-        VALUES (?, ?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        Statement.RETURN_GENERATED_KEYS)) {
-      bindInsert(ps, payment);
-      ps.executeUpdate();
-      try (ResultSet keys = ps.getGeneratedKeys()) {
-        if (!keys.next()) throw new SQLException("No payment id returned");
-        payment.setId(keys.getLong(1));
-        return payment;
-      }
-    }
-  }
-
-  private void update(Payment payment) throws SQLException {
-    try (PreparedStatement ps = connection.prepareStatement(
-        """
-        UPDATE payments SET payer_type=?, payer_id=?, amount_minor=?, fee_minor=?, currency=?, payment_method_id=(SELECT id FROM payment_methods WHERE name=?),
-          status=?, idempotency_key=?, failure_code=?, failure_message=?, notes=?,
-          reference_type=?, reference_id=?, created_at=?, updated_at=?, paid_at=?
-        WHERE id=?
-        """)) {
-      int i = 1;
-      ps.setString(i++, payment.getPayerType());
-      ps.setLong(i++, payment.getPayerId());
-      ps.setLong(i++, payment.getAmountMinor());
-      ps.setLong(i++, payment.getFeeMinor());
-      ps.setString(i++, payment.getCurrency());
-      ps.setString(i++, payment.getPaymentMethod().code());
-      ps.setString(i++, payment.getStatus().name());
-      ps.setString(i++, payment.getIdempotencyKey());
-      if (payment.getFailureReason() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-      else ps.setString(i++, payment.getFailureReason().name());
-      ps.setString(i++, payment.getFailureMessage());
-      ps.setString(i++, payment.getNotes());
-      if (payment.getReferenceType() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-      else ps.setString(i++, payment.getReferenceType());
-      if (payment.getReferenceId() == null) ps.setNull(i++, java.sql.Types.INTEGER);
-      else ps.setLong(i++, payment.getReferenceId());
-      ps.setString(i++, payment.getCreatedAt().toString());
-      ps.setString(i++, payment.getUpdatedAt().toString());
-      if (payment.getPaidAt() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-      else ps.setString(i++, payment.getPaidAt().toString());
-      ps.setLong(i, payment.getId());
-      ps.executeUpdate();
-    }
-  }
-
-  private void bindInsert(PreparedStatement ps, Payment payment) throws SQLException {
-    int i = 1;
-    ps.setString(i++, payment.getPayerType());
-    ps.setLong(i++, payment.getPayerId());
-    ps.setLong(i++, payment.getAmountMinor());
-    ps.setLong(i++, payment.getFeeMinor());
-    ps.setString(i++, payment.getCurrency());
-    ps.setString(i++, payment.getPaymentMethod().code());
-    ps.setString(i++, payment.getStatus().name());
-    ps.setString(i++, payment.getIdempotencyKey());
-    if (payment.getFailureReason() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-    else ps.setString(i++, payment.getFailureReason().name());
-    ps.setString(i++, payment.getFailureMessage());
-    ps.setString(i++, payment.getNotes());
-    if (payment.getReferenceType() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-    else ps.setString(i++, payment.getReferenceType());
-    if (payment.getReferenceId() == null) ps.setNull(i++, java.sql.Types.INTEGER);
-    else ps.setLong(i++, payment.getReferenceId());
-    ps.setString(i++, payment.getCreatedAt().toString());
-    ps.setString(i++, payment.getUpdatedAt().toString());
-    if (payment.getPaidAt() == null) ps.setNull(i++, java.sql.Types.VARCHAR);
-    else ps.setString(i++, payment.getPaidAt().toString());
-  }
-
-  private Payment map(ResultSet rs) throws SQLException {
-    PaymentError failure = nullableError(rs.getString("failure_code"));
+  private static final JdbcRepository.RowMapper<Payment> PAYMENT_MAPPER = rs -> {
+    PaymentError failure = nullableError(str(rs, "failure_code"));
     return Payment.restore(
-        rs.getLong("id"),
-        rs.getString("payer_type"),
-        rs.getLong("payer_id"),
-        nullableLong(rs, "reference_id"),
-        rs.getString("reference_type"),
-        rs.getLong("amount_minor"),
-        rs.getLong("fee_minor"),
-        rs.getString("currency"),
-        rs.getString("method_name"),
-        rs.getString("idempotency_key"),
-        PaymentStatus.valueOf(rs.getString("status")),
-        failure,
-        rs.getString("failure_message"),
-        rs.getString("notes"),
-        Instant.parse(rs.getString("created_at")),
-        Instant.parse(rs.getString("updated_at")),
-        nullableInstant(rs, "paid_at")
+      lng(rs, "id"),
+      str(rs, "payer_type"),
+      lng(rs, "payer_id"),
+      nullableLong(rs, "reference_id"),
+      str(rs, "reference_type"),
+      lng(rs, "amount_minor"),
+      lng(rs, "fee_minor"),
+      str(rs, "currency"),
+      str(rs, "method_name"),
+      str(rs, "idempotency_key"),
+      PaymentStatus.valueOf(str(rs, "status")),
+      failure,
+      str(rs, "failure_message"),
+      str(rs, "notes"),
+      Instant.parse(str(rs, "created_at")),
+      Instant.parse(str(rs, "updated_at")),
+      nullableInstant(rs, "paid_at")
     );
+  };
+
+  private Payment insert(Payment payment) throws java.sql.SQLException {
+    long id = insertReturnKey(
+      """
+      INSERT INTO payments (payer_type, payer_id, amount_minor, fee_minor, currency, payment_method_id,
+        status, idempotency_key, failure_code, failure_message, notes, reference_type, reference_id,
+        created_at, updated_at, paid_at)
+      VALUES (?, ?, ?, ?, ?, (SELECT id FROM payment_methods WHERE name=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      """,
+      payment.getPayerType(), payment.getPayerId(), payment.getAmountMinor(), payment.getFeeMinor(),
+      payment.getCurrency(), payment.getPaymentMethod().code(), payment.getStatus().name(),
+      payment.getIdempotencyKey(),
+      payment.getFailureReason() == null ? null : payment.getFailureReason().name(),
+      payment.getFailureMessage(), payment.getNotes(),
+      payment.getReferenceType(), payment.getReferenceId(),
+      payment.getCreatedAt().toString(), payment.getUpdatedAt().toString(),
+      payment.getPaidAt() == null ? null : payment.getPaidAt().toString()
+    );
+    payment.setId(id);
+    return payment;
   }
 
-  private Long nullableLong(ResultSet rs, String column) throws SQLException {
+  private void update(Payment payment) throws java.sql.SQLException {
+    int updated = execute(
+      """
+      UPDATE payments SET payer_type=?, payer_id=?, amount_minor=?, fee_minor=?, currency=?,
+        payment_method_id=(SELECT id FROM payment_methods WHERE name=?), status=?,
+        idempotency_key=?, failure_code=?, failure_message=?, notes=?,
+        reference_type=?, reference_id=?, created_at=?, updated_at=?, paid_at=? WHERE id=?
+      """,
+      payment.getPayerType(), payment.getPayerId(), payment.getAmountMinor(), payment.getFeeMinor(),
+      payment.getCurrency(), payment.getPaymentMethod().code(), payment.getStatus().name(),
+      payment.getIdempotencyKey(),
+      payment.getFailureReason() == null ? null : payment.getFailureReason().name(),
+      payment.getFailureMessage(), payment.getNotes(),
+      payment.getReferenceType(), payment.getReferenceId(),
+      payment.getCreatedAt().toString(), payment.getUpdatedAt().toString(),
+      payment.getPaidAt() == null ? null : payment.getPaidAt().toString(),
+      payment.getId()
+    );
+    if (updated == 0) throw new IllegalArgumentException("Payment not found");
+  }
+
+  private static Long nullableLong(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
     long value = rs.getLong(column);
     return rs.wasNull() ? null : value;
   }
 
-  private Instant nullableInstant(ResultSet rs, String column) throws SQLException {
-    String value = rs.getString(column);
+  private static Instant nullableInstant(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
+    String value = str(rs, column);
     return value == null ? null : Instant.parse(value);
   }
 
-  private PaymentError nullableError(String code) {
+  private static PaymentError nullableError(String code) {
     return code == null ? null : PaymentError.valueOf(code);
   }
 }

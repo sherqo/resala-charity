@@ -1,5 +1,6 @@
 package com.resala.persistence.sqlite;
 
+import com.resala.core.JdbcRepository;
 import com.resala.donation.Donation;
 import com.resala.donation.DonationFilter;
 import com.resala.donation.DonationRepository;
@@ -7,62 +8,54 @@ import com.resala.donation.DonationRequest;
 import com.resala.donation.DonationStatus;
 import com.resala.model.DonationType;
 import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SqliteDonationRepository implements DonationRepository {
+public class SqliteDonationRepository extends JdbcRepository implements DonationRepository {
 
-  private final Connection connection;
+  private static final JdbcRepository.RowMapper<Donation> DONATION_MAPPER = rs -> {
+    DonationType type = DonationType.valueOf(str(rs, "donation_type"));
+    Integer quantity = nullableInteger(rs, "quantity");
+    Long estimated = nullableLong(rs, "estimated_value_minor");
+    DonationRequest request = new DonationRequest(
+      lng(rs, "donor_id"),
+      type,
+      lng(rs, "amount_minor"),
+      str(rs, "item_description"),
+      quantity,
+      estimated,
+      str(rs, "reference_number"),
+      LocalDate.parse(str(rs, "donation_date")),
+      str(rs, "notes")
+    );
+    Donation donation = new com.resala.donation.DonationFactory().create(request);
+    donation.setId(lng(rs, "id"));
+    donation.setStatus(DonationStatus.valueOf(str(rs, "status")));
+    return donation;
+  };
 
   public SqliteDonationRepository(Connection connection) {
-    this.connection = connection;
+    super(connection);
   }
 
   @Override
   public Donation save(Donation donation) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        """
-        INSERT INTO donations (donor_id, donation_type, amount_minor, item_description, quantity,
-          estimated_value_minor, reference_number, donation_date, notes, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        Statement.RETURN_GENERATED_KEYS
-      )
-    ) {
-      ps.setLong(1, donation.getDonorId());
-      ps.setString(2, donation.getType().name());
-      ps.setLong(3, donation.getAmountMinor());
-      ps.setString(4, donation.getItemDescription());
-      if (donation.getQuantity() == null) ps.setNull(5, java.sql.Types.INTEGER);
-      else ps.setInt(5, donation.getQuantity());
-      if (donation.getEstimatedValueMinor() == null) ps.setNull(6, java.sql.Types.INTEGER);
-      else ps.setLong(6, donation.getEstimatedValueMinor());
-      ps.setString(7, donation.getReferenceNumber());
-      ps.setString(8, donation.getDonationDate().toString());
-      ps.setString(9, donation.getNotes());
-      ps.setString(10, donation.getStatus().name());
-      ps.executeUpdate();
-      try (ResultSet keys = ps.getGeneratedKeys()) {
-        if (!keys.next()) throw new SQLException("No donation id returned");
-        donation.setId(keys.getLong(1));
-        return donation;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not save donation", e);
-    }
+    long id = insertReturnKey(
+      "INSERT INTO donations (donor_id, donation_type, amount_minor, item_description, quantity, estimated_value_minor, reference_number, donation_date, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      donation.getDonorId(), donation.getType().name(), donation.getAmountMinor(),
+      donation.getItemDescription(), donation.getQuantity(), donation.getEstimatedValueMinor(),
+      donation.getReferenceNumber(), donation.getDonationDate().toString(), donation.getNotes(),
+      donation.getStatus().name()
+    );
+    donation.setId(id);
+    return donation;
   }
 
   @Override
   public Optional<Donation> findById(long id) {
-    List<Donation> results = find(" WHERE id=?", List.of(id));
-    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    return queryOne("SELECT * FROM donations WHERE id=?", DONATION_MAPPER, id);
   }
 
   @Override
@@ -79,120 +72,55 @@ public class SqliteDonationRepository implements DonationRepository {
     }
     if (filter.from() != null) {
       where.append(" AND donation_date>=?");
-      values.add(Date.valueOf(filter.from()));
+      values.add(java.sql.Date.valueOf(filter.from()));
     }
     if (filter.to() != null) {
       where.append(" AND donation_date<=?");
-      values.add(Date.valueOf(filter.to()));
+      values.add(java.sql.Date.valueOf(filter.to()));
     }
-    return find(where.toString(), values);
+    return query("SELECT * FROM donations" + where + " ORDER BY donation_date DESC, id DESC",
+      DONATION_MAPPER, values.toArray());
   }
 
   @Override
   public void delete(long id) {
-    try (PreparedStatement ps = connection.prepareStatement("DELETE FROM donations WHERE id=?")) {
-      ps.setLong(1, id);
-      if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Donation not found");
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not delete donation", e);
-    }
+    int deleted = execute("DELETE FROM donations WHERE id=?", id);
+    if (deleted == 0) throw new IllegalArgumentException("Donation not found");
   }
 
   @Override
   public Donation update(DonationRequest request, long donationId) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        """
-        UPDATE donations
-        SET amount_minor=?, reference_number=?, donation_date=?, notes=?
-        WHERE id=?
-        """
-      )
-    ) {
-      ps.setLong(1, request.amountMinor());
-      ps.setString(2, request.referenceNumber());
-      ps.setString(3, request.donationDate().toString());
-      ps.setString(4, request.notes());
-      ps.setLong(5, donationId);
-      if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Donation not found");
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not update donation", e);
-    }
+    int updated = execute(
+      "UPDATE donations SET amount_minor=?, reference_number=?, donation_date=?, notes=? WHERE id=?",
+      request.amountMinor(), request.referenceNumber(), request.donationDate().toString(),
+      request.notes(), donationId
+    );
+    if (updated == 0) throw new IllegalArgumentException("Donation not found");
     return findById(donationId)
         .orElseThrow(() -> new IllegalArgumentException("Donation not found after update"));
   }
 
   @Override
   public long monetaryTotalForDonorYear(long donorId, int year) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        """
-        SELECT COALESCE(SUM(amount_minor), 0) FROM donations
-        WHERE donor_id=? AND donation_type IN ('ONLINE', 'CHECK') AND strftime('%Y', donation_date)=?
-        """
-      )
-    ) {
-      ps.setLong(1, donorId);
-      ps.setString(2, String.valueOf(year));
-      try (ResultSet rs = ps.executeQuery()) {
-        rs.next();
-        return rs.getLong(1);
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not calculate donor total", e);
-    }
+    List<Long> rows = query(
+      "SELECT COALESCE(SUM(amount_minor), 0) FROM donations WHERE donor_id=? AND donation_type IN ('ONLINE', 'CHECK') AND strftime('%Y', donation_date)=?",
+      rs -> rs.getLong(1), donorId, String.valueOf(year));
+    return rows.isEmpty() ? 0 : rows.get(0);
   }
 
   @Override
   public Optional<Donation> findByReferenceNumber(String referenceNumber) {
     if (referenceNumber == null || referenceNumber.isBlank()) return Optional.empty();
-    return find(" WHERE reference_number=?", List.of(referenceNumber)).stream().findFirst();
+    return query("SELECT * FROM donations WHERE reference_number=? ORDER BY donation_date DESC, id DESC",
+      DONATION_MAPPER, referenceNumber).stream().findFirst();
   }
 
-  private List<Donation> find(String where, List<Object> values) {
-    try (
-      PreparedStatement ps = connection.prepareStatement(
-        "SELECT * FROM donations" + where + " ORDER BY donation_date DESC, id DESC"
-      )
-    ) {
-      for (int i = 0; i < values.size(); i++) ps.setObject(i + 1, values.get(i));
-      try (ResultSet rs = ps.executeQuery()) {
-        List<Donation> donations = new ArrayList<>();
-        while (rs.next()) donations.add(map(rs));
-        return donations;
-      }
-    } catch (SQLException e) {
-      throw new IllegalStateException("Could not list donations", e);
-    }
-  }
-
-  private Donation map(ResultSet rs) throws SQLException {
-    DonationType type = DonationType.valueOf(rs.getString("donation_type"));
-    Integer quantity = nullableInteger(rs, "quantity");
-    Long estimated = nullableLong(rs, "estimated_value_minor");
-    DonationRequest request = new DonationRequest(
-      rs.getLong("donor_id"),
-      type,
-      rs.getLong("amount_minor"),
-      rs.getString("item_description"),
-      quantity,
-      estimated,
-      rs.getString("reference_number"),
-      java.time.LocalDate.parse(rs.getString("donation_date")),
-      rs.getString("notes")
-    );
-    Donation donation = new com.resala.donation.DonationFactory().create(request);
-    donation.setId(rs.getLong("id"));
-    donation.setStatus(DonationStatus.valueOf(rs.getString("status")));
-    return donation;
-  }
-
-  private Integer nullableInteger(ResultSet rs, String column) throws SQLException {
+  private static Integer nullableInteger(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
     int value = rs.getInt(column);
     return rs.wasNull() ? null : value;
   }
 
-  private Long nullableLong(ResultSet rs, String column) throws SQLException {
+  private static Long nullableLong(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
     long value = rs.getLong(column);
     return rs.wasNull() ? null : value;
   }
