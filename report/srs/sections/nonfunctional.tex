@@ -2,20 +2,20 @@
 
 \begin{center}
 \small
-\begin{tabularx}{\textwidth}{@{}L{0.10\textwidth}L{0.23\textwidth}YL{0.10\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}L{0.20\textwidth}YL{0.11\textwidth}@{}}
 \toprule
 \textbf{ID} & \textbf{Category} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-NFR-1 & Usability & A new operator can complete the main tasks (record a donation, register a volunteer, create an event) after a short demonstration, without reading the code. & Must \\
-NFR-2 & Usability & Every screen uses consistent labels, and destructive actions ask for confirmation. & Must \\
-NFR-3 & Reliability & A failed database operation leaves no partial data; transactions are rolled back. & Must \\
-NFR-4 & Data integrity & Required fields are validated, and references between records are enforced. & Must \\
-NFR-5 & Performance & List and search operations return within one second for a single branch's data volume. & Should \\
-NFR-6 & Maintainability & The interface, control logic, business rules, and storage are separated, so a module can change without editing the others. & Must \\
-NFR-7 & Testability & Business rules can be tested without starting the graphical interface. & Should \\
-NFR-8 & Portability & The application runs on Windows, Linux, and macOS with a standard Java runtime. & Should \\
-NFR-9 & Capacity & The system stores the records of one branch and does not require concurrent multi-user access. & Must \\
-NFR-10 & Localisation & The interface is in English and amounts are shown in EGP. & Should \\
+NFR-1 & Flexibility & A new receipt add-on or distribution rule shall be added by adding a new class, without editing existing classes. A new donation type or message channel requires one new class plus a small registration change. & M \\
+NFR-2 & Maintainability & Code shall be split into MVC layers. Controllers contain no SQL. Data access goes through repositories; the shared database manager only opens connections and creates the schema. & M \\
+NFR-3 & Reusability & Shared parts (database access, configuration, notification) shall be implemented once and reused by all modules. & M \\
+NFR-4 & Usability & A staff user shall complete common tasks (add donor, record donation, register attendee) in a few steps without training. & M \\
+NFR-5 & Reliability & Failed operations shall show a clear message and shall not leave half-saved data. Payments shall use a transaction. & M \\
+NFR-6 & Performance & Screens shall respond in under 2 seconds for normal data sizes. & S \\
+NFR-7 & Data integrity & Donors are archived, not deleted, so donation history stays valid. & M \\
+NFR-8 & Portability & The application shall run on any system with Java installed. No separate database server is needed. & S \\
+NFR-9 & Consistency & The graphical and the console interface shall give the same result for the same action, because they share controllers and services. & M \\
+NFR-10 & Usability & Open screens shall refresh after a change, so users never see an outdated list. & M \\
 \bottomrule
 \end{tabularx}
 \end{center}

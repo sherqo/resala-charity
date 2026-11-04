@@ -1,44 +1,85 @@
 \section{Overall description}
 
-\subsection{Product perspective}
-
-The system is a standalone desktop application. It replaces a manual process based on spreadsheets, paper forms, and handwritten attendance sheets. It does not depend on an external server or a network connection: the database is stored on the same computer, and the application starts without configuration.
-
-Internally the product is organised in layers. The interface layer collects input and displays results, the controller layer receives user actions, the service layer applies the business rules, and the repository layer stores and retrieves data. This organisation is described in the Phase~1 report and is treated here as a constraint on the implementation.
-
-\subsection{User classes}
+\subsection{Users}
 
 \begin{center}
 \small
-\begin{tabularx}{\textwidth}{@{}L{0.24\textwidth}L{0.20\textwidth}Y@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.28\textwidth}Y@{}}
 \toprule
-\textbf{User class} & \textbf{Access} & \textbf{Main needs} \\
+\textbf{User} & \textbf{What they do} \\
 \midrule
-Charity administrator & Full & Manage all records, reference data, and reports. \\
-Event organiser & Events and attendance & Create events, register attendees, check attendance, send reminders. \\
-Volunteer coordinator & Volunteers and assignments & Track availability, skills, hours, and certificates. \\
-Donor or volunteer & Indirect & Receive receipts, statements, certificates, and notifications. \\
+Charity administrator & Full access to all modules, including creating, renaming and deleting reference data. \\
+Event organiser & Creates and runs events and registrations. Can read reference data. \\
+Volunteer & Can view reference data such as event types and skills. \\
+Donors, beneficiaries, attendees & Do not use the system. They appear as records and receive messages (email, SMS, social). \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Phase~1 assumes a single operator with full access. Authentication and role enforcement are outside this phase.
+In this document, \emph{staff user} means the charity administrator or the event organiser who operates the system. Login is not part of Phase~1, so roles describe who is \emph{intended} to do what. They are not enforced by an account system yet: anyone who runs the application can open every screen.
 
 \subsection{Operating environment}
 
 \begin{itemize}
-  \item a desktop or laptop computer with a standard keyboard and display;
-  \item a Java runtime and the packaged application;
-  \item no network connection, external database server, or third-party account;
-  \item English interface and Egyptian pound (EGP) as the currency.
+  \item a Java application with a JavaFX graphical interface and a console interface;
+  \item a local SQLite database;
+  \item a normal desktop running Windows, Linux or macOS.
 \end{itemize}
 
-\subsection{Constraints and assumptions}
+\subsection{Constraints}
 
 \begin{itemize}
-  \item the project is an academic deliverable and must remain understandable to a student audience;
-  \item payment processing and message delivery are simulated, because real providers require credentials and contracts;
-  \item only the six Phase~1 patterns are required; later patterns belong to Phase~2;
-  \item the data set is small (a single branch), so the system is not designed for concurrent multi-user access;
-  \item the operator is assumed to be trained on the main screens.
+  \item the code follows MVC: views show data, controllers take input, services hold business rules, and repositories hold the data-access SQL, while the shared database manager only opens the connection and creates the schema;
+  \item Phase~1 uses only the six patterns taught so far (see Section~\ref{sec:patterns}); more patterns are added in Phase~2;
+  \item money is stored as whole minor units (piastres) to avoid rounding errors.
 \end{itemize}
+
+\subsection{Assumptions}
+
+\begin{itemize}
+  \item messages (email, SMS, social) are simulated in Phase~1, so no real provider is required;
+  \item online payments use a fake payment provider;
+  \item one organization uses the system on one machine;
+  \item authentication (login) is not part of Phase~1;
+  \item need types are supported by the beneficiary module but are not yet editable on the lookup screen.
+\end{itemize}
+
+\subsection{Architecture (MVC)}
+
+The system is built in layers. The graphical and the console interface use the same controllers and services, so each business rule is written once and behaves the same in both.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.27\textwidth}Y@{}}
+\toprule
+\textbf{Layer} & \textbf{Responsibility} \\
+\midrule
+Views & Display data, collect input and show feedback. \\
+Controllers & Receive requests from the screens and pass them to the services. \\
+Services & Validate data and apply the rules of each module. \\
+Repositories & Define the storage operations without exposing storage details. \\
+Storage implementations & Carry out the repository operations on the local database. \\
+Core services & Shared configuration, database access, transactions and audit log. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Table~\ref{tab:mvc-roles} lists the MVC roles and what each one must not do.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.16\textwidth}L{0.30\textwidth}Y@{}}
+\toprule
+\textbf{MVC role} & \textbf{Example} & \textbf{Must not} \\
+\midrule
+Model & Donation, Volunteer, Event & Contain storage or interface code. \\
+View & Donation screen, console donation menu & Contain business rules or open a database connection. \\
+Controller & Donation controller & Print to the console or read the keyboard directly. \\
+Service & Donation service & Know which screen called it. \\
+Repository & Donation repository & Expose storage details to the service. \\
+\bottomrule
+\end{tabularx}
+\caption{MVC roles and their boundaries.}
+\label{tab:mvc-roles}
+\end{table}

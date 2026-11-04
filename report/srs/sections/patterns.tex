@@ -1,0 +1,20 @@
+\section{Design pattern requirements (Phase 1)}
+\label{sec:patterns}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.13\textwidth}YL{0.30\textwidth}@{}}
+\toprule
+\textbf{Pattern} & \textbf{Where it is required} & \textbf{Why} \\
+\midrule
+Singleton & Database connection, configuration, audit log. & One shared instance for the whole application. \\
+Factory & Creating online, check and in-kind donations, each with its own validation; also creating the family of console screens. & Add a donation type without changing the caller. \\
+Strategy & Message channels (email, SMS, social); distribution policies (equal, by need, first come first served). & Swap behavior at runtime. \\
+Observer & After a donation: activity-feed entry and thank-you message. When an event is updated, opened, closed or reminded: inform the registered attendees. & Services do not need to know who reacts. \\
+Decorator & Receipt with optional thank-you and tax additions. & Combine add-ons freely; two options would otherwise need four receipt subclasses. \\
+MVC & Whole application: two complete interfaces (graphical and console) share the same controllers and services. & Separate screens, input handling and business rules. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The class diagram in the Phase~1 report shows all main classes and where each pattern is applied.

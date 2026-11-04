@@ -1,75 +1,78 @@
 \section{Functional requirements}
 
-Each requirement has an identifier, a priority (Must or Should), and an acceptance condition that can be checked in the running application. Requirements marked Must are part of the Phase~1 demonstration.
+Each requirement has an identifier, a statement and a priority: \textbf{M} = must have, \textbf{S} = should have.
 
-\subsection{Donations and donors}
+\subsection{Donation management}
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-D1 & Create, edit, and archive donor records with name, contact details, and type. & Must & A donor can be added, edited, archived, and found again. \\
-FR-D2 & Record a donation as online, check, or in-kind. & Must & Each type saves the fields it needs and appears in the list. \\
-FR-D3 & Validate donation data: positive amount, check number for checks, item and quantity for in-kind. & Must & Invalid input is rejected with a clear message. \\
-FR-D4 & Filter donations by donor, type, and date range. & Must & The table shows only matching records. \\
-FR-D5 & Produce a receipt with optional tax and thank-you sections. & Must & The preview contains the selected sections. \\
-FR-D6 & Produce a yearly statement per donor from monetary donations. & Must & The total matches the donor's monetary donations for the year. \\
-FR-D7 & Process an online card or wallet payment through a simulated provider. & Should & A payment result is recorded and linked to the donation. \\
+FR-D1 & The system shall create, view, search, update and archive donors (name, type, email, phone). & M \\
+FR-D2 & The system shall record a donation linked to a donor, with date, amount and reference number. & M \\
+FR-D3 & The system shall support three donation types and validate each one: online needs a positive amount, check needs a check number (stored as the donation reference number), and in-kind needs an item and a quantity, with an optional estimated value. & M \\
+FR-D4 & The system shall let staff view, filter, update and delete donations. & M \\
+FR-D5 & The system shall generate a receipt for any donation. Receipts may include a thank-you note and a tax note. & M \\
+FR-D6 & The system shall generate a yearly tax statement for a donor that adds up the monetary donations of one year. & S \\
+FR-D7 & The system shall let staff take a payment by cash, card or wallet and record whether it succeeded. & S \\
+FR-D8 & The system shall add the donation to the activity feed and notify the donor with a thank-you message after a donation is recorded. & M \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\subsection{Volunteers}
+\subsection{Volunteer management}
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-V1 & Create and edit volunteers with contact details and availability. & Must & The record is saved and the availability is visible. \\
-FR-V2 & Add and remove skills for a volunteer. & Must & The volunteer's skill list updates immediately. \\
-FR-V3 & Assign a volunteer to an open event only when available, skilled, and within capacity. & Must & Ineligible assignments are refused with the reason. \\
-FR-V4 & Record worked hours per volunteer and event. & Must & Hours are stored and included in the summary. \\
-FR-V5 & Show the total hours for a volunteer. & Must & The total equals the sum of recorded hours. \\
-FR-V6 & Generate a certificate when the volunteer reaches the required hours. & Must & A certificate is produced with the correct total. \\
+FR-V1 & The system shall create, view, update and delete volunteers (name, email, phone, availability). & M \\
+FR-V2 & The system shall manage a list of skills and attach skills to volunteers. & M \\
+FR-V3 & The system shall search volunteers by skill (available in the console interface in Phase~1). & S \\
+FR-V4 & The system shall check the skill and availability of the volunteer before assigning the volunteer to an event for a chosen skill. & M \\
+FR-V5 & The system shall track volunteer hours per event and show a summary. & M \\
+FR-V6 & The system shall generate a volunteer certificate once the volunteer reaches the required hours (20). & S \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\subsection{Events and attendance}
+\subsection{Event management}
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-E1 & Create and edit events with title, date, place, capacity, and type. & Must & The event is saved and listed with its status. \\
-FR-E2 & Open and close registration for an event. & Must & Status changes are reflected and invalid transitions are refused. \\
-FR-E3 & Register an attendee and issue a ticket reference. & Must & The registration appears with a unique reference. \\
-FR-E4 & Check attendees in and produce an attendance report. & Must & Checked-in counts match the registrations. \\
-FR-E5 & Notify registered attendees when an event is updated, rescheduled, opened, or closed. & Must & A notification is recorded for each registered attendee. \\
-FR-E6 & Send a reminder for an upcoming event. & Should & A reminder is recorded for the event's attendees. \\
+FR-E1 & The system shall create, view, update and delete events (title, type, date, capacity, hours, description). & M \\
+FR-E2 & The system shall manage event types (create, rename, delete). & M \\
+FR-E3 & The system shall open and close events. Registration is allowed only while an event is open. & M \\
+FR-E4 & The system shall register attendees, issue a ticket reference, and stop at the event capacity. & M \\
+FR-E5 & The system shall check attendees in and show attendance for an event. & M \\
+FR-E6 & The system shall notify registered attendees automatically when an event is updated, opened, closed or rescheduled. & M \\
+FR-E7 & The system shall let staff send a reminder to the registered attendees of an event. & S \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\subsection{Beneficiaries and distribution}
+\subsection{Beneficiary management}
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-B1 & Create and edit beneficiaries with household size, need type, and status. & Must & The record is saved and the need type is selectable. \\
-FR-B2 & Record a distribution with item, quantity, date, optional donation link, and notes. & Must & The distribution is saved and refused for a closed beneficiary. \\
-FR-B3 & Show the distribution history for one beneficiary. & Must & The history lists exactly that beneficiary's distributions. \\
-FR-B4 & Distribute a quantity across eligible beneficiaries using a selected policy. & Should & The allocation follows the chosen policy and is recorded per beneficiary. \\
-FR-B5 & Record an impact score for a beneficiary. & Should & The score is saved and displayed. \\
+FR-B1 & The system shall create, view, update and delete beneficiaries (name, phone, household size, need type, status). & M \\
+FR-B2 & The system shall let staff choose a need type for each beneficiary. Need types are supported as reference data, but editing them from the Lookups screen is not part of Phase~1. & M \\
+FR-B3 & The system shall record each distribution of items or services to a beneficiary, optionally linked to a donation. & M \\
+FR-B4 & The system shall show the distribution history of a beneficiary. & M \\
+FR-B5 & The system shall let staff choose how limited resources are shared: equally, by need, or first come first served. & S \\
+FR-B6 & The system shall calculate an impact score per beneficiary to help evaluate programs. & S \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -78,13 +81,13 @@ FR-B5 & Record an impact score for a beneficiary. & Should & The score is saved 
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-C1 & Select email, SMS, or social media as the active channel at runtime. & Must & The selected channel is used by the next message. \\
-FR-C2 & Send a message to a recipient with a subject and body. & Must & The message is recorded and shown in the activity feed. \\
-FR-C3 & Keep a record of sent notifications for review. & Should & Recent notifications are visible in the interface. \\
+FR-C1 & The system shall send messages by email, SMS or social media post. Delivery is simulated in Phase~1. & M \\
+FR-C2 & Staff shall be able to switch the channel at runtime from the Messages screen, without changing the rest of the system. & M \\
+FR-C3 & The system shall keep an audit log of the messages sent during the current session. & S \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -93,27 +96,33 @@ FR-C3 & Keep a record of sent notifications for review. & Should & Recent notifi
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-R1 & Create, read, update, and delete event types. & Must & All four operations succeed and the event form reflects them. \\
-FR-R2 & Create, read, update, and delete skills. & Must & All four operations succeed and the volunteer form reflects them. \\
-FR-R3 & Reject duplicate names. & Must & A duplicate name is refused with a message. \\
-FR-R4 & Refuse deletion of a value that is still referenced. & Must & The value remains and the user is told why. \\
+FR-R1 & The system shall keep event types and skills as editable lists with full create, read, update and delete. & M \\
+FR-R2 & A name shall be required, trimmed and unique. & M \\
+FR-R3 & Renaming an item shall update every event or volunteer that uses it. & M \\
+FR-R4 & Deleting an item that is already used by an event or a volunteer shall be refused, to protect existing records. & M \\
+FR-R5 & Every change shall refresh the open screens, so the event form shows the new list at once. & M \\
+FR-R6 & Reference-data changes are intended for the charity administrator; other roles are read-only. This policy is documented but not enforced in Phase~1, because login is out of scope. & S \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\subsection{Reports and documents}
+The CRUD table for event types is in Appendix~\ref{app:crud-event-types}.
+
+\subsection{User interface}
 
 \begin{center}
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.09\textwidth}YL{0.11\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
 \midrule
-FR-P1 & Preview a receipt, yearly statement, attendance report, certificate, and distribution history. & Must & Each document opens with the correct data for the selection. \\
+FR-U1 & The system shall provide a graphical interface (JavaFX) for all main screens. & M \\
+FR-U2 & The system shall also provide a console interface that offers the same operations through the same controllers and services, so no rule is written twice. & S \\
+FR-U3 & The donation, volunteer, event, beneficiary and reference-data modules shall offer CRUD for their main records from the interface. & M \\
 \bottomrule
 \end{tabularx}
 \end{center}
