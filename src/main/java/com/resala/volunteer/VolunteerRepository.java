@@ -17,6 +17,7 @@ public interface VolunteerRepository {
   Skill findSkillById(int skillId);
   Skill findSkillByName(String name);
   Skill saveSkill(Skill skill);
+  void renameSkill(int skillId, String newName);
   boolean isSkillInUse(int skillId);
   void deleteSkill(int skillId);
   List<Skill> findSkillsForVolunteer(int volunteerId);

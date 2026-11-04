@@ -4,7 +4,7 @@ import com.resala.controller.PaymentController;
 import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
-import com.resala.gui.components.ModalOverlay;
+import com.resala.gui.components.PreviewDialog;
 import com.resala.gui.components.Toast;
 import com.resala.gui.components.Toolbar;
 import com.resala.payment.Payment;
@@ -113,73 +113,7 @@ public class PaymentView extends BaseView {
         }
         sb.append("\n========================================\n");
 
-        String receiptText = sb.toString();
-
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
-
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(560);
-                    card.setMinWidth(480);
-                    card.setMaxHeight(560);
-
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label("Payment Details #" + selected.getId());
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(receiptText);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-        }
+        PreviewDialog.show(appShell, "Payment Details #" + selected.getId(), sb.toString());
     }
 
     @Override

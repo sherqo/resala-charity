@@ -2,14 +2,12 @@ package com.resala.gui.views;
 
 import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
-import com.resala.gui.components.DataTable;
 import com.resala.gui.components.Toast;
 import com.resala.gui.components.Toolbar;
 import com.resala.notification.EmailStrategy;
 import com.resala.notification.Notifier;
 import com.resala.notification.SmsStrategy;
 import com.resala.notification.SocialStrategy;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -26,7 +24,7 @@ public class CommView extends BaseView {
     private ToggleGroup channelGroup;
 
     public CommView(AppShell appShell, Notifier notifier) {
-        super(Toolbar.of(), createDummyTable());
+        super(Toolbar.of(), null);
         this.appShell = appShell;
         this.notifier = notifier;
 
@@ -34,16 +32,7 @@ public class CommView extends BaseView {
         setPadding(new Insets(20, 24, 20, 24));
         setSpacing(20);
 
-        getChildren().remove(1);
-
         buildLayout();
-    }
-
-    private static DataTable<String> createDummyTable() {
-        return DataTable.<String>builder()
-            .column("Dummy", 100, (java.util.function.Function<String, String>) s -> s)
-            .items(FXCollections.observableArrayList())
-            .build();
     }
 
     @Override

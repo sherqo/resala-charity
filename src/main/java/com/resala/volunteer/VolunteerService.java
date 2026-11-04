@@ -110,8 +110,23 @@ public class VolunteerService {
     return volunteers.saveSkill(new Skill(0, cleanName));
   }
 
-  public void deleteSkill(int skillId) {
+  public Skill renameSkill(int skillId, String newName) {
+    if (newName == null || newName.isBlank()) {
+      throw new IllegalArgumentException("Skill name is required");
+    }
+
     getSkill(skillId);
+    String cleanName = newName.trim();
+    Skill existing = volunteers.findSkillByName(cleanName);
+    if (existing != null && existing.getId() != skillId) {
+      throw new IllegalStateException("Skill already exists: " + cleanName);
+    }
+
+    volunteers.renameSkill(skillId, cleanName);
+    return getSkill(skillId);
+  }
+
+  public void deleteSkill(int skillId) {    getSkill(skillId);
     if (volunteers.isSkillInUse(skillId)) {
       throw new IllegalStateException(
         "Cannot delete skill #" + skillId +

@@ -54,6 +54,10 @@ public class VolunteerController {
     return service.createSkill(name);
   }
 
+  public Skill renameSkill(int skillId, String newName) {
+    return service.renameSkill(skillId, newName);
+  }
+
   public void deleteSkill(int skillId) {
     service.deleteSkill(skillId);
   }

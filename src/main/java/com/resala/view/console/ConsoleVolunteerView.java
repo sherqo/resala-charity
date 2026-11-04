@@ -41,8 +41,9 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       System.out.println("11) Search volunteers by skill");
       System.out.println("12) Add a new skill type");
       System.out.println("13) Delete a skill type");
-      System.out.println("14) Hours summary for Volunteer");
-      System.out.println("15) Generate certificate");
+      System.out.println("14) Rename a skill type");
+      System.out.println("15) Hours summary for Volunteer");
+      System.out.println("16) Generate certificate");
       System.out.println("0) Main Menu");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
@@ -62,8 +63,9 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
           case "11" -> searchBySkill();
           case "12" -> createSkill();
           case "13" -> deleteSkill();
-          case "14" -> showSummary();
-          case "15" -> showCertificate();
+          case "14" -> renameSkill();
+          case "15" -> showSummary();
+          case "16" -> showCertificate();
           case "0"  -> running = false;
           default   -> System.out.println("Invalid option.");
         }
@@ -172,6 +174,16 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
       controller.deleteSkill(skillId);
       printSuccess("Skill #" + skillId + " deleted.");
     }
+  }
+
+  private void renameSkill() {
+    System.out.println("\n--- Rename a Skill Type ---");
+    printSkills(controller.listSkills());
+    int skillId = readInt("Skill ID to rename: ");
+    Skill skill = controller.getSkill(skillId);
+    String name = readLine("New name (current: " + skill.getName() + "): ");
+    Skill renamed = controller.renameSkill(skillId, name);
+    printSuccess("Skill renamed to \"" + renamed.getName() + "\".");
   }
 
   private void assignVolunteer() {

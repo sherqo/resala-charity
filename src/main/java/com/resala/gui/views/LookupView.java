@@ -135,8 +135,12 @@ public class LookupView extends BaseView {
             try {
                 String newName = (String) map.get("name");
                 switch (currentTable) {
-                    case SKILLS      -> appShell.getToast().show(appShell.getStage(),
-                        "Rename not supported for Skills yet.", Toast.Type.INFO);
+                    case SKILLS      -> {
+                        volunteerController.renameSkill(idOf(selected), newName);
+                        appShell.refreshAll();
+                        appShell.getToast().show(appShell.getStage(),
+                            "Renamed to \"" + newName + "\".", Toast.Type.SUCCESS);
+                    }
                     case EVENT_TYPES -> {
                         eventController.renameEventType(idOf(selected), newName);
                         appShell.refreshAll();
