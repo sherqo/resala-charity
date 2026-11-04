@@ -22,7 +22,7 @@ The requirements were written from the point of view of the staff who operate th
 \addlinespace[1.5pt]
 \textbf{CR5} & \textbf{Aid history.} Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary. & \textbf{FR-B3, FR-B4}; Beneficiaries \(\rightarrow\) Distribute Aid / History \\
 \addlinespace[1.5pt]
-\textbf{CR6} & \textbf{Staff-maintained lists.} Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & \textbf{FR-R1 to FR-R6}; Lookups \\
+\textbf{CR6} & \textbf{Staff-maintained lists.} Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & \textbf{FR-R1 to FR-R5}; Lookups \\
 \addlinespace[1.5pt]
 \textbf{CR7} & \textbf{One message screen.} Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. & \textbf{FR-C1 to FR-C3}; Messages \\
 \bottomrule
@@ -33,7 +33,7 @@ The requirements were written from the point of view of the staff who operate th
 
 \subsection{Lookup-table CRUD: event types}
 
-Event type was selected as the Phase~1 lookup-table example. It is an editable value used when creating an event, and the same screen also supports skills. Following the lecturer's guidance, the lookup is treated as application data, and create, read, update, and delete are assigned according to how each function is used.
+Event type was selected as the Phase~1 lookup-table example. It is an editable value used when creating an event, and the same screen also supports skills. Following the lecturer's guidance, the lookup is treated as application data, and the four operations are mapped to the functions that use them.
 
 \begin{table}[H]
 \centering
@@ -51,22 +51,6 @@ Assign a type when creating or editing an event & R & C / U & Events \(\rightarr
 \end{tabularx}
 \caption{CRUD matrix for the chosen lookup module.}
 \label{tab:crud}
-\end{table}
-
-\begin{table}[H]
-\centering
-\small
-\begin{tabularx}{\textwidth}{@{}L{0.34\textwidth}YYYY@{}}
-\toprule
-\textbf{Actor} & \textbf{Create} & \textbf{Read} & \textbf{Update} & \textbf{Delete} \\
-\midrule
-Charity administrator & Yes & Yes & Yes & Yes, only when unused \\
-Event organiser & No & Yes & No & No \\
-Volunteer & No & Yes & No & No \\
-\bottomrule
-\end{tabularx}
-\caption{Actors and their allowed operations on event types.}
-\label{tab:actors}
 \end{table}
 
 The service enforces the following rules, so they apply to both interfaces:

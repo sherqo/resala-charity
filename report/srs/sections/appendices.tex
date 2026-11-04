@@ -20,24 +20,6 @@ Assign a type when creating or editing an event & R & C / U & Events \(\rightarr
 \end{tabularx}
 \end{center}
 
-Table~\ref{tab:event-type-actors} lists who may do what with event types.
-
-\begin{table}[H]
-\centering
-\small
-\begin{tabularx}{\textwidth}{@{}L{0.34\textwidth}YYYY@{}}
-\toprule
-\textbf{Actor} & \textbf{Create} & \textbf{Read} & \textbf{Update} & \textbf{Delete} \\
-\midrule
-Charity administrator & Yes & Yes & Yes & Yes, only when unused \\
-Event organiser & No & Yes & No & No \\
-Volunteer & No & Yes & No & No \\
-\bottomrule
-\end{tabularx}
-\caption{Actors and their allowed operations on event types.}
-\label{tab:event-type-actors}
-\end{table}
-
 Skills use the same screen and the same four operations. A skill is used by the volunteer--skill relation, so the delete guard protects volunteer records in the same way.
 
 \section{CRUD table: donation module (extra example)}
@@ -76,6 +58,6 @@ Current limits of Phase~1:
 
 \begin{itemize}
   \item payment and messaging are simulated;
-  \item authentication is not part of this phase, so the roles in Section~2.1 are a policy and are not enforced;
+  \item authentication is not part of this phase, so there are no user accounts or permission checks; anyone who runs the application can use every screen;
   \item need types are supported by the beneficiary module but are not yet exposed on the lookup screen.
 \end{itemize}
