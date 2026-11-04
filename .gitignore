@@ -31,9 +31,6 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-### Database ###
-data/
-
 ### Build output ###
 target/
 out/
