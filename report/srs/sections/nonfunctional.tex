@@ -1,0 +1,21 @@
+\section{Non-functional requirements}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.10\textwidth}L{0.23\textwidth}YL{0.10\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Category} & \textbf{Requirement} & \textbf{Priority} \\
+\midrule
+NFR-1 & Usability & A new operator can complete the main tasks (record a donation, register a volunteer, create an event) after a short demonstration, without reading the code. & Must \\
+NFR-2 & Usability & Every screen uses consistent labels, and destructive actions ask for confirmation. & Must \\
+NFR-3 & Reliability & A failed database operation leaves no partial data; transactions are rolled back. & Must \\
+NFR-4 & Data integrity & Required fields are validated, and references between records are enforced. & Must \\
+NFR-5 & Performance & List and search operations return within one second for a single branch's data volume. & Should \\
+NFR-6 & Maintainability & The interface, control logic, business rules, and storage are separated, so a module can change without editing the others. & Must \\
+NFR-7 & Testability & Business rules can be tested without starting the graphical interface. & Should \\
+NFR-8 & Portability & The application runs on Windows, Linux, and macOS with a standard Java runtime. & Should \\
+NFR-9 & Capacity & The system stores the records of one branch and does not require concurrent multi-user access. & Must \\
+NFR-10 & Localisation & The interface is in English and amounts are shown in EGP. & Should \\
+\bottomrule
+\end{tabularx}
+\end{center}

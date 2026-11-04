@@ -1,0 +1,48 @@
+\section{Introduction}
+
+\subsection{Purpose}
+
+This document specifies the requirements for the Resala Charity Management System, a desktop application built for a non-profit organization. It is written for the course instructor and for the development team, and it defines what the system must do before the design and implementation are judged. The document covers the Phase~1 scope and states the limits of that scope explicitly.
+
+\subsection{Scope}
+
+The system supports the daily operations of a charity branch: donations and donors, volunteers and their skills and hours, events and attendance, beneficiaries and aid distribution, communication with stakeholders, and the reference data used by these modules. It runs on one computer, stores its data locally, and offers both a graphical interface and a console interface.
+
+The following items are inside the scope of this version:
+
+\begin{itemize}
+  \item recording and managing donors, donations, volunteers, events, beneficiaries, and distributions;
+  \item generating receipts, yearly statements, attendance reports, and volunteer certificates;
+  \item validating volunteer assignment against availability, skill, and event capacity;
+  \item notifying interested parties when a donation is recorded or an event changes;
+  \item selecting a communication channel at runtime;
+  \item maintaining event types and skills as editable reference data.
+\end{itemize}
+
+\subsection{Definitions}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.22\textwidth}Y@{}}
+\toprule
+\textbf{Term} & \textbf{Meaning} \\
+\midrule
+Donor & A person or organization that gives money or goods to the charity. \\
+Donation & A recorded contribution. It can be online, by check, or in-kind. \\
+In-kind donation & A donation of goods rather than money, described by an item and a quantity. \\
+Volunteer & A person who offers time and skills to the charity. \\
+Skill & A capability that can be attached to a volunteer and required by an event. \\
+Event & An organized activity such as a fundraiser, workshop, or outreach program. \\
+Registration & The record that a person will attend an event. \\
+Beneficiary & A person or family that receives aid from the charity. \\
+Distribution & A recorded delivery of aid to a beneficiary. \\
+Lookup table & Editable reference data used by other modules, such as event types and skills. \\
+Receipt & A document produced after a donation, optionally with tax and thank-you sections. \\
+Statement & A yearly summary of a donor's monetary donations. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{References}
+
+The project brief for CSE336, the Phase~1 assessment rubric, and the client requirements collected for this project. The design patterns referenced in this document are the six Phase~1 patterns: Factory, Decorator, Observer, Strategy, Singleton, and MVC.

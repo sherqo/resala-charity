@@ -1,0 +1,68 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{hyperref}
+
+\input{commands}
+
+\begin{document}
+\pagenumbering{gobble}
+
+\begin{titlepage}
+  \centering
+  \includegraphics[width=0.19\textwidth]{../phase1/assets/asu.png}\par\vspace{1.1cm}
+  {\Large Ain Shams University\par}
+  \vspace{0.2cm}
+  {\large Faculty of Computer and Information Sciences\par}
+  \vspace{1.8cm}
+  {\Huge\bfseries Resala Charity Management System\par}
+  \vspace{0.35cm}
+  {\Large Software Requirements Specification\par}
+  \vspace{1.4cm}
+  \begin{tcolorbox}[colback=blue!4,colframe=blue!45!black,width=0.84\textwidth]
+  \centering
+  \textbf{Course:} CSE336 --- Software Design Patterns\\[4pt]
+  \textbf{Instructor:} Dr. Raghda Ali
+  \end{tcolorbox}
+  \vfill
+  \begin{tabular}{ll}
+    \textbf{Student} & \textbf{ID} \\
+    \midrule
+    Sharqawy Wael & 23P0360 \\
+    Zyad El-Nemr & 23P0013 \\
+    Islam Nashaat & 23P0077 \\
+    Mohammed Osama & 23P0374 \\
+    Youssef Tarek & 23P0177 \\
+    Fady Joseph & 23P0124 \\
+  \end{tabular}
+  \vfill
+  {\large 4 November 2026\par}
+\end{titlepage}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+
+\input{sections/introduction}
+\input{sections/description}
+\input{sections/functional}
+\input{sections/nonfunctional}
+\input{sections/interfaces}
+\input{sections/traceability}
+
+\end{document}

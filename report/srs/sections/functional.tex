@@ -1,0 +1,119 @@
+\section{Functional requirements}
+
+Each requirement has an identifier, a priority (Must or Should), and an acceptance condition that can be checked in the running application. Requirements marked Must are part of the Phase~1 demonstration.
+
+\subsection{Donations and donors}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-D1 & Create, edit, and archive donor records with name, contact details, and type. & Must & A donor can be added, edited, archived, and found again. \\
+FR-D2 & Record a donation as online, check, or in-kind. & Must & Each type saves the fields it needs and appears in the list. \\
+FR-D3 & Validate donation data: positive amount, check number for checks, item and quantity for in-kind. & Must & Invalid input is rejected with a clear message. \\
+FR-D4 & Filter donations by donor, type, and date range. & Must & The table shows only matching records. \\
+FR-D5 & Produce a receipt with optional tax and thank-you sections. & Must & The preview contains the selected sections. \\
+FR-D6 & Produce a yearly statement per donor from monetary donations. & Must & The total matches the donor's monetary donations for the year. \\
+FR-D7 & Process an online card or wallet payment through a simulated provider. & Should & A payment result is recorded and linked to the donation. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Volunteers}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-V1 & Create and edit volunteers with contact details and availability. & Must & The record is saved and the availability is visible. \\
+FR-V2 & Add and remove skills for a volunteer. & Must & The volunteer's skill list updates immediately. \\
+FR-V3 & Assign a volunteer to an open event only when available, skilled, and within capacity. & Must & Ineligible assignments are refused with the reason. \\
+FR-V4 & Record worked hours per volunteer and event. & Must & Hours are stored and included in the summary. \\
+FR-V5 & Show the total hours for a volunteer. & Must & The total equals the sum of recorded hours. \\
+FR-V6 & Generate a certificate when the volunteer reaches the required hours. & Must & A certificate is produced with the correct total. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Events and attendance}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-E1 & Create and edit events with title, date, place, capacity, and type. & Must & The event is saved and listed with its status. \\
+FR-E2 & Open and close registration for an event. & Must & Status changes are reflected and invalid transitions are refused. \\
+FR-E3 & Register an attendee and issue a ticket reference. & Must & The registration appears with a unique reference. \\
+FR-E4 & Check attendees in and produce an attendance report. & Must & Checked-in counts match the registrations. \\
+FR-E5 & Notify registered attendees when an event is updated, rescheduled, opened, or closed. & Must & A notification is recorded for each registered attendee. \\
+FR-E6 & Send a reminder for an upcoming event. & Should & A reminder is recorded for the event's attendees. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Beneficiaries and distribution}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-B1 & Create and edit beneficiaries with household size, need type, and status. & Must & The record is saved and the need type is selectable. \\
+FR-B2 & Record a distribution with item, quantity, date, optional donation link, and notes. & Must & The distribution is saved and refused for a closed beneficiary. \\
+FR-B3 & Show the distribution history for one beneficiary. & Must & The history lists exactly that beneficiary's distributions. \\
+FR-B4 & Distribute a quantity across eligible beneficiaries using a selected policy. & Should & The allocation follows the chosen policy and is recorded per beneficiary. \\
+FR-B5 & Record an impact score for a beneficiary. & Should & The score is saved and displayed. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Communication}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-C1 & Select email, SMS, or social media as the active channel at runtime. & Must & The selected channel is used by the next message. \\
+FR-C2 & Send a message to a recipient with a subject and body. & Must & The message is recorded and shown in the activity feed. \\
+FR-C3 & Keep a record of sent notifications for review. & Should & Recent notifications are visible in the interface. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Reference data (lookup tables)}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-R1 & Create, read, update, and delete event types. & Must & All four operations succeed and the event form reflects them. \\
+FR-R2 & Create, read, update, and delete skills. & Must & All four operations succeed and the volunteer form reflects them. \\
+FR-R3 & Reject duplicate names. & Must & A duplicate name is refused with a message. \\
+FR-R4 & Refuse deletion of a value that is still referenced. & Must & The value remains and the user is told why. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Reports and documents}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}YL{0.08\textwidth}L{0.30\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Priority} & \textbf{Acceptance} \\
+\midrule
+FR-P1 & Preview a receipt, yearly statement, attendance report, certificate, and distribution history. & Must & Each document opens with the correct data for the selection. \\
+\bottomrule
+\end{tabularx}
+\end{center}

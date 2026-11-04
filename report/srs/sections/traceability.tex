@@ -1,0 +1,36 @@
+\section{Traceability and scope limits}
+
+\subsection{Client requirements to functional requirements}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.08\textwidth}L{0.52\textwidth}Y@{}}
+\toprule
+\textbf{Client} & \textbf{Requirement} & \textbf{Functional requirements} \\
+\midrule
+CR1 & Yearly tax statement per donor & FR-D6, FR-P1 \\
+CR2 & Validate volunteer skill and availability before assignment & FR-V3 \\
+CR3 & Certificate after the required cumulative hours & FR-V4, FR-V5, FR-V6 \\
+CR4 & Notify attendees when an event is updated or rescheduled & FR-E5, FR-C2 \\
+CR5 & Record aid distribution per beneficiary & FR-B2, FR-B3, FR-P1 \\
+CR6 & Full CRUD for event types, and for skills & FR-R1, FR-R2, FR-R3, FR-R4 \\
+CR7 & Email, SMS, and social channels, swappable at runtime & FR-C1, FR-C2 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Out of scope for this version}
+
+The following items are deliberately excluded from Phase~1. They are listed so that the boundary of the deliverable is clear:
+
+\begin{itemize}
+  \item user accounts, login, and role-based access control;
+  \item real payment processing and real message delivery;
+  \item multi-branch operation and concurrent multi-user access;
+  \item mobile or web clients;
+  \item the Phase~2 design patterns and the admin pages.
+\end{itemize}
+
+\subsection{Acceptance of the phase}
+
+The phase is accepted when the Must requirements in Section~3 can be demonstrated from the running application, the reference-data module performs all four operations on event types and skills, and the six Phase~1 patterns are present in the class diagram and in the code.
