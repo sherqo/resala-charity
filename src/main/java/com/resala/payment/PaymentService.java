@@ -142,10 +142,6 @@ public class PaymentService {
     return gateway.getAvailableMethods();
   }
 
-  public List<Payment> history(String payerType, long payerId) {
-    return payments.findByPayer(payerType, payerId);
-  }
-
   public Payment get(long paymentId) {
     return payments.findById(paymentId)
         .orElseThrow(() -> new PaymentException(PaymentError.INVALID_STATE, paymentId, "not found", null));

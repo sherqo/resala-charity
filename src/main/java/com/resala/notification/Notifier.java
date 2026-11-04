@@ -24,10 +24,6 @@ public class Notifier {
     );
   }
 
-  public NotificationStrategy getStrategy() {
-    return strategy;
-  }
-
   public void send(String recipient, String subject, String body) {
     // Some channels (SMS) do not have a subject.
     String safeSubject = subject == null ? "" : subject;

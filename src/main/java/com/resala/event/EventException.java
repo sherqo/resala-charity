@@ -24,7 +24,6 @@ public class EventException extends RuntimeException {
 
   public String code()      { return error.code(); }
 
-  public String userMessage() { return error.message(); }
 
   public boolean retryable() { return error.retryable(); }
 }

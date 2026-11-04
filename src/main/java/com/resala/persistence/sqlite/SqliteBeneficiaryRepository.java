@@ -101,11 +101,6 @@ public class SqliteBeneficiaryRepository extends JdbcRepository implements Benef
   }
 
   @Override
-  public List<Distribution> findAllDistributions() {
-    return query("SELECT * FROM distributions ORDER BY distribution_date DESC, id DESC", DISTRIBUTION_MAPPER);
-  }
-
-  @Override
   public List<NeedType> findAllNeedTypes() {
     return query("SELECT * FROM need_types ORDER BY id",
       rs -> new NeedType(num(rs, "id"), str(rs, "name")));

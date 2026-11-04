@@ -18,10 +18,6 @@ public class FifoDistributionPolicy implements DistributionPolicy {
     this.quotaPerBeneficiary = Math.max(1, quotaPerBeneficiary);
   }
 
-  public int getQuotaPerBeneficiary() {
-    return quotaPerBeneficiary;
-  }
-
   @Override
   public String getName() {
     return "FIFO (First-In, First-Out by Registration, quota=" + quotaPerBeneficiary + ")";

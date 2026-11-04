@@ -28,7 +28,6 @@ public enum PaymentStatus {
 
   public abstract void validate(Payment p);
 
-  public boolean isTerminal() { return this != PENDING; }
 
   public boolean canTransitionTo(PaymentStatus next) {
     return switch (this) {

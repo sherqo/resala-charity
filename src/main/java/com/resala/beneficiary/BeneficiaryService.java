@@ -63,10 +63,6 @@ public class BeneficiaryService {
     repository.delete(id);
   }
 
-  public int getImpactScore(long beneficiaryId) {
-    return getBeneficiary(beneficiaryId).getImpactScore();
-  }
-
   public void setImpactScore(long beneficiaryId, int score) {
     if (score < 0 || score > 10) {
       throw new IllegalArgumentException("Impact score must be between 0 and 10.");
@@ -137,10 +133,6 @@ public class BeneficiaryService {
   public List<Distribution> getDistributionHistory(long beneficiaryId) {
     getBeneficiary(beneficiaryId);
     return repository.findDistributionsByBeneficiary(beneficiaryId);
-  }
-
-  public List<Distribution> getAllDistributions() {
-    return repository.findAllDistributions();
   }
 
   public Map<Beneficiary, Integer> previewDistribution(int totalItems) {

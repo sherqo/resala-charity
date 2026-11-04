@@ -1,7 +1,6 @@
 package com.resala.gui;
 
 import com.resala.gui.components.DataTable;
-import com.resala.gui.components.Toolbar;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
@@ -36,19 +35,10 @@ public abstract class BaseView extends VBox implements Refreshable {
         return table != null ? table.getTableView() : null;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> DataTable<T> getDataTable() {
-        return (DataTable<T>) table;
-    }
-
     @Override
     public abstract void refresh();
 
     public Button getPrimaryAction() {
         return null;
-    }
-
-    protected static HBox createToolbar(Button... buttons) {
-        return Toolbar.of(buttons);
     }
 }

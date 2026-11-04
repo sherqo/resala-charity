@@ -19,10 +19,6 @@ public class DonationService implements DonationSubject {
   private final PaymentRepository payments;
   private final List<DonationObserver> observers = new ArrayList<>();
 
-  public DonationService(DonorRepository donors, DonationRepository donations) {
-    this(donors, donations, null);
-  }
-
   public DonationService(DonorRepository donors, DonationRepository donations, PaymentRepository payments) {
     this.donors = donors;
     this.donations = donations;

@@ -172,5 +172,4 @@ public final class Payment {
   public Instant getPaidAt() { return paidAt; }
 
   public boolean isPaid() { return status == PaymentStatus.PAID; }
-  public boolean isTerminal() { return status.isTerminal(); }
 }

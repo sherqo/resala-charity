@@ -6,7 +6,6 @@ public enum EventError {
   DATE_REQUIRED         ("EVT-002", "Event date is required.",                                     false),
   INVALID_EVENT_TYPE    ("EVT-003", "A valid event type must be selected.",                        false),
   INVALID_CAPACITY      ("EVT-004", "Capacity must be a positive number.",                         false),
-  INVALID_DATE_FORMAT   ("EVT-005", "Date format is invalid. Use YYYY-MM-DD.",                     false),
   ATTENDEE_NAME_REQUIRED("EVT-006", "Attendee name is required.",                                  false),
   INVALID_HOURS         ("EVT-007", "Volunteer hours must be greater than zero.",                  false),
 

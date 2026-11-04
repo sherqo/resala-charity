@@ -157,15 +157,5 @@ class PaymentServiceTest {
     Optional<Payment> findByKey(String key) {
       return Optional.ofNullable(byKey.get(key));
     }
-
-    @Override public List<Payment> findByPayer(String payerType, long payerId) {
-      return byKey.values().stream()
-          .filter(p -> p.getPayerType().equals(payerType) && p.getPayerId() == payerId)
-          .toList();
-    }
-
-    @Override public List<Payment> findByStatus(PaymentStatus status) {
-      return byKey.values().stream().filter(p -> p.getStatus() == status).toList();
-    }
   }
 }

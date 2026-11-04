@@ -44,20 +44,6 @@ public class SqlitePaymentRepository extends JdbcRepository implements PaymentRe
   }
 
   @Override
-  public List<Payment> findByPayer(String payerType, long payerId) {
-    return query(
-      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.payer_type=? AND p.payer_id=? ORDER BY p.created_at DESC",
-      PAYMENT_MAPPER, payerType, payerId);
-  }
-
-  @Override
-  public List<Payment> findByStatus(PaymentStatus status) {
-    return query(
-      "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id WHERE p.status=? ORDER BY p.created_at",
-      PAYMENT_MAPPER, status.name());
-  }
-
-  @Override
   public List<Payment> findAll() {
     return query(
       "SELECT p.*, pm.name AS method_name FROM payments p JOIN payment_methods pm ON p.payment_method_id = pm.id ORDER BY p.id DESC",

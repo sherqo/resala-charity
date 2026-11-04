@@ -30,7 +30,4 @@ public class ConfigManager {
     public String get(String key){
         return  props.getProperty(key);
     }
-    public String get(String key, String defaultValue){
-        return props.getProperty(key, defaultValue);
-    }
 }

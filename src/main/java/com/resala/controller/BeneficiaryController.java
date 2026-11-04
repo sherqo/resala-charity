@@ -52,10 +52,6 @@ public class BeneficiaryController {
     return service.getDistributionHistory(beneficiaryId);
   }
 
-  public List<Distribution> listDistributions() {
-    return service.getAllDistributions();
-  }
-
   public void setDistributionPolicy(DistributionPolicy policy) {
     service.setDistributionPolicy(policy);
   }
@@ -96,10 +92,6 @@ public class BeneficiaryController {
 
   public void deleteNeedType(int id) {
     service.deleteNeedType(id);
-  }
-
-  public int getImpactScore(long beneficiaryId) {
-    return service.getImpactScore(beneficiaryId);
   }
 
   public void setImpactScore(long beneficiaryId, int score) {

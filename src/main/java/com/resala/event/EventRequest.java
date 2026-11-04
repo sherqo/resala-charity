@@ -10,14 +10,4 @@ public record EventRequest(
   int hours,
   String description
 ) {
-
-  public EventRequest(
-    String title,
-    int eventTypeId,
-    LocalDate date,
-    int capacity,
-    String description
-  ) {
-    this(title, eventTypeId, date, capacity, 0, description);
-  }
 }

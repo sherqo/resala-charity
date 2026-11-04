@@ -10,7 +10,6 @@ import com.resala.beneficiary.Distribution;
 import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
 import com.resala.beneficiary.policy.EqualDistributionPolicy;
 import com.resala.beneficiary.policy.FifoDistributionPolicy;
-import com.resala.controller.BeneficiaryController;
 import com.resala.model.Beneficiary;
 import com.resala.model.NeedType;
 import com.resala.view.BeneficiaryView;

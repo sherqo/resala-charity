@@ -18,10 +18,6 @@ public abstract class JdbcRepository {
         conn = c;
     }
 
-    protected  JdbcRepository() {
-        this(DatabaseManager.getInstance().getConnection());
-    }
-
     protected  int execute(String sql, Object... params){
         try (PreparedStatement ps = conn.prepareStatement(sql)){
         bind(ps, params);

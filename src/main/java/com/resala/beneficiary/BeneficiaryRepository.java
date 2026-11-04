@@ -18,8 +18,6 @@ public interface BeneficiaryRepository {
 
     List<Distribution> findDistributionsByBeneficiary(long beneficiaryId);
 
-    List<Distribution> findAllDistributions();
-
     List<NeedType> findAllNeedTypes();
 
     Optional<NeedType> findNeedTypeById(int id);

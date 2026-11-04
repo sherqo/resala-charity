@@ -145,16 +145,16 @@ public class AppShell {
         VBox.setVgrow(navBox, Priority.ALWAYS);
 
         List<NavItem> navItems = List.of(
-            new NavItem("Dashboard", DashboardView.class),
-            new NavItem("Donations", DonationView.class),
-            new NavItem("Payments", PaymentView.class),
-            new NavItem("Donors", DonorView.class),
-            new NavItem("Volunteers", VolunteerView.class),
-            new NavItem("Events", EventView.class),
-            new NavItem("Beneficiaries", BeneficiaryView.class),
-            new NavItem("Messages", CommView.class),
-            new NavItem("Lookups", LookupView.class),
-            new NavItem("Audit Log", AuditLogView.class)
+            new NavItem("Dashboard"),
+            new NavItem("Donations"),
+            new NavItem("Payments"),
+            new NavItem("Donors"),
+            new NavItem("Volunteers"),
+            new NavItem("Events"),
+            new NavItem("Beneficiaries"),
+            new NavItem("Messages"),
+            new NavItem("Lookups"),
+            new NavItem("Audit Log")
         );
 
         for (NavItem item : navItems) {
@@ -319,20 +319,12 @@ public class AppShell {
         };
     }
 
-    public DonationController getDonationController() { return donationController; }
-    public EventController getEventController() { return eventController; }
-    public VolunteerController getVolunteerController() { return volunteerController; }
-    public PaymentController getPaymentController() { return paymentController; }
-    public PaymentService getPaymentService() { return paymentService; }
-
     private static class NavItem {
         final String name;
-        final Class<? extends BaseView> viewClass;
         Button button;
 
-        NavItem(String name, Class<? extends BaseView> viewClass) {
+        NavItem(String name) {
             this.name = name;
-            this.viewClass = viewClass;
         }
     }
 

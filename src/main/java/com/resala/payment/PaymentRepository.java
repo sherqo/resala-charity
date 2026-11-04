@@ -7,8 +7,6 @@ public interface PaymentRepository {
   Payment save(Payment payment);
   Optional<Payment> findById(long id);
   Optional<Payment> findByIdempotencyKey(String key);
-  List<Payment> findByPayer(String payerType, long payerId);
-  List<Payment> findByStatus(PaymentStatus status);
 
   default List<Payment> findAll() {
     return List.of();

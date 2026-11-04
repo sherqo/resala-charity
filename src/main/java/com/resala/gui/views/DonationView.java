@@ -100,7 +100,6 @@ public class DonationView extends BaseView implements DonationObserver {
             .column("Reference", 150, (java.util.function.Function<Donation, String>) d -> d.getReferenceNumber() != null ? d.getReferenceNumber() : "")
             .column("Date", 120, (java.util.function.Function<Donation, String>) d -> d.getDonationDate().toString())
             .items(FXCollections.observableArrayList())
-            .onRowDoubleClick(d -> {})
             .build();
     }
 

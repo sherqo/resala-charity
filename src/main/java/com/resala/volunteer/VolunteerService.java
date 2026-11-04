@@ -36,10 +36,6 @@ public class VolunteerService {
     this.certificateGenerator = new CertificateGenerator();
   }
 
-  public VolunteerService(VolunteerRepository volunteers, EventRepository events) {
-    this(volunteers, events, null);
-  }
-
   public Volunteer create(Volunteer request) {
 
     validate(request);

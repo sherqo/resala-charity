@@ -10,5 +10,4 @@ public interface EventRegistrationRepository {
   void checkIn(long registrationId);
   int countRegistered(long eventId);
   Optional<EventRegistration> findByVolunteerAndEvent(long volunteerId, long eventId);
-  void deleteByVolunteerAndEvent(long volunteerId, long eventId);
 }
