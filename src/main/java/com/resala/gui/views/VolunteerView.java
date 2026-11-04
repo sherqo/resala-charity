@@ -6,6 +6,7 @@ import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
 import com.resala.gui.components.FormDialog;
 import com.resala.gui.components.ModalOverlay;
+import com.resala.gui.components.PreviewDialog;
 import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
 import com.resala.model.Event;
@@ -43,10 +44,14 @@ public class VolunteerView extends BaseView {
         this.volunteerController = volunteerController;
         this.volunteersTable = (DataTable<Volunteer>) this.table;
 
+        Button editBtn = Toolbar.ghost("Edit", e -> showEditVolunteerDialog());
+        Button availabilityBtn = Toolbar.ghost("Availability", e -> toggleAvailability());
+        Button skillsBtn = Toolbar.ghost("Skills", e -> showSkillsDialog());
+        Button hoursBtn = Toolbar.ghost("Hours", e -> showHoursDialog());
         Button assignBtn = Toolbar.ghost("Register to Event", e -> showAssignDialog());
         Button certBtn = Toolbar.ghost("Print Certificate", e -> showCertificateDialog());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
-        toolbar.getChildren().addAll(assignBtn, certBtn, deleteBtn);
+        toolbar.getChildren().addAll(editBtn, availabilityBtn, skillsBtn, hoursBtn, assignBtn, certBtn, deleteBtn);
 
         this.primaryActionButton = Toolbar.primary("Add Volunteer", e -> showAddVolunteerDialog());
     }
@@ -145,7 +150,7 @@ public class VolunteerView extends BaseView {
                 appShell.refreshAll();
                 appShell.getToast().show(appShell.getStage(),
                     "Volunteer registered to event!" + ticketInfo
-                        + " Hours will be credited after the event closes.",
+                        + " Hours are credited when the volunteer checks in.",
                     Toast.Type.SUCCESS);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -169,79 +174,153 @@ public class VolunteerView extends BaseView {
     }
 
     private void showCertificatePreview(String text) {
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
+        PreviewDialog.show(appShell, "Volunteer Certificate", text);
+    }
 
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(560);
-                    card.setMinWidth(480);
-                    card.setMaxHeight(560);
-
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label("Volunteer Certificate");
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(text);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-            return;
+    private Volunteer selectedVolunteer() {
+        Volunteer selected = volunteersTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select a volunteer first.", Toast.Type.WARNING);
         }
+        return selected;
+    }
 
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(appShell.getStage());
-        dialog.setTitle("Volunteer Certificate");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(new TextArea(text));
-        dialog.showAndWait();
+    private void showEditVolunteerDialog() {
+        Volunteer selected = selectedVolunteer();
+        if (selected == null) return;
+
+        Volunteer current = volunteerController.getVolunteer(selected.getId());
+        // COMBO selects the first item, so put the current value first.
+        String[] availability = current.isAvailable()
+            ? new String[]{"Yes", "No"}
+            : new String[]{"No", "Yes"};
+
+        var fields = List.of(
+            new FormDialog.Field("name", "Name", FormDialog.Type.TEXT, true, current.getName()),
+            new FormDialog.Field("email", "Email", FormDialog.Type.TEXT, false,
+                current.getEmail() == null ? "" : current.getEmail()),
+            new FormDialog.Field("phone", "Phone", FormDialog.Type.TEXT, false,
+                current.getPhone() == null ? "" : current.getPhone()),
+            new FormDialog.Field("available", "Available", FormDialog.Type.COMBO, true, (Object[]) availability)
+        );
+
+        Optional<java.util.Map<String, Object>> result =
+            FormDialog.show(appShell.getStage(), "Edit Volunteer", fields);
+        result.ifPresent(map -> {
+            try {
+                String name = (String) map.get("name");
+                String email = (String) map.get("email");
+                String phone = (String) map.get("phone");
+                boolean available = "Yes".equals(map.get("available"));
+
+                Volunteer volunteer = volunteerController.getVolunteer(selected.getId());
+                volunteer.setName(name);
+                volunteer.setEmail(email == null || email.isBlank() ? null : email.trim());
+                volunteer.setPhone(phone == null || phone.isBlank() ? null : phone.trim());
+                volunteer.setAvailable(available);
+
+                volunteerController.update(selected.getId(), volunteer);
+                appShell.refreshAll();
+                appShell.getToast().show(appShell.getStage(), "Volunteer updated.", Toast.Type.SUCCESS);
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
+    }
+
+    private void toggleAvailability() {
+        Volunteer selected = selectedVolunteer();
+        if (selected == null) return;
+
+        try {
+            boolean available = !selected.isAvailable();
+            volunteerController.setAvailability(selected.getId(), available);
+            appShell.refreshAll();
+            appShell.getToast().show(appShell.getStage(),
+                selected.getName() + " is now " + (available ? "available" : "unavailable") + ".",
+                Toast.Type.SUCCESS);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
+    }
+
+    private void showSkillsDialog() {
+        Volunteer selected = selectedVolunteer();
+        if (selected == null) return;
+
+        List<Skill> skills = volunteerController.getVolunteerSkills(selected.getId());
+        StringBuilder current = new StringBuilder("Skills for " + selected.getName() + ":
+");
+        if (skills.isEmpty()) {
+            current.append("(none)
+");
+        } else {
+            for (Skill skill : skills) {
+                current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("
+");
+            }
+        }
+        current.append("
+Available skills:
+");
+        for (Skill skill : volunteerController.listSkills()) {
+            current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("
+");
+        }
+        PreviewDialog.show(appShell, "Volunteer Skills", current.toString());
+
+        var fields = List.of(
+            new FormDialog.Field("addSkillId", "Skill ID to add (blank = skip)", FormDialog.Type.TEXT, false),
+            new FormDialog.Field("removeSkillId", "Skill ID to remove (blank = skip)", FormDialog.Type.TEXT, false)
+        );
+
+        Optional<java.util.Map<String, Object>> result =
+            FormDialog.show(appShell.getStage(), "Change Skills", fields);
+        result.ifPresent(map -> {
+            try {
+                String add = (String) map.get("addSkillId");
+                String remove = (String) map.get("removeSkillId");
+                boolean changed = false;
+
+                if (add != null && !add.isBlank()) {
+                    volunteerController.addSkill(selected.getId(), Integer.parseInt(add.trim()));
+                    changed = true;
+                }
+                if (remove != null && !remove.isBlank()) {
+                    volunteerController.removeSkill(selected.getId(), Integer.parseInt(remove.trim()));
+                    changed = true;
+                }
+
+                appShell.refreshAll();
+                if (changed) {
+                    appShell.getToast().show(appShell.getStage(), "Skills updated.", Toast.Type.SUCCESS);
+                } else {
+                    appShell.getToast().show(appShell.getStage(), "No skill change.", Toast.Type.INFO);
+                }
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
+    }
+
+    private void showHoursDialog() {
+        Volunteer selected = selectedVolunteer();
+        if (selected == null) return;
+
+        VolunteerSummary summary = volunteerController.summary(selected.getId());
+        StringBuilder text = new StringBuilder();
+        text.append("Total hours: ").append(summary.getTotalHours()).append("
+
+");
+        if (summary.getHoursByEvent().isEmpty()) {
+            text.append("No hours recorded yet.");
+        } else {
+            for (var entry : summary.getHoursByEvent().entrySet()) {
+                text.append(entry.getKey()).append(": ").append(entry.getValue()).append("
+");
+            }
+        }
+        PreviewDialog.show(appShell, "Volunteer Hours", text.toString());
     }
 
     private void deleteSelected() {

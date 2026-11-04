@@ -360,9 +360,14 @@ public class EventView extends BaseView implements EventObserver {
             return;
         }
         List<EventRegistration> regs = eventController.getRegistrations(selected.getId());
-        appShell.getToast().show(appShell.getStage(),
-            "Reminder sent to " + regs.size() + " attendees for " + selected.getTitle(),
-            Toast.Type.INFO);
+        try {
+            eventController.sendReminder(selected.getId());
+            appShell.getToast().show(appShell.getStage(),
+                "Reminder sent to " + regs.size() + " attendees for " + selected.getTitle(),
+                Toast.Type.SUCCESS);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
     }
 
     private void deleteSelected() {

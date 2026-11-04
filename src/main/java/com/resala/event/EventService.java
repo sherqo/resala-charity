@@ -164,8 +164,12 @@ public class EventService implements EventSubject {
     }
   }
 
-  public void checkIn(long registrationId) {
-    try {
+  public void sendReminder(long id) {
+    Event event = getEvent(id);
+    notifyObservers(event, "Reminder: " + event.getTitle() + " is on " + event.getDate() + ".");
+  }
+
+  public void checkIn(long registrationId) {    try {
       registrations.checkIn(registrationId);
     } catch (IllegalArgumentException e) {
       throw new EventException(EventError.REGISTRATION_NOT_FOUND, "#" + registrationId);

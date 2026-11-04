@@ -32,13 +32,14 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       System.out.println("2) Create event");
       System.out.println("3) Edit event");
       System.out.println("4) Delete event");
-      System.out.println("5) Open event (DRAFT / CLOSED → OPEN)");
+      System.out.println("5) Open event (DRAFT → OPEN)");
       System.out.println("6) Close event (OPEN → CLOSED)");
       System.out.println("7) Register attendee");
       System.out.println("8) Check in attendee");
       System.out.println("9) View registrations");
       System.out.println("A) Attendance report");
-      System.out.println("B) Manage event types");
+      System.out.println("B) Send reminder");
+      System.out.println("C) Manage event types");
       System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
@@ -55,7 +56,8 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
           case "8" -> checkIn();
           case "9" -> viewRegistrations();
           case "A" -> attendanceReport();
-          case "B" -> manageEventTypes();
+          case "B" -> sendReminder();
+          case "C" -> manageEventTypes();
           case "0" -> running = false;
           default  -> System.out.println("Invalid option.");
         }
@@ -241,6 +243,13 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n--- Attendance Report ---");
     long eventId = readLong("Event ID: ");
     System.out.println("\n" + controller.attendanceReport(eventId));
+  }
+
+  private void sendReminder() {
+    System.out.println("\n--- Send Reminder ---");
+    long eventId = readLong("Event ID: ");
+    controller.sendReminder(eventId);
+    printSuccess("Reminder sent to registered attendees.");
   }
 
   private EventRequest readEventRequest(Event current) {

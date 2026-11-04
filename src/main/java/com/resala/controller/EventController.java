@@ -49,6 +49,8 @@ public class EventController {
   }
   public String attendanceReport(long eventId)           { return service.attendanceReport(eventId); }
 
+  public void sendReminder(long eventId)                 { service.sendReminder(eventId); }
+
   public List<EventRegistration> getRegistrations(long eventId) {
     return service.getRegistrations(eventId);
   }
