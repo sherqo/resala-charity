@@ -94,7 +94,7 @@ public class GuiMain extends Application {
             donationController, eventController, volunteerController,
             paymentController, paymentService,
             donationService, eventService,
-            beneficiaryController
+            beneficiaryController, notifier
         ).show();
     }
 

@@ -13,6 +13,7 @@ import com.resala.gui.views.*;
 import com.resala.notification.DonationSubject;
 import com.resala.notification.EventSubject;
 import com.resala.notification.FeedObserver;
+import com.resala.notification.Notifier;
 import com.resala.payment.PaymentService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,6 +40,7 @@ public class AppShell {
     private final PaymentController paymentController;
     private final PaymentService paymentService;
     private final BeneficiaryController beneficiaryController;
+    private final Notifier notifier;
 
     private final DonationSubject donationSubject;
     private final EventSubject eventSubject;
@@ -54,20 +56,9 @@ public class AppShell {
                     PaymentController paymentController,
                     PaymentService paymentService,
                     DonationSubject donationSubject,
-                    EventSubject eventSubject) {
-        this(stage, donationController, eventController, volunteerController,
-             paymentController, paymentService, donationSubject, eventSubject, null);
-    }
-
-    public AppShell(Stage stage,
-                    DonationController donationController,
-                    EventController eventController,
-                    VolunteerController volunteerController,
-                    PaymentController paymentController,
-                    PaymentService paymentService,
-                    DonationSubject donationSubject,
                     EventSubject eventSubject,
-                    BeneficiaryController beneficiaryController) {
+                    BeneficiaryController beneficiaryController,
+                    Notifier notifier) {
         this.stage = stage;
         this.donationController = donationController;
         this.eventController = eventController;
@@ -77,6 +68,7 @@ public class AppShell {
         this.donationSubject = donationSubject;
         this.eventSubject = eventSubject;
         this.beneficiaryController = beneficiaryController;
+        this.notifier = notifier;
         this.feedObserver = new FeedObserver(feedList, statusLabel);
 
         donationSubject.addObserver(feedObserver);
@@ -271,7 +263,7 @@ public class AppShell {
 
         views.put("Beneficiaries", new BeneficiaryView(this, beneficiaryController));
 
-        views.put("Messages", new CommView(this));
+        views.put("Messages", new CommView(this, notifier));
 
         views.put("Lookups", new LookupView(this, volunteerController, eventController));
 

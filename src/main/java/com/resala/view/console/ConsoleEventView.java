@@ -248,7 +248,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     String typeStr = value("Event type ID",      current == null ? null : String.valueOf(current.getEventTypeId()));
     String dateStr = value("Date (YYYY-MM-DD)",  current == null ? null : current.getDate().toString());
     String capStr  = value("Capacity",           current == null ? null : String.valueOf(current.getCapacity()));
-    String hoursStr = value("Volunteer hours credited after event closes",
+    String hoursStr = value("Volunteer hours credited after check-in",
                             current == null ? null : String.valueOf(current.getHours()));
     String desc    = value("Description",        current == null ? null : current.getDescription());
 

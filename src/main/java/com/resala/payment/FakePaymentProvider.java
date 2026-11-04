@@ -14,7 +14,7 @@ public class FakePaymentProvider {
   private final AtomicLong sequence = new AtomicLong(1000);
   private final long latencyMillis;
 
-  public FakePaymentProvider() { this(200); }
+  public FakePaymentProvider() { this(0); }
   public FakePaymentProvider(long latencyMillis) { this.latencyMillis = latencyMillis; }
 
   public List<PaymentMethod> availableMethods() { return availableMethods; }

@@ -25,10 +25,10 @@ public class CommView extends BaseView {
     private ListView<String> logList;
     private ToggleGroup channelGroup;
 
-    public CommView(AppShell appShell) {
+    public CommView(AppShell appShell, Notifier notifier) {
         super(Toolbar.of(), createDummyTable());
         this.appShell = appShell;
-        this.notifier = new Notifier(new EmailStrategy());
+        this.notifier = notifier;
 
         getStyleClass().add("view");
         setPadding(new Insets(20, 24, 20, 24));

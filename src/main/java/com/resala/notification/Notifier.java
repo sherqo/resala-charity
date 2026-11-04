@@ -29,7 +29,9 @@ public class Notifier {
   }
 
   public void send(String recipient, String subject, String body) {
-    strategy.send(recipient, subject, body);
+    // Some channels (SMS) do not have a subject.
+    String safeSubject = subject == null ? "" : subject;
+    strategy.send(recipient, safeSubject, body);
 
     String channelName = strategy.getClass().getSimpleName().replace("Strategy", "");
     AuditLogManager.getInstance().log(
@@ -37,8 +39,8 @@ public class Notifier {
         "Notifications",
         "Outgoing Notifications",
         recipient,
-        subject != null && !subject.isBlank() ? subject : "Notification dispatched",
-        "Channel: " + channelName.toUpperCase() + "\nRecipient: " + recipient + "\nSubject: " + subject + "\n\nBody:\n" + body
+        !safeSubject.isBlank() ? safeSubject : "Notification dispatched",
+        "Channel: " + channelName.toUpperCase() + "\nRecipient: " + recipient + "\nSubject: " + safeSubject + "\n\nBody:\n" + body
     );
   }
 }

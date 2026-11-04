@@ -37,8 +37,11 @@ public abstract class AbstractConsoleView {
 
   protected String value(String label, String current) {
     String suffix = current == null ? "" : " (current: " + current + ")";
-    System.out.print(label + suffix + ": ");
+    System.out.print(label + suffix + " (blank = keep, - = clear): ");
     String entered = input.nextLine().trim();
+    if (current != null && entered.equals("-")) {
+      return null;
+    }
     return entered.isBlank() && current != null ? current : entered;
   }
 

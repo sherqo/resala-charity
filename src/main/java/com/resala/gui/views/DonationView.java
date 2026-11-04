@@ -281,20 +281,12 @@ public class DonationView extends BaseView implements DonationObserver {
             return;
         }
 
-        var fields = List.of(
-            new FormDialog.Field("tax", "Include Tax Receipt", FormDialog.Type.CHECKBOX, false, "Tax Receipt"),
-            new FormDialog.Field("thankYou", "Include Thank You Note", FormDialog.Type.CHECKBOX, false, "Thank You Note")
-        );
-
-        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Receipt Options", fields);
-        result.ifPresent(map -> {
-            try {
-                String receiptText = donationController.receipt(selected.getId());
-                showReceiptPreview(receiptText);
-            } catch (Exception ex) {
-                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
-            }
-        });
+        try {
+            String receiptText = donationController.receipt(selected.getId());
+            showReceiptPreview(receiptText);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
     }
 
     private void showReceiptPreview(String text) {

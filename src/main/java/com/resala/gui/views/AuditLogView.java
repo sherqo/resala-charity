@@ -65,6 +65,13 @@ public class AuditLogView extends BaseView {
         Button detailsBtn = Toolbar.ghost("View Details", e -> showSelectedDetails());
 
         Button clearBtn = Toolbar.danger("Clear Logs", e -> {
+            boolean confirmed = appShell == null || appShell.getConfirmDialog().ask(
+                appShell.getStage(),
+                "Clear Logs",
+                "Clear the whole audit log? This cannot be undone."
+            );
+            if (!confirmed) return;
+
             AuditLogManager.getInstance().clear();
             if (appShell != null) {
                 appShell.getToast().show(appShell.getStage(), "Audit log cleared", Toast.Type.INFO);
