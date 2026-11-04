@@ -33,7 +33,6 @@ public final class ModalOverlay {
         AtomicReference<T> resultRef = new AtomicReference<>(null);
         AtomicBoolean closed = new AtomicBoolean(false);
 
-        // Semi-transparent backdrop
         Region backdrop = new Region();
         backdrop.getStyleClass().add("modal-backdrop");
         backdrop.prefWidthProperty().bind(overlay.widthProperty());
@@ -41,7 +40,6 @@ public final class ModalOverlay {
 
         Node cardNode = card.getNode();
 
-        // Dismiss action
         final javafx.event.EventHandler<KeyEvent>[] escHandlerRef = new javafx.event.EventHandler[1];
 
         Runnable dismiss = () -> {

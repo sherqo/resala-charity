@@ -33,7 +33,6 @@ public class AppShell {
     private final Label statusLabel = new Label("Ready");
     private BaseView currentView;
 
-    // Controllers
     private final DonationController donationController;
     private final EventController eventController;
     private final VolunteerController volunteerController;
@@ -41,12 +40,10 @@ public class AppShell {
     private final PaymentService paymentService;
     private final BeneficiaryController beneficiaryController;
 
-    // Observer subjects
     private final DonationSubject donationSubject;
     private final EventSubject eventSubject;
     private final FeedObserver feedObserver;
 
-    // Shared UI components
     private final Toast toast = new Toast();
     private final ConfirmDialog confirmDialog = new ConfirmDialog();
 
@@ -82,12 +79,10 @@ public class AppShell {
         this.beneficiaryController = beneficiaryController;
         this.feedObserver = new FeedObserver(feedList, statusLabel);
 
-        // Attach feed observer
         donationSubject.addObserver(feedObserver);
         eventSubject.addObserver(feedObserver);
     }
 
-    // Helper methods for views
     private static AppShell instance;
     private StackPane rootPane;
     private BorderPane mainLayout;
@@ -108,7 +103,6 @@ public class AppShell {
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setTitle("Resala Charity System");
 
-        // Application icon (for window & dock)
         try {
             var icon256 = getClass().getResourceAsStream("/app-icon.png");
             if (icon256 != null) {
@@ -123,7 +117,6 @@ public class AppShell {
         stage.setScene(scene);
         stage.show();
 
-        // Show dashboard by default
         showView("Dashboard");
     }
 
@@ -151,12 +144,10 @@ public class AppShell {
         sidebar.setMaxWidth(220);
         sidebar.setMinWidth(220);
 
-        // Logo/Title
         Label logo = new Label("Resala");
         logo.getStyleClass().add("logo");
         sidebar.getChildren().add(logo);
 
-        // Navigation buttons
         VBox navBox = new VBox(2);
         navBox.setPadding(new Insets(12, 8, 12, 8));
         VBox.setVgrow(navBox, Priority.ALWAYS);
@@ -185,7 +176,6 @@ public class AppShell {
 
         sidebar.getChildren().add(navBox);
 
-        // Footer with dark theme toggle
         VBox footerBox = new VBox(6);
         footerBox.setPadding(new Insets(8, 8, 12, 8));
 
@@ -209,7 +199,6 @@ public class AppShell {
         footerBox.getChildren().add(themeBtn);
         sidebar.getChildren().add(footerBox);
 
-        // Store nav items for active state management
         this.navItems = navItems;
 
         return sidebar;
@@ -221,16 +210,13 @@ public class AppShell {
         VBox mainPane = new VBox();
         mainPane.getStyleClass().add("main-pane");
 
-        // Header bar
         headerBar = new HeaderBar();
         mainPane.getChildren().add(headerBar);
 
-        // Content area - StackPane for view switching
         contentStack = new StackPane();
         contentStack.getStyleClass().add("content-area");
         VBox.setVgrow(contentStack, Priority.ALWAYS);
 
-        // Add all views to stack (hidden initially)
         for (BaseView view : views.values()) {
             view.setVisible(false);
             view.setManaged(false);
@@ -262,42 +248,33 @@ public class AppShell {
     }
 
     private void buildViews() {
-        // Dashboard observes donations and events
+
         DashboardView dashboard = new DashboardView(this, donationController, eventController, volunteerController);
         donationSubject.addObserver(dashboard);
         eventSubject.addObserver(dashboard);
         views.put("Dashboard", dashboard);
 
-        // Donations view observes donations
         DonationView donationView = new DonationView(this, donationController, paymentController);
         donationSubject.addObserver(donationView);
         views.put("Donations", donationView);
 
-        // Payments view
         PaymentView paymentView = new PaymentView(this, paymentController);
         views.put("Payments", paymentView);
 
-        // Donors
         views.put("Donors", new DonorView(this, donationController));
 
-        // Volunteers
         views.put("Volunteers", new VolunteerView(this, volunteerController));
 
-        // Events view observes events
         EventView eventView = new EventView(this, eventController);
         eventSubject.addObserver(eventView);
         views.put("Events", eventView);
 
-        // Beneficiaries
         views.put("Beneficiaries", new BeneficiaryView(this, beneficiaryController));
 
-        // Messages
         views.put("Messages", new CommView(this));
 
-        // Lookups
         views.put("Lookups", new LookupView(this, volunteerController, eventController));
 
-        // Audit Log
         views.put("Audit Log", new AuditLogView(this));
     }
 
@@ -313,18 +290,15 @@ public class AppShell {
         BaseView view = views.get(name);
         if (view == null) return;
 
-        // Hide current view
         if (currentView != null) {
             currentView.setVisible(false);
             currentView.setManaged(false);
         }
 
-        // Show new view
         view.setVisible(true);
         view.setManaged(true);
         currentView = view;
 
-        // Update nav button active state
         for (NavItem item : navItems) {
             item.button.getStyleClass().remove("active");
             if (item.name.equals(name)) {
@@ -332,12 +306,10 @@ public class AppShell {
             }
         }
 
-        // Update header
         headerBar.setTitle(name);
         headerBar.setSubtitle(getSubtitle(name));
         headerBar.setPrimaryAction(view.getPrimaryAction());
 
-        // Refresh view data
         view.refresh();
     }
 
@@ -355,7 +327,6 @@ public class AppShell {
         };
     }
 
-    // Getters for views to access controllers
     public DonationController getDonationController() { return donationController; }
     public EventController getEventController() { return eventController; }
     public VolunteerController getVolunteerController() { return volunteerController; }

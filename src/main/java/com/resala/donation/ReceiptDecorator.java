@@ -1,6 +1,5 @@
 package com.resala.donation;
 
-// Base decorator
 public abstract class ReceiptDecorator implements Receipt {
 
   protected final Receipt receipt;

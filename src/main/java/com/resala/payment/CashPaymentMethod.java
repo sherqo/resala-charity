@@ -7,7 +7,7 @@ public final class CashPaymentMethod implements PaymentMethod {
 
   @Override
   public void validate(PaymentCommand cmd) {
-    // Cash is collected at the counter, so no payment token is required.
+    // Cash payments do not need a token.
   }
 
   @Override

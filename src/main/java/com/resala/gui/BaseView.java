@@ -21,7 +21,7 @@ public abstract class BaseView extends VBox implements Refreshable {
 
         if (toolbar != null) {
             getChildren().add(toolbar);
-            // Collapse empty toolbar to avoid dead padding
+
             toolbar.visibleProperty().bind(Bindings.isNotEmpty(toolbar.getChildren()));
             toolbar.managedProperty().bind(toolbar.visibleProperty());
         }

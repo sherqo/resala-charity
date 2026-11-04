@@ -16,7 +16,7 @@ public class TransactionManager {
     boolean previous;
     try {
       previous = connection.getAutoCommit();
-      if (!previous) return work.get(); // an outer transaction owns commit/rollback
+      if (!previous) return work.get();
       connection.setAutoCommit(false);
     } catch (SQLException e) {
       throw new IllegalStateException("Could not begin transaction", e);

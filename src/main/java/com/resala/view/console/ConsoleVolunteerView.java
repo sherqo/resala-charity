@@ -74,7 +74,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  // Volunteer CRUD
   private void listVolunteers() {
     printVolunteers(controller.listVolunteers());
   }
@@ -116,7 +115,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     printSuccess("Availability updated to " + (available ? "available" : "not available") + ".");
   }
 
-  // Skills
   private void showVolunteerSkills() {
     System.out.println("\n--- Volunteer Skills ---");
     int id = readInt("Volunteer ID: ");
@@ -176,7 +174,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  // Assignments and hours
   private void assignVolunteer() {
     System.out.println("\n--- Assign Volunteer to Event ---");
     printVolunteers(controller.listVolunteers());
@@ -231,7 +228,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     System.out.println("\n" + controller.certificate(volunteerId));
   }
 
-  // Printing helpers
   private void printVolunteers(List<Volunteer> volunteers) {
     if (volunteers.isEmpty()) {
       System.out.println("No volunteers found.");
@@ -311,7 +307,6 @@ public class ConsoleVolunteerView extends AbstractConsoleView implements Volunte
     }
   }
 
-  // Input helpers
   private Volunteer readVolunteerRequest(Volunteer current) {
     String name = value("Name", current == null ? null : current.getName());
     String email = value("Email", current == null ? null : current.getEmail());

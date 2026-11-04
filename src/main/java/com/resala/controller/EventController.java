@@ -24,7 +24,6 @@ public class EventController {
     this.volunteerService = volunteerService;
   }
 
-  // --- Events ---
   public Event create(EventRequest request)              { return service.create(request); }
   public Event update(long id, EventRequest request)     { return service.update(id, request); }
   public void  delete(long id)                           { service.delete(id); }
@@ -54,7 +53,6 @@ public class EventController {
     return service.getRegistrations(eventId);
   }
 
-  // --- Event Types ---
   public List<EventType> listEventTypes()                        { return eventTypeService.findAll(); }
   public EventType       getEventType(int id)                    { return eventTypeService.getById(id); }
   public EventType       createEventType(String name)            { return eventTypeService.create(name); }

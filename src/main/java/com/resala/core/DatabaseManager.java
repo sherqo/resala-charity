@@ -30,7 +30,7 @@ public class DatabaseManager {
       connection = DriverManager.getConnection(url);
 
       try (Statement st = connection.createStatement()) {
-        st.execute("PRAGMA foreign_keys = ON"); // SQLite keeps it off by default
+        st.execute("PRAGMA foreign_keys = ON"); // SQLite foreign keys must be enabled for each connection.
       }
 
       runScript("/schema.sql");
@@ -59,10 +59,9 @@ public class DatabaseManager {
     }
   }
 
-  /** Executes every statement of a classpath SQL file (statements separated by ';'). */
   private void runScript(String resourcePath) {
     String script = readResource(resourcePath).replaceAll("(?m)--.*$", "").trim();
-    // fixed: remove comments before splitting commands, not vice versa
+    // Remove SQL comments before splitting statements.
     for (String sql : script.split(";")) {
       String statement = sql.trim();
       if (statement.isEmpty()) {
@@ -76,7 +75,6 @@ public class DatabaseManager {
     }
   }
 
-  /** Best-effort migration for columns added after the initial schema. */
   private void migrate(Connection connection) {
     try (Statement st = connection.createStatement()) {
       st.execute("""
@@ -88,7 +86,7 @@ public class DatabaseManager {
         """);
       st.execute("ALTER TABLE payments ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0");
     } catch (SQLException ignored) {
-      // Column already exists on fresh databases.
+      // The column may already exist in a new database.
     }
 
     try (Statement st = connection.createStatement()) {
@@ -115,7 +113,6 @@ public class DatabaseManager {
     }
   }
 
-  /** Creates the folder that will hold the SQLite file (e.g. data/). */
   private void createParentDirectory(String url) {
     if (!url.startsWith(SQLITE_PREFIX) || url.equals(SQLITE_PREFIX + ":memory:")) {
       return;

@@ -3,7 +3,6 @@ package com.resala.donation;
 import com.resala.model.DonationType;
 import java.time.LocalDate;
 
-// this doensn't care about the used UI
 public record DonationRequest(
   long donorId,
   DonationType type,

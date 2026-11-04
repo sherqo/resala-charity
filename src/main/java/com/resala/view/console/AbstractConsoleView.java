@@ -12,31 +12,25 @@ public abstract class AbstractConsoleView {
     this.input = input;
   }
 
-  // Input helpers
-  /** Prints prompt, returns trimmed line. */
   protected String readLine(String prompt) {
     System.out.print(prompt);
     return input.nextLine().trim();
   }
 
-  /** Reads the next line without printing a prompt (used after switch-reading). */
   protected String readLine() {
     return input.nextLine().trim();
   }
 
-  /** Reads a required non-blank line; throws if blank. */
   protected String requiredLine(String prompt) {
     String value = readLine(prompt);
     if (value.isBlank()) throw new IllegalArgumentException("This field is required.");
     return value;
   }
 
-  /** Reads a long integer from a required prompt. */
   protected long readLong(String prompt) {
     return Long.parseLong(requiredLine(prompt));
   }
 
-  /** Reads an integer from a required prompt. */
   protected int readInt(String prompt) {
     return Integer.parseInt(requiredLine(prompt));
   }
@@ -48,7 +42,6 @@ public abstract class AbstractConsoleView {
     return entered.isBlank() && current != null ? current : entered;
   }
 
-  // Output helpers
   protected void printError(String message) {
     System.out.println("Error: " + message);
   }
@@ -57,7 +50,6 @@ public abstract class AbstractConsoleView {
     System.out.println("✓ " + message);
   }
 
-  // String utilities
   protected String blankToNull(String value) {
     return value == null || value.isBlank() ? null : value;
   }

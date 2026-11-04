@@ -78,7 +78,6 @@ public class VolunteerController {
     return service.listEvents();
   }
 
-  /** Returns only OPEN events — the ones a volunteer can register for. */
   public List<Event> listOpenEvents() {
     return service.listOpenEvents();
   }

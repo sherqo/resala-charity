@@ -1,6 +1,5 @@
 package com.resala.model;
 
-/** A skill from the skills lookup table. */
 public class Skill {
 
   private int id;

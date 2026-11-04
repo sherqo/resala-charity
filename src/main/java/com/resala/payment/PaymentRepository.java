@@ -14,7 +14,6 @@ public interface PaymentRepository {
     return List.of();
   }
 
-  /** The caller-facing reference for a payment is its idempotency key. */
   default Optional<Payment> findByReference(String reference) {
     return findByIdempotencyKey(reference);
   }

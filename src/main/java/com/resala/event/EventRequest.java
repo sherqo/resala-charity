@@ -10,7 +10,7 @@ public record EventRequest(
   int hours,
   String description
 ) {
-  /** Backwards-compatible constructor; events created this way must still supply hours later. */
+
   public EventRequest(
     String title,
     int eventTypeId,

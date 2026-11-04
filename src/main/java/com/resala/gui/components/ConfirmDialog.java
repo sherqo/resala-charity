@@ -48,7 +48,6 @@ public class ConfirmDialog {
                 card.setMaxWidth(420);
                 card.setMinWidth(360);
 
-                // Header
                 HBox header = new HBox();
                 header.getStyleClass().add("modal-header");
                 header.setAlignment(Pos.CENTER_LEFT);
@@ -67,7 +66,6 @@ public class ConfirmDialog {
 
                 header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                // Body
                 VBox body = new VBox(10);
                 body.getStyleClass().add("modal-body");
 
@@ -77,7 +75,6 @@ public class ConfirmDialog {
                 msgLabel.setMaxWidth(380);
                 body.getChildren().add(msgLabel);
 
-                // Footer
                 HBox footer = new HBox(8);
                 footer.getStyleClass().add("modal-footer");
                 footer.setAlignment(Pos.CENTER_RIGHT);

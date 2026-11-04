@@ -48,7 +48,6 @@ public class AuditLogView extends BaseView {
         this.filteredLogs = filteredLogs;
         this.logTable = (DataTable<AuditLog>) this.table;
 
-        // Category filter ComboBox
         this.categoryFilter = new ComboBox<>();
         categoryFilter.getItems().addAll(
             "All Categories",
@@ -59,15 +58,12 @@ public class AuditLogView extends BaseView {
         categoryFilter.getSelectionModel().selectFirst();
         categoryFilter.setPrefWidth(190);
 
-        // Search text field
         this.searchField = new TextField();
         searchField.setPromptText("Search logs & payload...");
         searchField.setPrefWidth(220);
 
-        // View Details button
         Button detailsBtn = Toolbar.ghost("View Details", e -> showSelectedDetails());
 
-        // Clear Logs button
         Button clearBtn = Toolbar.danger("Clear Logs", e -> {
             AuditLogManager.getInstance().clear();
             if (appShell != null) {
@@ -75,17 +71,14 @@ public class AuditLogView extends BaseView {
             }
         });
 
-        // Assemble toolbar controls
         Label categoryLabel = new Label("Category:");
         categoryLabel.getStyleClass().add("filter-label");
 
         toolbar.getChildren().addAll(categoryLabel, categoryFilter, searchField, detailsBtn, clearBtn);
 
-        // Filter change listeners
         categoryFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilter());
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
 
-        // Row double-click
         logTable.getTableView().setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 showSelectedDetails();
@@ -183,7 +176,6 @@ public class AuditLogView extends BaseView {
                     card.setMinWidth(480);
                     card.setMaxHeight(600);
 
-                    // Header
                     HBox header = new HBox();
                     header.getStyleClass().add("modal-header");
                     header.setAlignment(Pos.CENTER_LEFT);
@@ -202,7 +194,6 @@ public class AuditLogView extends BaseView {
 
                     header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                    // Body
                     VBox body = new VBox(10);
                     body.getStyleClass().add("modal-body");
 
@@ -214,7 +205,6 @@ public class AuditLogView extends BaseView {
                     body.getChildren().add(area);
                     VBox.setVgrow(body, Priority.ALWAYS);
 
-                    // Footer
                     HBox footer = new HBox(8);
                     footer.getStyleClass().add("modal-footer");
                     footer.setAlignment(Pos.CENTER_RIGHT);

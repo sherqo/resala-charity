@@ -181,7 +181,6 @@ public class VolunteerView extends BaseView {
                     card.setMinWidth(480);
                     card.setMaxHeight(560);
 
-                    // Header
                     HBox header = new HBox();
                     header.getStyleClass().add("modal-header");
                     header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -200,7 +199,6 @@ public class VolunteerView extends BaseView {
 
                     header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                    // Body
                     VBox body = new VBox(10);
                     body.getStyleClass().add("modal-body");
 
@@ -212,7 +210,6 @@ public class VolunteerView extends BaseView {
                     body.getChildren().add(area);
                     VBox.setVgrow(body, Priority.ALWAYS);
 
-                    // Footer
                     HBox footer = new HBox(8);
                     footer.getStyleClass().add("modal-footer");
                     footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
@@ -239,7 +236,6 @@ public class VolunteerView extends BaseView {
             return;
         }
 
-        // Fallback
         Dialog<Void> dialog = new Dialog<>();
         dialog.initOwner(appShell.getStage());
         dialog.setTitle("Volunteer Certificate");

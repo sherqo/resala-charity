@@ -6,12 +6,12 @@ public class AuditLog {
 
     private final long id;
     private final LocalDateTime timestamp;
-    private final String pattern;     // e.g. "Observer", "Strategy", "Command"
-    private final String module;      // e.g. "Events", "Volunteers", "Donations", "Payments"
-    private final String category;    // "Observer Triggers", "Outgoing Notifications", "Payment Operations"
-    private final String recipient;   // e.g. "user@example.com" or "Donor #1"
-    private final String summary;     // Brief description
-    private final String details;     // Full payload, message body, or pattern explanation
+    private final String pattern;
+    private final String module;
+    private final String category;
+    private final String recipient;
+    private final String summary;
+    private final String details;
 
     public AuditLog(long id, LocalDateTime timestamp, String pattern, String module,
                     String category, String recipient, String summary, String details) {

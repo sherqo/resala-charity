@@ -6,7 +6,6 @@ import com.resala.payment.Payment;
 import com.resala.payment.PaymentSettlement;
 import java.time.LocalDate;
 
-/** Settles an approved payment by recording the matching online donation. */
 public class DonationPaymentSettlement implements PaymentSettlement {
 
   private final DonationService donations;

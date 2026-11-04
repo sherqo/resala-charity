@@ -2,12 +2,11 @@ package com.resala.beneficiary;
 
 import java.time.LocalDate;
 
-/** Record of aid or items distributed to a beneficiary. */
 public class Distribution {
 
   private long id;
   private long beneficiaryId;
-  private Long donationId; // nullable: optional link to an in-kind donation
+  private Long donationId;
   private String itemDescription;
   private int quantity;
   private LocalDate distributionDate;

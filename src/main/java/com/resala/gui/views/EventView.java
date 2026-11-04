@@ -62,7 +62,6 @@ public class EventView extends BaseView implements EventObserver {
         this.eventTypeNames = typeMap;
         this.eventsTable = (DataTable<Event>) this.table;
 
-        // Secondary actions
         Button registerBtn = Toolbar.ghost("Register Attendee", e -> showRegisterDialog());
         Button editBtn = Toolbar.ghost("Edit Event", e -> showEditDialog());
         Button openBtn = Toolbar.ghost("Open Event", e -> openSelected());
@@ -84,10 +83,6 @@ public class EventView extends BaseView implements EventObserver {
     public Button getPrimaryAction() { return primaryActionButton; }
 
     private static HBox createToolbar() { return Toolbar.of(); }
-
-    // -------------------------------------------------------------------------
-    // Dialogs & Actions
-    // -------------------------------------------------------------------------
 
     private void showCreateEventDialog() {
         List<EventType> types = eventController.listEventTypes();
@@ -295,7 +290,6 @@ public class EventView extends BaseView implements EventObserver {
                     card.setMinWidth(480);
                     card.setMaxHeight(560);
 
-                    // Header
                     HBox header = new HBox();
                     header.getStyleClass().add("modal-header");
                     header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -314,7 +308,6 @@ public class EventView extends BaseView implements EventObserver {
 
                     header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                    // Body
                     VBox body = new VBox(10);
                     body.getStyleClass().add("modal-body");
 
@@ -326,7 +319,6 @@ public class EventView extends BaseView implements EventObserver {
                     body.getChildren().add(area);
                     VBox.setVgrow(body, Priority.ALWAYS);
 
-                    // Footer
                     HBox footer = new HBox(8);
                     footer.getStyleClass().add("modal-footer");
                     footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
@@ -353,7 +345,6 @@ public class EventView extends BaseView implements EventObserver {
             return;
         }
 
-        // Fallback
         Dialog<Void> dialog = new Dialog<>();
         dialog.initOwner(appShell.getStage());
         dialog.setTitle("Event Attendance Report");
@@ -392,10 +383,6 @@ public class EventView extends BaseView implements EventObserver {
             }
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Refresh
-    // -------------------------------------------------------------------------
 
     @Override
     public void refresh() {

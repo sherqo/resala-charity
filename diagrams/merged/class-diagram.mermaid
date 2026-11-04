@@ -1,343 +1,305 @@
 classDiagram
-direction TB
+direction LR
 
-%% ===================== MODELS =====================
-class Role {
-    <<enumeration>>
-    ADMIN
-    STAFF
-    VOLUNTEER
-}
-class User {
-    -int id
-    -String username
-    -String passwordHash
-    -Role role
-}
-class Donor {
-    -int id
-    -String name
-    -String email
-    -String phone
-}
-class Volunteer {
-    -int id
-    -String name
-    -String email
-    -double hours
-    +addHours(double h) void
-}
-class Beneficiary {
-    -int id
-    -String name
-    -String address
-    -String needType
-}
-class Event {
-    -int id
-    -String title
-    -Date date
-    -EventState state
-    +setState(EventState s) void
-    +next() void
-    +register(Volunteer v) boolean
-}
-
-User --> Role
-Donor "1" --> "*" Donation : makes
-Volunteer "*" -- "*" Event : registers for
-
-%% ===================== SINGLETON (P1, Phase 1) =====================
-class DatabaseManager {
-    -DatabaseManager instance$
-    -Connection conn
-    -DatabaseManager()
-    +getInstance()$ DatabaseManager
-    +getConnection() Connection
-}
-class ConfigManager {
-    -ConfigManager instance$
-    -Properties props
-    +getInstance()$ ConfigManager
-    +get(String key) String
-}
-
-%% ===================== FACTORY + DECORATOR (Phase 1) =====================
-class Donation {
+namespace Models {
+  class Donor {
+    long id
+    String name
+    Type type
+    String email
+    String phone
+    boolean active
+  }
+  class Donation {
     <<abstract>>
-    -long id
-    -long donorId
-    -DonationType type
-    -java.time.LocalDate donationDate
-    -String notes
-    -String referenceNumber
-    -String status
-    +getId() long
-    +getDonorId() long
-    +getType() DonationType
-    +getDonationDate() LocalDate
-    +getNotes() String
-    +getReferenceNumber() String
-    +setReferenceNumber(String)
-    +getStatus() String
-    +getAmountMinor() long
-    +getItemDescription() String
-    +getQuantity() Integer
-    +getEstimatedValueMinor() Long
+    long id
+    long donorId
+    DonationType type
+    LocalDate donationDate
+    DonationStatus status
+  }
+  class OnlineDonation
+  class CheckDonation
+  class InKindDonation
+  class Volunteer {
+    int id
+    String name
+    String email
+    String phone
+    boolean available
+  }
+  class Skill
+  class Event {
+    int id
+    String title
+    int eventTypeId
+    LocalDate date
+    int capacity
+    int hours
+    Status status
+  }
+  class EventType
+  class EventRegistration
+  class Beneficiary {
+    long id
+    String name
+    int householdSize
+    int needTypeId
+    Status status
+    int impactScore
+  }
+  class NeedType
+  class Distribution
+  class Payment
+  class VolunteerEventAssignment
 }
-class OnlineDonation
-class CheckDonation
-class InKindDonation
-class DonationFactory {
-    +create(DonationRequest) Donation
-}
-class Receipt {
+
+namespace DonationModule {
+  class DonationFactory {
+    create(DonationRequest) Donation
+  }
+  class Receipt {
     <<interface>>
-    +render() String
+    render() String
+  }
+  class BasicReceipt
+  class ReceiptDecorator
+  class TaxReceiptDecorator
+  class ThankYouReceiptDecorator
+  class DonationService
+  class DonationController
+  class DonorRepository {
+    <<interface>>
+  }
+  class DonationRepository {
+    <<interface>>
+  }
+  class DonationPaymentSettlement
 }
-class BasicReceipt
-class ReceiptDecorator {
-    <<abstract>>
-    #Receipt wrapped
-    +render() String
-}
-class TaxReceiptDecorator
-class ThankYouReceiptDecorator
 
-Donation <|.. OnlineDonation
-Donation <|.. CheckDonation
-Donation <|.. InKindDonation
+namespace EventAndVolunteer {
+  class EventService
+  class EventTypeService
+  class VolunteerService
+  class EventController
+  class VolunteerController
+  class EventRepository {
+    <<interface>>
+  }
+  class EventRegistrationRepository {
+    <<interface>>
+  }
+  class EventTypeRepository {
+    <<interface>>
+  }
+  class VolunteerRepository {
+    <<interface>>
+  }
+}
+
+namespace BeneficiaryModule {
+  class BeneficiaryService
+  class BeneficiaryController
+  class BeneficiaryRepository {
+    <<interface>>
+  }
+  class DistributionPolicy {
+    <<interface>>
+    allocate()
+  }
+  class ByNeedDistributionPolicy
+  class EqualDistributionPolicy
+  class FifoDistributionPolicy
+}
+
+namespace Notification {
+  class DonationSubject {
+    <<interface>>
+  }
+  class DonationObserver {
+    <<interface>>
+    onDonationRecorded()
+  }
+  class EventSubject {
+    <<interface>>
+  }
+  class EventObserver {
+    <<interface>>
+    onEventUpdated()
+  }
+  class ThankYouNotificationObserver
+  class FeedObserver
+  class EventNotificationObserver
+  class Notifier
+  class NotificationStrategy {
+    <<interface>>
+    send()
+  }
+  class EmailStrategy
+  class SmsStrategy
+  class SocialStrategy
+}
+
+namespace PaymentSimulation {
+  class PaymentService
+  class PaymentController
+  class PaymentRepository {
+    <<interface>>
+  }
+  class PaymentGateway {
+    <<interface>>
+    charge(PaymentCommand) GatewayResult
+  }
+  class FakePaymentGatewayAdapter
+  class FakePaymentProvider
+  class PaymentSettlement {
+    <<interface>>
+    settle(Payment) long
+  }
+  class PaymentMethod {
+    <<interface>>
+    validate() tokenize()
+  }
+  class CashPaymentMethod
+  class CardPaymentMethod
+  class WalletPaymentMethod
+}
+
+namespace MVC {
+  class AppShell
+  class DonationView
+  class EventView
+  class VolunteerView
+  class BeneficiaryView
+  class LookupView
+  class PaymentView
+  class DashboardView
+}
+
+namespace Shared {
+  class DatabaseManager {
+    <<singleton>>
+    getInstance()
+  }
+  class ConfigManager {
+    <<singleton>>
+    getInstance()
+  }
+  class AuditLogManager {
+    <<singleton>>
+    getInstance()
+  }
+  class JdbcRepository {
+    <<abstract>>
+  }
+  class SqliteDonationRepository
+  class SqliteDonorRepository
+  class SqliteEventRepository
+  class SqliteEventRegistrationRepository
+  class SqliteEventTypeRepository
+  class SqliteVolunteerRepository
+  class SqliteBeneficiaryRepository
+  class SqlitePaymentRepository
+}
+
+Donor "1" --> "*" Donation : donorId
+Donation <|-- OnlineDonation
+Donation <|-- CheckDonation
+Donation <|-- InKindDonation
 DonationFactory ..> Donation : creates
 Receipt <|.. BasicReceipt
 Receipt <|.. ReceiptDecorator
 ReceiptDecorator o-- Receipt : wraps
 ReceiptDecorator <|-- TaxReceiptDecorator
 ReceiptDecorator <|-- ThankYouReceiptDecorator
-
-%% ===================== ADAPTER (P2, Phase 2) =====================
-class PaymentProcessor {
-    <<interface>>
-    +pay(double amount) boolean
-}
-class LegacyGateway {
-    +makePayment(int cents, String card) int
-}
-class FakeGatewayAdapter {
-    -LegacyGateway gateway
-    +pay(double amount) boolean
-}
-PaymentProcessor <|.. FakeGatewayAdapter
-FakeGatewayAdapter --> LegacyGateway : adapts
-
-%% ===================== TEMPLATE METHOD (P2, Phase 2) =====================
-class ReportGenerator {
-    <<abstract>>
-    +generate() String
-    #header() String
-    #body() String*
-    #footer() String
-}
-class ReceiptReport
-class MonthlyReport
-ReportGenerator <|-- ReceiptReport
-ReportGenerator <|-- MonthlyReport
-
-%% ===================== OBSERVER (P4, Phase 1) =====================
-class Observer {
-    <<interface>>
-    +update(String message) void
-}
-class Subject {
-    -List~Observer~ observers
-    +attach(Observer o) void
-    +detach(Observer o) void
-    +notifyObservers(String msg) void
-}
-Observer <|.. Volunteer
-Observer <|.. Donor
-Subject o-- Observer : notifies
-Subject <|-- Event
-Subject <|-- DonationService
-
-%% ===================== STRATEGY (P4, Phase 1) =====================
-class NotificationStrategy {
-    <<interface>>
-    +send(String to, String msg) void
-}
-class EmailStrategy
-class SmsStrategy
-class SocialStrategy
-class Notifier {
-    -NotificationStrategy strategy
-    +setStrategy(NotificationStrategy s) void
-    +notify(String to, String msg) void
-}
-NotificationStrategy <|.. EmailStrategy
-NotificationStrategy <|.. SmsStrategy
-NotificationStrategy <|.. SocialStrategy
-Notifier o-- NotificationStrategy : uses
-
-%% ===================== STATE (P3, Phase 2) =====================
-class EventState {
-    <<interface>>
-    +getName() String
-    +canRegister() boolean
-    +next(Event e) void
-}
-class DraftState
-class OpenState
-class ClosedState
-EventState <|.. DraftState
-EventState <|.. OpenState
-EventState <|.. ClosedState
-Event --> EventState : current state
-
-%% ===================== ITERATOR (P3, Phase 2) =====================
-class Iterable {
-    <<interface>>
-    +iterator() Iterator
-}
-class Iterator {
-    <<interface>>
-    +hasNext() boolean
-    +next() Object
-}
-class VolunteerCollection {
-    -List~Volunteer~ items
-    +add(Volunteer v) void
-    +iterator() Iterator
-}
-class VolunteerIterator {
-    -int index
-    +hasNext() boolean
-    +next() Volunteer
-}
-Iterable <|.. VolunteerCollection
-Iterator <|.. VolunteerIterator
-VolunteerCollection ..> VolunteerIterator : creates
-VolunteerCollection o-- Volunteer
-
-%% ===================== COMMAND (P1, Phase 2) =====================
-class Command {
-    <<interface>>
-    +execute() void
-    +undo() void
-}
-class CommandHistory {
-    -Deque~Command~ undoStack
-    -Deque~Command~ redoStack
-    +run(Command c) void
-    +undo() void
-    +redo() void
-}
-class AddDonationCommand {
-    -DonationService service
-    -Donation donation
-}
-Command <|.. AddDonationCommand
-CommandHistory o-- Command
-AddDonationCommand --> DonationService
-
-%% ===================== PROXY (P1, Phase 2) =====================
-class AdminService {
-    <<interface>>
-    +manageUsers() void
-    +editLookups() void
-}
-class AdminServiceImpl
-class AdminServiceProxy {
-    -AdminService real
-    -User currentUser
-    -checkAccess() void
-}
-AdminService <|.. AdminServiceImpl
-AdminService <|.. AdminServiceProxy
-AdminServiceProxy --> AdminService : delegates
-AdminServiceProxy --> User : checks role
-
-%% ===================== SERVICES + REPOSITORIES =====================
-class DonationService {
-    -DonationRepository repo
-    -PaymentProcessor payment
-    +donate(String type, double amt, Donor d) Donation
-    +generateReceipt(Donation d) String
-}
-class VolunteerService
-class EventService
-class BeneficiaryService
-class DistributionService
-class CertificateGenerator
-
-class JdbcRepository {
-    <<abstract>>
-    #Connection conn
-    #JdbcRepository(Connection conn)
-    #execute(String sql, Object... params) int
-    #query(String sql, Object... params) ResultSet
-}
-class DonationRepository
-class VolunteerRepository
-class EventRepository
-class BeneficiaryRepository
-JdbcRepository <|-- DonationRepository
-JdbcRepository <|-- VolunteerRepository
-JdbcRepository <|-- EventRepository
-JdbcRepository <|-- BeneficiaryRepository
-
+DonationController --> DonationService
+DonationService --> DonorRepository
 DonationService --> DonationRepository
-DonationService --> PaymentProcessor
 DonationService ..> DonationFactory
-DonationService ..> ReportGenerator
-VolunteerService --> VolunteerRepository
-VolunteerService ..> CertificateGenerator
+DonationService ..|> DonationSubject
+DonationSubject --> DonationObserver : notifies
+ThankYouNotificationObserver ..|> DonationObserver
+DonationPaymentSettlement ..|> PaymentSettlement
+DonationPaymentSettlement --> DonationService
+
+Event "1" --> "*" EventRegistration
+Event --> EventType : eventTypeId
+EventController --> EventService
+EventController --> EventTypeService
+EventController --> VolunteerService
 EventService --> EventRepository
+EventService --> EventRegistrationRepository
+EventService ..|> EventSubject
+EventSubject --> EventObserver : notifies
+EventNotificationObserver ..|> EventObserver
+FeedObserver ..|> DonationObserver
+FeedObserver ..|> EventObserver
+VolunteerController --> VolunteerService
+VolunteerService --> VolunteerRepository
+VolunteerService --> EventRepository
+VolunteerService --> EventRegistrationRepository
+Volunteer "*" -- "*" Skill
+VolunteerEventAssignment --> Volunteer : volunteerId
+VolunteerEventAssignment --> Event : eventId
+VolunteerEventAssignment --> Skill : skillId
+
+Beneficiary --> NeedType : needTypeId
+Distribution --> Beneficiary : beneficiaryId
 BeneficiaryService --> BeneficiaryRepository
-DistributionService --> BeneficiaryService
+BeneficiaryController --> BeneficiaryService
+BeneficiaryService --> DistributionPolicy
+ByNeedDistributionPolicy ..|> DistributionPolicy
+EqualDistributionPolicy ..|> DistributionPolicy
+FifoDistributionPolicy ..|> DistributionPolicy
 
-JdbcRepository ..> DatabaseManager : obtains Connection from
+Notifier --> NotificationStrategy : uses
+EmailStrategy ..|> NotificationStrategy
+SmsStrategy ..|> NotificationStrategy
+SocialStrategy ..|> NotificationStrategy
 
-%% ===================== FACADE (P1, Phase 2) =====================
-class NonProfitFacade {
-    -DonationService donations
-    -VolunteerService volunteers
-    -EventService events
-    -BeneficiaryService beneficiaries
-    -DistributionService distribution
-    -Notifier notifier
-    -CommandHistory history
-    -AdminService admin
-    +donate(String type, double amt, Donor d) void
-    +registerVolunteer(Volunteer v, Event e) void
-    +createEvent(Event e) void
-    +distributeAid(Beneficiary b, String item) void
-    +notify(String to, String msg) void
-    +undo() void
-}
-NonProfitFacade --> DonationService
-NonProfitFacade --> VolunteerService
-NonProfitFacade --> EventService
-NonProfitFacade --> BeneficiaryService
-NonProfitFacade --> DistributionService
-NonProfitFacade --> Notifier
-NonProfitFacade --> CommandHistory
-NonProfitFacade --> AdminService
+PaymentService --> PaymentRepository
+PaymentService --> PaymentGateway
+PaymentService --> PaymentSettlement
+PaymentService ..> Payment : creates and updates
+FakePaymentGatewayAdapter ..|> PaymentGateway
+FakePaymentGatewayAdapter --> FakePaymentProvider : adapts
+PaymentMethod <|.. CashPaymentMethod
+PaymentMethod <|.. CardPaymentMethod
+PaymentMethod <|.. WalletPaymentMethod
 
-%% ===================== VIEW / CONTROLLER ENTRY =====================
-class Controllers {
-    <<MVC>>
-    DonationController
-    VolunteerController
-    EventController
-    BeneficiaryController
-    AdminController
-}
-class Views {
-    <<UI>>
-    ConsoleMenu
-    DonationView
-    VolunteerView
-    EventView
-    BeneficiaryView
-}
-Views --> Controllers
-Controllers --> NonProfitFacade
+AppShell o-- DonationView
+AppShell o-- EventView
+AppShell o-- VolunteerView
+AppShell o-- BeneficiaryView
+AppShell o-- LookupView
+AppShell o-- PaymentView
+AppShell o-- DashboardView
+DonationView --> DonationController
+EventView --> EventController
+VolunteerView --> VolunteerController
+BeneficiaryView --> BeneficiaryController
+PaymentView --> PaymentController
+PaymentController --> PaymentService
+LookupView --> EventController
+LookupView --> VolunteerController
+DashboardView ..|> DonationObserver
+DashboardView ..|> EventObserver
+
+JdbcRepository --> DatabaseManager
+DatabaseManager --> ConfigManager
+SqliteDonationRepository --|> JdbcRepository
+SqliteDonationRepository ..|> DonationRepository
+SqliteDonorRepository --|> JdbcRepository
+SqliteDonorRepository ..|> DonorRepository
+SqliteEventRepository --|> JdbcRepository
+SqliteEventRepository ..|> EventRepository
+SqliteEventRegistrationRepository --|> JdbcRepository
+SqliteEventRegistrationRepository ..|> EventRegistrationRepository
+SqliteEventTypeRepository --|> JdbcRepository
+SqliteEventTypeRepository ..|> EventTypeRepository
+SqliteVolunteerRepository --|> JdbcRepository
+SqliteVolunteerRepository ..|> VolunteerRepository
+SqliteBeneficiaryRepository --|> JdbcRepository
+SqliteBeneficiaryRepository ..|> BeneficiaryRepository
+SqlitePaymentRepository --|> JdbcRepository
+SqlitePaymentRepository ..|> PaymentRepository

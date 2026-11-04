@@ -63,8 +63,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
     }
   }
 
-  // ── Beneficiary CRUD ───────────────────────────────────────────────────────
-
   private void listBeneficiaries() {
     List<Beneficiary> list = controller.listBeneficiaries();
     if (list.isEmpty()) {
@@ -137,8 +135,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("Delete cancelled.");
     }
   }
-
-  // ── Distribution Features (B3 & B4) ────────────────────────────────────────
 
   private void recordDistribution() {
     System.out.println("\n--- Record Aid Distribution ---");
@@ -248,8 +244,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
     }
   }
 
-  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
-
   private void manageNeedTypes() {
     boolean inSubMenu = true;
     while (inSubMenu) {
@@ -321,8 +315,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("Delete cancelled.");
     }
   }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   private void printNeedTypesInline() {
     List<NeedType> types = controller.listNeedTypes();

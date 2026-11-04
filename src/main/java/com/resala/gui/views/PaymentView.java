@@ -46,7 +46,6 @@ public class PaymentView extends BaseView {
 
         this.primaryActionButton = Toolbar.primary("Refresh", e -> refresh());
 
-        // Double-click row handler
         paymentsTable.getTableView().setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 showSelectedDetails();
@@ -128,7 +127,6 @@ public class PaymentView extends BaseView {
                     card.setMinWidth(480);
                     card.setMaxHeight(560);
 
-                    // Header
                     HBox header = new HBox();
                     header.getStyleClass().add("modal-header");
                     header.setAlignment(Pos.CENTER_LEFT);
@@ -147,7 +145,6 @@ public class PaymentView extends BaseView {
 
                     header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                    // Body
                     VBox body = new VBox(10);
                     body.getStyleClass().add("modal-body");
 
@@ -159,7 +156,6 @@ public class PaymentView extends BaseView {
                     body.getChildren().add(area);
                     VBox.setVgrow(body, Priority.ALWAYS);
 
-                    // Footer
                     HBox footer = new HBox(8);
                     footer.getStyleClass().add("modal-footer");
                     footer.setAlignment(Pos.CENTER_RIGHT);

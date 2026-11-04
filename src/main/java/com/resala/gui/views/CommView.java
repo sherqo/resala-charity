@@ -34,7 +34,6 @@ public class CommView extends BaseView {
         setPadding(new Insets(20, 24, 20, 24));
         setSpacing(20);
 
-        // Remove the dummy table from the view
         getChildren().remove(1);
 
         buildLayout();
@@ -53,7 +52,7 @@ public class CommView extends BaseView {
     }
 
     private void buildLayout() {
-        // --- 1. Composer Section (Single unified card) ---
+
         VBox composerCard = new VBox(14);
         composerCard.getStyleClass().add("card");
         composerCard.setPadding(new Insets(18, 20, 18, 20));
@@ -61,7 +60,6 @@ public class CommView extends BaseView {
         Label composeTitle = new Label("Compose Notification");
         composeTitle.getStyleClass().add("card-title");
 
-        // Channel Selection (Restrained radio group, no emojis)
         HBox channelRow = new HBox(16);
         channelRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -99,7 +97,6 @@ public class CommView extends BaseView {
             }
         });
 
-        // Form Fields Grid
         GridPane formGrid = new GridPane();
         formGrid.setHgap(16);
         formGrid.setVgap(12);
@@ -139,7 +136,6 @@ public class CommView extends BaseView {
         GridPane.setHgrow(subjectField, Priority.ALWAYS);
         GridPane.setHgrow(bodyArea, Priority.ALWAYS);
 
-        // Action row
         HBox actionRow = new HBox(12);
         actionRow.setAlignment(Pos.CENTER_RIGHT);
 
@@ -177,7 +173,6 @@ public class CommView extends BaseView {
 
         composerCard.getChildren().addAll(composeTitle, channelRow, formGrid, actionRow);
 
-        // --- 2. Activity / Delivery Log Section (Flat layout) ---
         VBox logSection = new VBox(8);
         VBox.setVgrow(logSection, Priority.ALWAYS);
 
@@ -196,6 +191,6 @@ public class CommView extends BaseView {
 
     @Override
     public void refresh() {
-        // Stateless view - no remote refresh needed
+
     }
 }

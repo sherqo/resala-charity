@@ -1,24 +1,21 @@
 package com.resala.model;
 
-/** A person or family receiving support. Beneficiaries do not log in. */
-// TODO: Reject negative household sizes.
 public class Beneficiary {
 
   public enum Status {
-    ACTIVE, // currently taking support
-    CLOSED, // support stopped for them
+    ACTIVE,
+    CLOSED,
   }
 
   private long id;
   private String name;
   private String phone;
-  private int householdSize; // no of people getting help
-  private int needTypeId; // the id of the need they need
+  private int householdSize;
+  private int needTypeId;
   private Status status;
   private String notes;
-  private int impactScore; // 0-10 impact score assigned to this beneficiary
+  private int impactScore;
 
-  // constructors
   public Beneficiary() {}
 
   public Beneficiary(
@@ -53,7 +50,6 @@ public class Beneficiary {
     this.impactScore = impactScore;
   }
 
-  // getters and setters
   public long getId() {
     return id;
   }

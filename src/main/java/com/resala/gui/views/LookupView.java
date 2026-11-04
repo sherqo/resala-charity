@@ -19,7 +19,6 @@ import java.util.Optional;
 
 public class LookupView extends BaseView {
 
-    // Supported tables
     private enum LookupTable {
         SKILLS("Skills"),
         EVENT_TYPES("Event Types");
@@ -93,7 +92,6 @@ public class LookupView extends BaseView {
         getChildren().add(0, selectorBox);
     }
 
-    // ------------------------------------------------------------------ Add
     private void showAddDialog() {
         var fields = List.of(
             new FormDialog.Field("name", "Name", FormDialog.Type.TEXT, true)
@@ -118,7 +116,6 @@ public class LookupView extends BaseView {
         });
     }
 
-    // --------------------------------------------------------------- Rename
     private void showRenameDialog() {
         Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -154,7 +151,6 @@ public class LookupView extends BaseView {
         });
     }
 
-    // --------------------------------------------------------------- Delete
     private void deleteSelected() {
         Object selected = lookupTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -179,7 +175,6 @@ public class LookupView extends BaseView {
         }
     }
 
-    // --------------------------------------------------------------- Refresh
     @Override
     @SuppressWarnings("unchecked")
     public void refresh() {
@@ -191,7 +186,6 @@ public class LookupView extends BaseView {
             FXCollections.observableArrayList((List<Object>) items));
     }
 
-    // ------------------------------------------------- Helpers to unbox rows
     private static int idOf(Object row) {
         if (row instanceof Skill s)     return s.getId();
         if (row instanceof EventType t) return t.getId();

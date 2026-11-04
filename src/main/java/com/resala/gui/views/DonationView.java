@@ -64,7 +64,6 @@ public class DonationView extends BaseView implements DonationObserver {
         this.paymentController = paymentController;
         this.donationsTable = (DataTable<Donation>) this.table;
 
-        // Secondary actions in toolbar
         Button receiptBtn = Toolbar.ghost("View Receipt", e -> showReceiptDialog());
         Button editBtn = Toolbar.ghost("Edit", e -> editSelected());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
@@ -159,7 +158,7 @@ public class DonationView extends BaseView implements DonationObserver {
                     request = new DonationRequest(donorId, type, 0L, itemDescription, quantity,
                         estimatedValueMinor, null, LocalDate.now(), notes);
                 } else {
-                    // Check: referenceNumber is the check number
+
                     request = new DonationRequest(donorId, type, amountMinor, null, null, null,
                         referenceNumber, LocalDate.now(), notes);
                 }
@@ -172,7 +171,6 @@ public class DonationView extends BaseView implements DonationObserver {
         });
     }
 
-    /** Lets the user pick a gateway method, collect dummy details, and charge the payment. */
     private void payOnline(long donorId, long amountMinor, String notes) {
         PaymentMethod method = choosePaymentMethod();
         if (method == null) {
@@ -190,7 +188,7 @@ public class DonationView extends BaseView implements DonationObserver {
             appShell.getToast().show(appShell.getStage(), "Payment cancelled.", Toast.Type.INFO);
             return;
         }
-        // The method strategy validates the raw details and issues the one-time token.
+        // This method checks the entered details and creates a demo token.
         String token = method.tokenize(instrument);
 
         String reference = UUID.randomUUID().toString();
@@ -234,7 +232,6 @@ public class DonationView extends BaseView implements DonationObserver {
         return methods.stream().filter(m -> m.displayName().equals(chosen)).findFirst().orElse(null);
     }
 
-    /** Dummy card form; validation and tokenization happen in {@link com.resala.payment.CardPaymentMethod}. */
     private CardDetails cardDetails() {
         var fields = List.of(
             new FormDialog.Field("holder", "Card holder", FormDialog.Type.TEXT, true),
@@ -253,7 +250,6 @@ public class DonationView extends BaseView implements DonationObserver {
             (String) values.get("cvv"));
     }
 
-    /** Dummy wallet form; validation and tokenization happen in {@link com.resala.payment.WalletPaymentMethod}. */
     private WalletDetails walletDetails() {
         var fields = List.of(
             new FormDialog.Field("phone", "Wallet phone", FormDialog.Type.TEXT, true, "01012345678")
@@ -314,7 +310,6 @@ public class DonationView extends BaseView implements DonationObserver {
                     card.setMinWidth(480);
                     card.setMaxHeight(560);
 
-                    // Header
                     HBox header = new HBox();
                     header.getStyleClass().add("modal-header");
                     header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -333,7 +328,6 @@ public class DonationView extends BaseView implements DonationObserver {
 
                     header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                    // Body
                     VBox body = new VBox(10);
                     body.getStyleClass().add("modal-body");
 
@@ -345,7 +339,6 @@ public class DonationView extends BaseView implements DonationObserver {
                     body.getChildren().add(area);
                     VBox.setVgrow(body, Priority.ALWAYS);
 
-                    // Footer
                     HBox footer = new HBox(8);
                     footer.getStyleClass().add("modal-footer");
                     footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
@@ -372,7 +365,6 @@ public class DonationView extends BaseView implements DonationObserver {
             return;
         }
 
-        // Fallback
         Dialog<Void> dialog = new Dialog<>();
         dialog.initOwner(appShell.getStage());
         dialog.setTitle("Donation Receipt");

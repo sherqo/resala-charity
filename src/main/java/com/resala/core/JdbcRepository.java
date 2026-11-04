@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-//Java Database Connectivity
 public abstract class JdbcRepository {
     protected final Connection conn;
 
@@ -30,7 +29,7 @@ public abstract class JdbcRepository {
         } catch (SQLException e) {
             throw dbError(sql, e);
         }
-    } // PreparedStatement + bind + UPDATE/INSERT/DELETE
+    }
     protected <T> List<T> query(String sql, RowMapper<T> mapper, Object... params){
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             bind(ps, params);

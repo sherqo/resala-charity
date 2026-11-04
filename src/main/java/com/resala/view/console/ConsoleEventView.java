@@ -74,9 +74,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // =========================================================================
-  // Event Types sub-menu
-  // =========================================================================
   private void manageEventTypes() {
     boolean running = true;
     while (running) {
@@ -103,10 +100,10 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       }
       catch (NumberFormatException e) {
         printError("Invalid number entered. Please enter a valid integer.");
-      } 
+      }
       catch (IllegalArgumentException | IllegalStateException e) {
         printError(e.getMessage());
-      } 
+      }
       System.out.println();
     }
   }
@@ -152,9 +149,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // =========================================================================
-  // Events
-  // =========================================================================
   private void listEvents() {
     List<EventType> types = controller.listEventTypes();
     List<Event> events = controller.listEvents();
@@ -204,7 +198,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // Lifecycle
   private void openEvent() {
     System.out.println("\n--- Open Event ---");
     long id = readLong("Event ID to open: ");
@@ -220,7 +213,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       + event.getHours() + " volunteer hour(s) credited to assigned volunteers.");
   }
 
-  // Registration
   private void registerAttendee() {
     System.out.println("\n--- Register Attendee ---");
     listEvents();
@@ -252,9 +244,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n" + controller.attendanceReport(eventId));
   }
 
-  // =========================================================================
-  // Helpers
-  // =========================================================================
   private EventRequest readEventRequest(Event current) {
     String title   = value("Title",              current == null ? null : current.getTitle());
     String typeStr = value("Event type ID",      current == null ? null : String.valueOf(current.getEventTypeId()));

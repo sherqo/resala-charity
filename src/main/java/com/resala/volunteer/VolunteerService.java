@@ -40,9 +40,8 @@ public class VolunteerService {
     this(volunteers, events, null);
   }
 
-  // Volunteer CRUD
   public Volunteer create(Volunteer request) {
-    // to ensure name is not empty 
+
     validate(request);
     Volunteer volunteer = new Volunteer(
       request.getName().trim(),
@@ -86,7 +85,6 @@ public class VolunteerService {
     return volunteer;
   }
 
-  // Skills
   public List<Skill> listSkills() {
     return volunteers.findAllSkills();
   }
@@ -123,7 +121,6 @@ public class VolunteerService {
     volunteers.deleteSkill(skillId);
   }
 
-  // Volunteer Skills
   public List<Skill> getVolunteerSkills(int volunteerId) {
     getVolunteer(volunteerId);
     return volunteers.findSkillsForVolunteer(volunteerId);
@@ -145,12 +142,10 @@ public class VolunteerService {
     return volunteers.findBySkill(skillId);
   }
 
-  // Assignments & Event Registrations
   public List<Event> listEvents() {
     return events.findAll();
   }
 
-  /** Returns only OPEN events with available capacity that volunteers can register for. */
   public List<Event> listOpenEvents() {
     return events.findAll().stream()
       .filter(e -> e.getStatus() == Event.Status.OPEN)
@@ -166,7 +161,7 @@ public class VolunteerService {
 
     validateAssignment(volunteer, event, skill);
 
-    // Enforce event capacity across registrations
+    // Count all registrations before checking capacity.
     if (eventRegistrations != null) {
       int registered = eventRegistrations.countRegistered(eventId);
       if (registered >= event.getCapacity()) {
@@ -174,7 +169,7 @@ public class VolunteerService {
       }
     }
 
-    // Connect to event registration: register volunteer as an attendee for the event
+    // Volunteers are also stored as event attendees.
     if (eventRegistrations != null) {
       Optional<EventRegistration> existing = eventRegistrations.findByVolunteerAndEvent(volunteerId, eventId);
       if (existing.isEmpty()) {
@@ -246,7 +241,7 @@ public class VolunteerService {
 
     int credited = volunteers.creditEventHours((int) event.getId(), event.getHours());
     if (credited > 0) {
-      // Volunteers who earned hours attended the event, so keep attendance in sync.
+      // Volunteers with credited hours should also be marked as checked in.
       if (eventRegistrations != null) {
         eventRegistrations.findByEvent(event.getId()).stream()
           .filter(EventRegistration::isVolunteer)
@@ -267,7 +262,6 @@ public class VolunteerService {
     return credited;
   }
 
-  // Summaries and certificate
   public VolunteerSummary summary(int volunteerId) {
     getVolunteer(volunteerId);
 
@@ -293,7 +287,6 @@ public class VolunteerService {
     return certificateGenerator.generate(volunteer, summary(volunteerId));
   }
 
-  // Private helpers
   private Event getEvent(int eventId) {
     return events.findById(eventId)
       .orElseThrow(() -> new IllegalArgumentException("Event not found: #" + eventId));

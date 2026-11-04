@@ -20,7 +20,6 @@ public interface BeneficiaryRepository {
 
     List<Distribution> findAllDistributions();
 
-    // ── Need Types Lookup CRUD ──────────────────────────────────────────────
     List<NeedType> findAllNeedTypes();
 
     Optional<NeedType> findNeedTypeById(int id);

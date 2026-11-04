@@ -11,7 +11,7 @@ public class ConfigManager {
 
     private ConfigManager() {
         props = new Properties();
-        // Loads from src/main/resources via the classpath — bundled into the jar
+
         try (InputStream in = ConfigManager.class.getResourceAsStream("/config.properties")) {
             if (in == null) {
                 throw new IllegalStateException("config.properties not found on classpath");
@@ -20,7 +20,7 @@ public class ConfigManager {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read config.properties", e);
         }
-    }      // loads config.properties from classpath
+    }
     public static synchronized ConfigManager getInstance(){
         if (instance == null){
             instance = new ConfigManager();

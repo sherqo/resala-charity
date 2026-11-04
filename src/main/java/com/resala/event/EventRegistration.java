@@ -1,16 +1,15 @@
 package com.resala.event;
 
-/** A single attendee or volunteer registration for an event. */
 public class EventRegistration {
 
   private long id;
   private long eventId;
   private String attendeeName;
-  private String attendeeEmail; // optional
-  private String ticketRef;     // unique 8-char code generated on registration
+  private String attendeeEmail;
+  private String ticketRef;
   private boolean checkedIn;
-  private Integer volunteerId;  // null for non-volunteer attendees
-  private Integer skillId;      // null for non-volunteer attendees
+  private Integer volunteerId;
+  private Integer skillId;
 
   public EventRegistration() {}
 

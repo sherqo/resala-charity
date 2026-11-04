@@ -41,7 +41,7 @@ public class FifoDistributionPolicy implements DistributionPolicy {
       return allocation;
     }
 
-    // Sort by ID ascending (earliest registered first)
+    // Lower IDs are treated as earlier registrations.
     List<Beneficiary> sorted = candidates.stream()
         .sorted(Comparator.comparingLong(Beneficiary::getId))
         .toList();

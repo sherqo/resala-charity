@@ -2,10 +2,8 @@ package com.resala.model;
 
 import java.time.LocalDate;
 
-/** An organized event by the charity */
 public class Event {
 
-  // regestration status
   public enum Status {
     DRAFT,
     OPEN,
@@ -14,14 +12,13 @@ public class Event {
 
   private long id;
   private String title;
-  private int eventTypeId; // DB: event_types.id
+  private int eventTypeId;
   private LocalDate date;
   private int capacity;
-  private int hours; // volunteer hours credited to each assigned volunteer on close
+  private int hours;
   private Status status;
   private String description;
 
-  // constructors
   public Event() {}
 
   public Event(
@@ -44,7 +41,6 @@ public class Event {
     this.description = description;
   }
 
-  /** Backwards-compatible constructor for events created before volunteer hours existed. */
   public Event(
     long id,
     String title,
@@ -57,7 +53,6 @@ public class Event {
     this(id, title, eventTypeId, date, capacity, 0, status, description);
   }
 
-  // getters & setters
   public long getId() {
     return id;
   }

@@ -33,8 +33,7 @@ public class JavaFxUiFactory implements UiFactory {
 
     @Override
     public DonationView createDonationView(DonationController controller, PaymentController payments) {
-        // For JavaFX, the views are created in AppShell and managed there
-        // This factory is kept for interface compatibility
+
         return new GuiDonationView(controller, payments);
     }
 
@@ -53,9 +52,6 @@ public class JavaFxUiFactory implements UiFactory {
         return new GuiBeneficiaryView(controller);
     }
 
-    // JavaFX-specific view wrappers that implement the console view interfaces
-    // These are thin adapters - the real views are in AppShell
-
     private static class GuiDonationView implements DonationView {
         private final DonationController controller;
         private final PaymentController payments;
@@ -67,7 +63,7 @@ public class JavaFxUiFactory implements UiFactory {
 
         @Override
         public void start() {
-            // Not used in JavaFX - views are managed by AppShell
+
         }
     }
 
@@ -80,7 +76,7 @@ public class JavaFxUiFactory implements UiFactory {
 
         @Override
         public void start() {
-            // Not used in JavaFX
+
         }
     }
 
@@ -93,7 +89,7 @@ public class JavaFxUiFactory implements UiFactory {
 
         @Override
         public void start() {
-            // Not used in JavaFX
+
         }
     }
 
@@ -106,7 +102,7 @@ public class JavaFxUiFactory implements UiFactory {
 
         @Override
         public void start() {
-            // Not used in JavaFX
+
         }
     }
 }

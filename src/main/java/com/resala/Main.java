@@ -40,10 +40,8 @@ public class Main {
     DatabaseManager database = DatabaseManager.getInstance();
     Connection conn = database.getConnection();
 
-    // Shared Notification System (Strategy Pattern)
     Notifier notifier = new Notifier(new EmailStrategy());
 
-    // Donation module (Observer: new donation → thank you notification)
     SqlitePaymentRepository paymentRepository = new SqlitePaymentRepository(conn);
     DonationService donationService = new DonationService(
       new SqliteDonorRepository(conn),
@@ -53,7 +51,6 @@ public class Main {
     donationService.addObserver(new ThankYouNotificationObserver(notifier));
     DonationController donationController = new DonationController(donationService);
 
-    // Online payments (gateway → settlement → donation)
     PaymentService paymentService = new PaymentService(
       paymentRepository,
       new FakePaymentGatewayAdapter(new FakePaymentProvider()),
@@ -62,7 +59,6 @@ public class Main {
     );
     PaymentController paymentController = new PaymentController(paymentService);
 
-    // Event module (Observer: event update/close → attendee notification)
     SqliteEventRegistrationRepository eventRegistrationRepo = new SqliteEventRegistrationRepository(conn);
     EventService eventService = new EventService(
       new SqliteEventRepository(conn),
@@ -71,7 +67,6 @@ public class Main {
     eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
     EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
 
-    // Volunteer module
     VolunteerService volunteerService = new VolunteerService(
       new SqliteVolunteerRepository(conn),
       new SqliteEventRepository(conn),
@@ -84,12 +79,10 @@ public class Main {
       volunteerService
     );
 
-    // ── Beneficiary module ──────────────────────────────────────────────
     BeneficiaryRepository beneficiaryRepo = new SqliteBeneficiaryRepository(conn);
     BeneficiaryService beneficiaryService = new BeneficiaryService(beneficiaryRepo);
     BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
 
-    // Top-level module menu
     Scanner input = new Scanner(System.in);
     UiFactory uiFactory = new ConsoleUiFactory(input);
     boolean running = true;

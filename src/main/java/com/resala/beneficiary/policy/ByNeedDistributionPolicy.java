@@ -38,7 +38,7 @@ public class ByNeedDistributionPolicy implements DistributionPolicy {
       remaining -= share;
     }
 
-    // Allocate any leftover remainder to the largest households first
+    // Give any remaining items to the largest households first.
     if (remaining > 0) {
       List<Beneficiary> sortedByNeed = candidates.stream()
           .sorted((a, b) -> Integer.compare(b.getHouseholdSize(), a.getHouseholdSize()))

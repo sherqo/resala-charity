@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-// business logic
 public class DonationService implements DonationSubject {
 
   private final DonorRepository donors;
@@ -52,7 +51,6 @@ public class DonationService implements DonationSubject {
     return donation;
   }
 
-  /** Records an online donation whose payment is already confirmed. Does NOT notify observers. */
   public Donation recordConfirmed(DonationRequest request) {
     Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
     if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
@@ -100,7 +98,6 @@ public class DonationService implements DonationSubject {
     }
   }
 
-  /** Call only after the payment transaction commits. */
   public void notifyRecorded(Donation donation, Donor donor) {
     notifyObservers(donation, donor);
   }

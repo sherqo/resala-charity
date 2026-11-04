@@ -56,8 +56,6 @@ public class BeneficiaryController {
     return service.getAllDistributions();
   }
 
-  // ── Strategy Pattern (Distribution Policy) ───────────────────────────────
-
   public void setDistributionPolicy(DistributionPolicy policy) {
     service.setDistributionPolicy(policy);
   }
@@ -80,8 +78,6 @@ public class BeneficiaryController {
     return service.distributeByPolicy(itemDescription, totalItems, donationId, distributionDate, notes);
   }
 
-  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
-
   public List<NeedType> listNeedTypes() {
     return service.listNeedTypes();
   }
@@ -101,8 +97,6 @@ public class BeneficiaryController {
   public void deleteNeedType(int id) {
     service.deleteNeedType(id);
   }
-
-  // ── Impact Scoring ─────────────────────────────────────────────────────────
 
   public int getImpactScore(long beneficiaryId) {
     return service.getImpactScore(beneficiaryId);

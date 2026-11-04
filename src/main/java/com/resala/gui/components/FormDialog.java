@@ -39,7 +39,6 @@ public final class FormDialog {
             return showInAppModal(appShell, title, fields);
         }
 
-        // Fallback for standalone headless/dialog tests without AppShell
         return showFallbackDialog(owner, title, fields);
     }
 
@@ -56,14 +55,12 @@ public final class FormDialog {
                 card.setMaxWidth(480);
                 card.setMinWidth(420);
 
-                // Bound max height so modal NEVER overflows the window
                 double maxH = 580;
                 if (appShell.getStage() != null && appShell.getStage().getHeight() > 200) {
                     maxH = Math.min(620, appShell.getStage().getHeight() * 0.85);
                 }
                 card.setMaxHeight(maxH);
 
-                // Header
                 HBox header = new HBox();
                 header.getStyleClass().add("modal-header");
                 header.setAlignment(Pos.CENTER_LEFT);
@@ -82,7 +79,6 @@ public final class FormDialog {
 
                 header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                // Body with vertical stacked fields
                 VBox formBox = new VBox(14);
                 formBox.getStyleClass().add("modal-body");
 
@@ -97,7 +93,7 @@ public final class FormDialog {
                     }
                     if (control instanceof TextField tf) {
                         tf.getStyleClass().add("input");
-                        // Submit on ENTER
+
                         tf.setOnKeyPressed(ke -> {
                             if (ke.getCode() == KeyCode.ENTER) {
                                 submit();
@@ -130,7 +126,6 @@ public final class FormDialog {
                     controls.put(field.key(), control);
                 }
 
-                // Scroll pane wrapping form box
                 ScrollPane scroll = new ScrollPane(formBox);
                 scroll.getStyleClass().add("modal-scroll");
                 scroll.setFitToWidth(true);
@@ -138,7 +133,6 @@ public final class FormDialog {
                 scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
                 VBox.setVgrow(scroll, Priority.ALWAYS);
 
-                // Footer
                 HBox footer = new HBox(8);
                 footer.getStyleClass().add("modal-footer");
                 footer.setAlignment(Pos.CENTER_RIGHT);

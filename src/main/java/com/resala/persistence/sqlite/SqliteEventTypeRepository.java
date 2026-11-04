@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 
-/** This saves event types in the SQLite database. */
 public class SqliteEventTypeRepository extends JdbcRepository implements EventTypeRepository {
 
   private static final JdbcRepository.RowMapper<EventType> EVENT_TYPE_MAPPER =

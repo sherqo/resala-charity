@@ -48,12 +48,10 @@ public class Toast {
         }
         toastStage.setScene(scene);
 
-        // Position at owner's bottom-right
         toastStage.setX(owner.getX() + owner.getWidth() - 380);
         toastStage.setY(owner.getY() + owner.getHeight() - 80);
         toastStage.show();
 
-        // Subtle slide & fade in
         label.setOpacity(0);
         label.setTranslateY(10);
 
@@ -66,7 +64,6 @@ public class Toast {
         fadeIn.play();
         slideIn.play();
 
-        // Auto-dismiss after 2.8 seconds
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), label);
         fadeOut.setDelay(Duration.millis(2800));
         fadeOut.setToValue(0);
