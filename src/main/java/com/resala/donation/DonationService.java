@@ -30,7 +30,10 @@ public class DonationService implements DonationSubject {
       "Donor name is required"
     );
     if (donor.getType() == null) throw new IllegalArgumentException("Donor type is required");
-    donor.setActive(true);
+    // Only new donors become active automatically. Editing keeps the current flag.
+    if (donor.getId() == 0) {
+      donor.setActive(true);
+    }
     return donors.save(donor);
   }
 
