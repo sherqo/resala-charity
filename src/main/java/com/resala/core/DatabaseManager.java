@@ -77,13 +77,6 @@ public class DatabaseManager {
 
   private void migrate(Connection connection) {
     try (Statement st = connection.createStatement()) {
-      st.execute("""
-        CREATE TABLE IF NOT EXISTS donation_types (
-            id    INTEGER PRIMARY KEY AUTOINCREMENT,
-            name  TEXT NOT NULL UNIQUE,
-            code  TEXT NOT NULL UNIQUE CHECK (code IN ('ONLINE','CHECK','IN_KIND'))
-        )
-        """);
       st.execute("ALTER TABLE payments ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0");
     } catch (SQLException ignored) {
       // The column may already exist in a new database.

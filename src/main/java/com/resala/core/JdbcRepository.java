@@ -1,7 +1,5 @@
 package com.resala.core;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.*;
@@ -62,8 +60,7 @@ public abstract class JdbcRepository {
             else                     ps.setObject(i + 1, params[i]);
         }
     }
-    @Contract("_, _ -> new")
-    private @NotNull RuntimeException dbError(String sql, SQLException e) {
+    private RuntimeException dbError(String sql, SQLException e) {
         return new IllegalStateException("SQL failed: " + sql + " -> " + e.getMessage(), e);
     }
 
