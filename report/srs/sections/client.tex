@@ -1,35 +1,27 @@
 \section{Client requirements}
 
-The basic requirements were extended by imagining a short interview with a branch coordinator and asking what makes the manual process hard. Each answer became a testable requirement linked to the module that implements it. Table~\ref{tab:client} lists them, with the screen where the user finds each one.
+The requirements below describe the problems the branch staff face and the outcome the client needs, not just the screens that were built. Each row states the need, how the client can judge that it is met, and the requirement that delivers it.
 
-\begin{table}[H]
-\centering
+\begingroup
 \footnotesize
-\begin{tabularx}{\textwidth}{@{}L{0.06\textwidth}YL{0.24\textwidth}L{0.23\textwidth}@{}}
+\begin{xltabular}{\textwidth}{@{}L{0.06\textwidth}YL{0.27\textwidth}L{0.21\textwidth}@{}}
+\caption{Client needs, acceptance and implementation.}\label{tab:client}\\
 \toprule
-\textbf{ID} & \textbf{Client requirement} & \textbf{Handled by} & \textbf{Where the user finds it} \\
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{How the client judges it} & \textbf{Addressed by} \\
 \midrule
-CR1 & Yearly tax statement per donor, adding up the monetary donations of a year & Donation module (FR-D6) & Donations \(\rightarrow\) Yearly Statement \\
-CR2 & Check the skill and availability of a volunteer before assignment & Volunteer module (FR-V4) & Volunteers \(\rightarrow\) Register to Event \\
-CR3 & Certificate after the required cumulative hours & Volunteer module (FR-V5, FR-V6) & Volunteers \(\rightarrow\) Print Certificate \\
-CR4 & Notify attendees when an event is updated or rescheduled & Event module, Observer (FR-E6, FR-E7) & Automatic; Events \(\rightarrow\) Send Reminder \\
-CR5 & Record aid distribution per beneficiary with item, optional donation link and date & Beneficiary module (FR-B3, FR-B4) & Beneficiaries \(\rightarrow\) Distribute Aid / History \\
-CR6 & Full CRUD for the chosen lookup table (event types); skills also full CRUD & Reference-data module (FR-R1 to FR-R6) & Lookups \\
-CR7 & Email, SMS and social channels, swappable at runtime & Communication module, Strategy (FR-C1, FR-C2) & Messages \\
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{How the client judges it} & \textbf{Addressed by} \\
+\midrule
+\endhead
 \bottomrule
-\end{tabularx}
-\caption{Client requirements and where they are implemented.}
-\label{tab:client}
-\end{table}
-
-Further client needs covered by Section~\ref{sec:patterns} and Section~3:
-
-\begin{itemize}
-  \item find a donor quickly by name (FR-D1);
-  \item print a receipt and a yearly tax statement for a donor (FR-D5, FR-D6);
-  \item stop registrations when an event is full (FR-E4);
-  \item tell attendees when an event changes (FR-E6);
-  \item see how many hours a volunteer worked and give a certificate (FR-V5, FR-V6);
-  \item see what help each beneficiary already received (FR-B4);
-  \item keep a record of every message sent (FR-C3).
-\end{itemize}
+\endlastfoot
+CR1 & At year end, staff rebuild each donor's total by hand. The client needs an accurate statement for any donor and year, covering monetary donations only, without re-entering data. & The total matches the recorded online and check donations for that donor and year. & FR-D6; Donations \(\rightarrow\) Yearly Statement \\
+CR2 & Coordinators assign volunteers from memory, which causes skill mismatches and no-shows. The client needs every assignment checked against availability and the required skill before it is confirmed. & An unavailable or unskilled volunteer is refused with a reason; an eligible volunteer is assigned. & FR-V4; Volunteers \(\rightarrow\) Register to Event \\
+CR3 & Certificates are calculated by hand and issued late. The client needs a certificate produced only after 20 verified hours, showing the correct total. & Below 20 hours the certificate is refused; at or above 20 it shows the recorded total. & FR-V5, FR-V6; Volunteers \(\rightarrow\) Print Certificate \\
+CR4 & Attendees are not told when an event changes, so some travel for nothing. The client needs every registered attendee informed automatically when the event is updated, opened, closed or rescheduled. & Each registered attendee receives a notification after the change. & FR-E6; automatic, and Events \(\rightarrow\) Send Reminder \\
+CR5 & Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary that staff can check before distributing again. & The history lists only that beneficiary's distributions, with item, quantity and date. & FR-B3, FR-B4; Beneficiaries \(\rightarrow\) Distribute Aid / History \\
+CR6 & Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & All four operations work; duplicate names and deletion of a used value are refused. & FR-R1 to FR-R6; Lookups \\
+CR7 & Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. & The next message uses the newly selected channel and is recorded in the audit log. & FR-C1 to FR-C3; Messages \\
+\end{xltabular}
+\endgroup

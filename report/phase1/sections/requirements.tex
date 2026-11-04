@@ -2,25 +2,25 @@
 
 \subsection{Client requirements}
 
-The requirements were written from the point of view of the staff who operate the system, not from the point of view of the code. We imagined a short interview with a branch coordinator and asked what makes the current manual process difficult. Each answer was written as a testable requirement and connected to the module that implements it.
+The requirements were written from the point of view of the staff who operate the system, not from the point of view of the code. Each one describes a problem in the current manual process, the outcome the client needs, and how the client can judge that it is met. The last column links the need to the module that delivers it.
 
 \begin{table}[H]
 \centering
 \scriptsize
-\begin{tabularx}{\textwidth}{@{}L{0.05\textwidth}L{0.31\textwidth}L{0.26\textwidth}Y@{}}
+\begin{tabularx}{\textwidth}{@{}L{0.05\textwidth}YL{0.27\textwidth}L{0.22\textwidth}@{}}
 \toprule
-\textbf{ID} & \textbf{Client requirement} & \textbf{Handled by} & \textbf{Where the user finds it} \\
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{How the client judges it} & \textbf{Addressed by} \\
 \midrule
-CR1 & Yearly tax statement per donor, summing monetary donations for a year & Donation module: yearly statement & Donations \(\rightarrow\) Yearly Statement \\
-CR2 & Validate a volunteer's skill and availability before assignment & Volunteer module: assignment validation & Volunteers \(\rightarrow\) Register to Event \\
-CR3 & Issue a certificate after the required cumulative hours & Volunteer module: hours and certificate & Volunteers \(\rightarrow\) Print Certificate \\
-CR4 & Notify attendees when an event is updated or rescheduled & Event module: observer notifications & Automatic; Events \(\rightarrow\) Send Reminder \\
-CR5 & Record aid distribution per beneficiary with item, optional donation link, and date & Beneficiary module: distribution record & Beneficiaries \(\rightarrow\) Distribute Aid / History \\
-CR6 & Full CRUD for the chosen lookup table, event types; skills also full CRUD & Reference-data module & Lookups \\
-CR7 & Email, SMS, and social channels, swappable at runtime & Communication module: channel strategy & Messages \\
+CR1 & At year end, staff rebuild each donor's total by hand. The client needs an accurate statement for any donor and year, covering monetary donations only. & The total matches the recorded online and check donations for that donor and year. & FR-D6; Donations \(\rightarrow\) Yearly Statement \\
+CR2 & Coordinators assign volunteers from memory, which causes skill mismatches and no-shows. The client needs every assignment checked against availability and the required skill. & An unavailable or unskilled volunteer is refused with a reason; an eligible volunteer is assigned. & FR-V4; Volunteers \(\rightarrow\) Register to Event \\
+CR3 & Certificates are calculated by hand and issued late. The client needs a certificate produced only after 20 verified hours, showing the correct total. & Below 20 hours the certificate is refused; at or above 20 it shows the recorded total. & FR-V5, FR-V6; Volunteers \(\rightarrow\) Print Certificate \\
+CR4 & Attendees are not told when an event changes, so some travel for nothing. The client needs every registered attendee informed automatically. & Each registered attendee receives a notification after the change. & FR-E6; automatic, and Events \(\rightarrow\) Send Reminder \\
+CR5 & Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary. & The history lists only that beneficiary's distributions, with item, quantity and date. & FR-B3, FR-B4; Beneficiaries \(\rightarrow\) Distribute Aid / History \\
+CR6 & Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & All four operations work; duplicate names and deletion of a used value are refused. & FR-R1 to FR-R6; Lookups \\
+CR7 & Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. & The next message uses the newly selected channel and is recorded in the audit log. & FR-C1 to FR-C3; Messages \\
 \bottomrule
 \end{tabularx}
-\caption{Client requirements and their implementation.}
+\caption{Client needs, acceptance, and implementation.}
 \label{tab:cr}
 \end{table}
 
