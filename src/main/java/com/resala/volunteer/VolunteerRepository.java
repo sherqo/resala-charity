@@ -17,6 +17,7 @@ public interface VolunteerRepository {
   Skill findSkillById(int skillId);
   Skill findSkillByName(String name);
   Skill saveSkill(Skill skill);
+  void renameSkill(int skillId, String newName);
   boolean isSkillInUse(int skillId);
   void deleteSkill(int skillId);
   List<Skill> findSkillsForVolunteer(int volunteerId);
@@ -28,5 +29,5 @@ public interface VolunteerRepository {
   List<VolunteerEventAssignment> findAssignments(int volunteerId);
   boolean hasAssignment(int volunteerId, int eventId);
 
-  int creditEventHours(int eventId, int hours);
+  int creditVolunteerHours(int eventId, int volunteerId, int hours);
 }

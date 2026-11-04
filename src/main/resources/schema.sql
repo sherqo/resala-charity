@@ -1,7 +1,3 @@
--- Dates use ISO-8601 text (YYYY-MM-DD)
--- Money uses integer minor units (cents)
-
--- lookup tables
 CREATE TABLE IF NOT EXISTS event_types (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
@@ -16,8 +12,6 @@ CREATE TABLE IF NOT EXISTS need_types (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
 );
-
--- Donation module
 CREATE TABLE IF NOT EXISTS donors (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
@@ -40,8 +34,6 @@ CREATE TABLE IF NOT EXISTS donations (
   notes TEXT,
   status TEXT NOT NULL DEFAULT 'COMPLETED' CHECK (status IN ('PENDING','COMPLETED','CANCELLED','REFUNDED','FAILED'))
 );
-
--- Event module
 CREATE TABLE IF NOT EXISTS events (
   id            INTEGER PRIMARY KEY,
   title         TEXT    NOT NULL,
@@ -52,9 +44,6 @@ CREATE TABLE IF NOT EXISTS events (
   status        TEXT    NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','OPEN','CLOSED')),
   description   TEXT
 );
-
-
--- Volunteer module
 CREATE TABLE IF NOT EXISTS volunteers (
   id        INTEGER PRIMARY KEY,
   name      TEXT    NOT NULL,
@@ -68,8 +57,6 @@ CREATE TABLE IF NOT EXISTS volunteer_skills (
   skill_id     INTEGER NOT NULL REFERENCES skills(id),
   PRIMARY KEY (volunteer_id, skill_id)
 );
-
--- One row per assignment; hours stay 0 until they are logged.
 CREATE TABLE IF NOT EXISTS volunteer_hours (
   id           INTEGER PRIMARY KEY,
   volunteer_id INTEGER NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
@@ -109,7 +96,6 @@ CREATE TABLE IF NOT EXISTS payments (
   CHECK (status = 'FAILED' OR failure_code IS NULL)
 );
 
-
 CREATE TABLE IF NOT EXISTS event_registrations (
   id             INTEGER PRIMARY KEY,
   event_id       INTEGER NOT NULL REFERENCES events(id),
@@ -120,8 +106,6 @@ CREATE TABLE IF NOT EXISTS event_registrations (
   volunteer_id   INTEGER REFERENCES volunteers(id) ON DELETE SET NULL,
   skill_id       INTEGER REFERENCES skills(id)
 );
-
--- Beneficiary module
 CREATE TABLE IF NOT EXISTS beneficiaries (
   id             INTEGER PRIMARY KEY,
   name           TEXT NOT NULL,
@@ -142,16 +126,10 @@ CREATE TABLE IF NOT EXISTS distributions (
   distribution_date TEXT NOT NULL,
   notes             TEXT
 );
-
--- admin deletions/edits of lookup rows survive restarts.
 CREATE TABLE IF NOT EXISTS seed_history (
   name TEXT PRIMARY KEY,
   ran_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
--- initial lookup values, run once per fresh database.
--- NOTE: the first ADMIN account is NOT seeded here. It is created by the
--- app on first run because the password must be hashed in Java.
 BEGIN TRANSACTION;
 
 INSERT INTO event_types (name)
@@ -186,8 +164,6 @@ SELECT name FROM (
   UNION ALL SELECT 'WALLET'
 )
 WHERE NOT EXISTS (SELECT 1 FROM seed_history WHERE name = 'payment_methods_init');
-
--- mark the block as done
 INSERT OR IGNORE INTO seed_history (name) VALUES ('lookup_init');
 INSERT OR IGNORE INTO seed_history (name) VALUES ('payment_methods_init');
 

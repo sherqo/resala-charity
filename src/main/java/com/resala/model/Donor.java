@@ -1,6 +1,5 @@
 package com.resala.model;
 
-/** A person or organization that donates. Donors do not log in. */
 public class Donor {
 
   public enum Type {
@@ -15,7 +14,6 @@ public class Donor {
   private String phone;
   private boolean active;
 
-  // constructors
   public Donor() {}
 
   public Donor(long id, String name, Type type, String email, String phone) {
@@ -31,7 +29,6 @@ public class Donor {
     this.active = active;
   }
 
-  // getters & setters
   public long getId() {
     return id;
   }

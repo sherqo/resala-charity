@@ -1,7 +1,6 @@
 package com.resala.gui.components;
 
 import com.resala.gui.AppShell;
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -24,7 +23,7 @@ public final class FormDialog {
     public record Field(String key, String label, Type type, boolean required, Object... options) {}
 
     public enum Type {
-        TEXT, NUMBER, COMBO, DATE, SPINNER, TEXTAREA, CHECKBOX, RADIO_GROUP
+        TEXT, NUMBER, COMBO, DATE, TEXTAREA, CHECKBOX
     }
 
     public static Optional<Map<String, Object>> show(Window owner, String title, List<Field> fields) {
@@ -39,7 +38,6 @@ public final class FormDialog {
             return showInAppModal(appShell, title, fields);
         }
 
-        // Fallback for standalone headless/dialog tests without AppShell
         return showFallbackDialog(owner, title, fields);
     }
 
@@ -56,14 +54,12 @@ public final class FormDialog {
                 card.setMaxWidth(480);
                 card.setMinWidth(420);
 
-                // Bound max height so modal NEVER overflows the window
                 double maxH = 580;
                 if (appShell.getStage() != null && appShell.getStage().getHeight() > 200) {
                     maxH = Math.min(620, appShell.getStage().getHeight() * 0.85);
                 }
                 card.setMaxHeight(maxH);
 
-                // Header
                 HBox header = new HBox();
                 header.getStyleClass().add("modal-header");
                 header.setAlignment(Pos.CENTER_LEFT);
@@ -82,7 +78,6 @@ public final class FormDialog {
 
                 header.getChildren().addAll(titleLabel, spacer, closeBtn);
 
-                // Body with vertical stacked fields
                 VBox formBox = new VBox(14);
                 formBox.getStyleClass().add("modal-body");
 
@@ -97,7 +92,7 @@ public final class FormDialog {
                     }
                     if (control instanceof TextField tf) {
                         tf.getStyleClass().add("input");
-                        // Submit on ENTER
+
                         tf.setOnKeyPressed(ke -> {
                             if (ke.getCode() == KeyCode.ENTER) {
                                 submit();
@@ -130,7 +125,6 @@ public final class FormDialog {
                     controls.put(field.key(), control);
                 }
 
-                // Scroll pane wrapping form box
                 ScrollPane scroll = new ScrollPane(formBox);
                 scroll.getStyleClass().add("modal-scroll");
                 scroll.setFitToWidth(true);
@@ -138,7 +132,6 @@ public final class FormDialog {
                 scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
                 VBox.setVgrow(scroll, Priority.ALWAYS);
 
-                // Footer
                 HBox footer = new HBox(8);
                 footer.getStyleClass().add("modal-footer");
                 footer.setAlignment(Pos.CENTER_RIGHT);
@@ -266,14 +259,6 @@ public final class FormDialog {
                 }
                 yield dp;
             }
-            case SPINNER -> {
-                int min = field.options().length > 0 ? ((Number) field.options()[0]).intValue() : 0;
-                int max = field.options().length > 1 ? ((Number) field.options()[1]).intValue() : 100;
-                int initial = field.options().length > 2 ? ((Number) field.options()[2]).intValue() : min;
-                Spinner<Integer> sp = new Spinner<>(min, max, initial);
-                sp.setEditable(true);
-                yield sp;
-            }
             case TEXTAREA -> {
                 TextArea ta = new TextArea();
                 ta.setPrefRowCount(3);
@@ -289,18 +274,6 @@ public final class FormDialog {
                     cb.setText(label);
                 }
                 yield cb;
-            }
-            case RADIO_GROUP -> {
-                ToggleGroup tg = new ToggleGroup();
-                VBox box = new VBox(6);
-                for (Object opt : field.options()) {
-                    RadioButton rb = new RadioButton(opt.toString());
-                    rb.setToggleGroup(tg);
-                    rb.setUserData(opt.toString());
-                    box.getChildren().add(rb);
-                }
-                box.setUserData(tg);
-                yield box;
             }
         };
     }
@@ -364,19 +337,8 @@ public final class FormDialog {
                 LocalDate date = dp.getValue();
                 yield date != null ? date.format(DateTimeFormatter.ISO_LOCAL_DATE) : "";
             }
-            case SPINNER -> {
-                @SuppressWarnings("unchecked")
-                Spinner<Integer> sp = (Spinner<Integer>) control;
-                yield sp.getValue();
-            }
             case TEXTAREA -> ((TextArea) control).getText().trim();
             case CHECKBOX -> ((CheckBox) control).isSelected();
-            case RADIO_GROUP -> {
-                VBox box = (VBox) control;
-                ToggleGroup tg = (ToggleGroup) box.getUserData();
-                Toggle sel = tg.getSelectedToggle();
-                yield sel != null ? sel.getUserData() : null;
-            }
         };
     }
 }

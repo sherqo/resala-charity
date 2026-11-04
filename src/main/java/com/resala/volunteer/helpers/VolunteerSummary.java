@@ -2,7 +2,6 @@ package com.resala.volunteer.helpers;
 
 import java.util.Map;
 
-
 public class VolunteerSummary {
 
   private final double totalHours;
@@ -20,7 +19,6 @@ public class VolunteerSummary {
     return totalHours;
   }
 
-  // Event title -> total hours
   public Map<String, Double> getHoursByEvent() {
     return hoursByEvent;
   }

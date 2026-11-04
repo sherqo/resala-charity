@@ -10,7 +10,6 @@ import com.resala.beneficiary.Distribution;
 import com.resala.beneficiary.policy.ByNeedDistributionPolicy;
 import com.resala.beneficiary.policy.EqualDistributionPolicy;
 import com.resala.beneficiary.policy.FifoDistributionPolicy;
-import com.resala.controller.BeneficiaryController;
 import com.resala.model.Beneficiary;
 import com.resala.model.NeedType;
 import com.resala.view.BeneficiaryView;
@@ -62,8 +61,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println();
     }
   }
-
-  // ── Beneficiary CRUD ───────────────────────────────────────────────────────
 
   private void listBeneficiaries() {
     List<Beneficiary> list = controller.listBeneficiaries();
@@ -137,8 +134,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("Delete cancelled.");
     }
   }
-
-  // ── Distribution Features (B3 & B4) ────────────────────────────────────────
 
   private void recordDistribution() {
     System.out.println("\n--- Record Aid Distribution ---");
@@ -248,8 +243,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
     }
   }
 
-  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
-
   private void manageNeedTypes() {
     boolean inSubMenu = true;
     while (inSubMenu) {
@@ -321,8 +314,6 @@ public class ConsoleBeneficiaryView extends AbstractConsoleView implements Benef
       System.out.println("Delete cancelled.");
     }
   }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   private void printNeedTypesInline() {
     List<NeedType> types = controller.listNeedTypes();

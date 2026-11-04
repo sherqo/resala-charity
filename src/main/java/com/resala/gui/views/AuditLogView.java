@@ -4,7 +4,7 @@ import com.resala.core.AuditLogManager;
 import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
-import com.resala.gui.components.ModalOverlay;
+import com.resala.gui.components.PreviewDialog;
 import com.resala.gui.components.Toast;
 import com.resala.gui.components.Toolbar;
 import com.resala.model.AuditLog;
@@ -48,7 +48,6 @@ public class AuditLogView extends BaseView {
         this.filteredLogs = filteredLogs;
         this.logTable = (DataTable<AuditLog>) this.table;
 
-        // Category filter ComboBox
         this.categoryFilter = new ComboBox<>();
         categoryFilter.getItems().addAll(
             "All Categories",
@@ -59,33 +58,34 @@ public class AuditLogView extends BaseView {
         categoryFilter.getSelectionModel().selectFirst();
         categoryFilter.setPrefWidth(190);
 
-        // Search text field
         this.searchField = new TextField();
         searchField.setPromptText("Search logs & payload...");
         searchField.setPrefWidth(220);
 
-        // View Details button
         Button detailsBtn = Toolbar.ghost("View Details", e -> showSelectedDetails());
 
-        // Clear Logs button
         Button clearBtn = Toolbar.danger("Clear Logs", e -> {
+            boolean confirmed = appShell == null || appShell.getConfirmDialog().ask(
+                appShell.getStage(),
+                "Clear Logs",
+                "Clear the whole audit log? This cannot be undone."
+            );
+            if (!confirmed) return;
+
             AuditLogManager.getInstance().clear();
             if (appShell != null) {
                 appShell.getToast().show(appShell.getStage(), "Audit log cleared", Toast.Type.INFO);
             }
         });
 
-        // Assemble toolbar controls
         Label categoryLabel = new Label("Category:");
         categoryLabel.getStyleClass().add("filter-label");
 
         toolbar.getChildren().addAll(categoryLabel, categoryFilter, searchField, detailsBtn, clearBtn);
 
-        // Filter change listeners
         categoryFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilter());
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
 
-        // Row double-click
         logTable.getTableView().setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 showSelectedDetails();
@@ -144,10 +144,8 @@ public class AuditLogView extends BaseView {
     private void showSelectedDetails() {
         AuditLog selected = logTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
-            if (appShell != null) {
-                appShell.getToast().show(appShell.getStage(),
-                    "Please select a log entry to view details", Toast.Type.WARNING);
-            }
+            appShell.getToast().show(appShell.getStage(),
+                "Please select a log entry to view details", Toast.Type.WARNING);
             return;
         }
 
@@ -169,76 +167,9 @@ public class AuditLogView extends BaseView {
         sb.append(selected.getDetails() != null ? selected.getDetails() : "(No details provided)").append("\n");
         sb.append("\n========================================\n");
 
-        String displayText = sb.toString();
-
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
-
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(620);
-                    card.setMinWidth(480);
-                    card.setMaxHeight(600);
-
-                    // Header
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label("Audit Entry #" + selected.getId() + " (" + selected.getPattern() + ")");
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    // Body
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(displayText);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    // Footer
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-        }
+        PreviewDialog.show(appShell,
+            "Audit Entry #" + selected.getId() + " (" + selected.getPattern() + ")",
+            sb.toString());
     }
 
     @Override

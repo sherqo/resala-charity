@@ -1,0 +1,31 @@
+digraph classdiagram {
+  graph [rankdir=TB, splines=polyline, nodesep=0.35, ranksep=1.1,
+         compound=true, newrank=true,
+         fontname="Helvetica", fontsize=22, labelloc="t", label="Beneficiaries and aid distribution"];
+  node [shape=plaintext, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9, color="#5f6b7a"];
+
+  subgraph cluster_0 {
+    label="beneficiary"; fontsize=13; fontcolor="#344054";
+    style="rounded,dashed"; color="#c7ccd4"; penwidth=1;
+    "com.resala.beneficiary.BeneficiaryRepository" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#fff2cc' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>BeneficiaryRepository</B></FONT></TD></TR><TR><TD BGCOLOR='#fff2cc' ALIGN='CENTER'><FONT POINT-SIZE='10'><I>&laquo;interface&raquo;</I></FONT></TD></TR><TR><TD ALIGN='LEFT'>+ save(Beneficiary): Beneficiary<BR/>+ findById(long): Optional&lt;Beneficiary&gt;<BR/>+ findAll(): List&lt;Beneficiary&gt;<BR/>+ delete(long)<BR/>+ saveDistribution(Distribution): Distribution<BR/>+ findDistributionsByBeneficiary(long): List&lt;Distribution&gt;<BR/>+ findAllNeedTypes(): List&lt;NeedType&gt;<BR/>+ findNeedTypeById(int): Optional&lt;NeedType&gt;<BR/>+ saveNeedType(NeedType): NeedType<BR/>+ deleteNeedType(int)</TD></TR></TABLE>>];
+    "com.resala.beneficiary.BeneficiaryService" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#fff2cc' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>BeneficiaryService</B></FONT></TD></TR><TR><TD ALIGN='LEFT'>- repository: BeneficiaryRepository<BR/>- distributionPolicy: DistributionPolicy</TD></TR><TR><TD ALIGN='LEFT'>+ BeneficiaryService(BeneficiaryRepository)<BR/>+ BeneficiaryService(BeneficiaryRepository, DistributionPolicy)<BR/>+ setDistributionPolicy(DistributionPolicy)<BR/>+ getDistributionPolicy(): DistributionPolicy<BR/>+ add(Beneficiary): Beneficiary<BR/>+ update(Beneficiary): Beneficiary<BR/>+ findAll(): List&lt;Beneficiary&gt;<BR/>+ findById(long): Optional&lt;Beneficiary&gt;<BR/>+ getBeneficiary(long): Beneficiary<BR/>+ delete(long)<BR/><I>... 11 more</I></TD></TR></TABLE>>];
+    "com.resala.beneficiary.Distribution" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#fff2cc' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>Distribution</B></FONT></TD></TR><TR><TD ALIGN='LEFT'>- id: long<BR/>- beneficiaryId: long<BR/>- donationId: Long<BR/>- itemDescription: String<BR/>- quantity: int<BR/>- distributionDate: LocalDate<BR/>- notes: String</TD></TR><TR><TD ALIGN='LEFT'>+ Distribution()<BR/>+ Distribution(long, long, Long, String, int, LocalDate, String)<BR/>+ getId(): long<BR/>+ setId(long)<BR/>+ getBeneficiaryId(): long<BR/>+ setBeneficiaryId(long)<BR/>+ getDonationId(): Long<BR/>+ setDonationId(Long)<BR/>+ getItemDescription(): String<BR/>+ setItemDescription(String)<BR/><I>... 6 more</I></TD></TR></TABLE>>];
+  }
+  subgraph cluster_1 {
+    label="beneficiary.policy"; fontsize=13; fontcolor="#344054";
+    style="rounded,dashed"; color="#c7ccd4"; penwidth=1;
+    "com.resala.beneficiary.policy.ByNeedDistributionPolicy" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#ffffff' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>ByNeedDistributionPolicy</B></FONT></TD></TR><TR><TD ALIGN='LEFT'>+ ByNeedDistributionPolicy()<BR/>+ getName(): String<BR/>+ allocate(List, int): Map&lt;Beneficiary, Integer&gt;</TD></TR></TABLE>>];
+    "com.resala.beneficiary.policy.DistributionPolicy" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#ffffff' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>DistributionPolicy</B></FONT></TD></TR><TR><TD BGCOLOR='#ffffff' ALIGN='CENTER'><FONT POINT-SIZE='10'><I>&laquo;interface&raquo;</I></FONT></TD></TR><TR><TD ALIGN='LEFT'>+ allocate(List, int): Map&lt;Beneficiary, Integer&gt;<BR/>+ getName(): String</TD></TR></TABLE>>];
+    "com.resala.beneficiary.policy.EqualDistributionPolicy" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#ffffff' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>EqualDistributionPolicy</B></FONT></TD></TR><TR><TD ALIGN='LEFT'>+ EqualDistributionPolicy()<BR/>+ getName(): String<BR/>+ allocate(List, int): Map&lt;Beneficiary, Integer&gt;</TD></TR></TABLE>>];
+    "com.resala.beneficiary.policy.FifoDistributionPolicy" [label=<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='4'><TR><TD BGCOLOR='#ffffff' ALIGN='CENTER'><FONT POINT-SIZE='14'><B>FifoDistributionPolicy</B></FONT></TD></TR><TR><TD ALIGN='LEFT'>- quotaPerBeneficiary: int</TD></TR><TR><TD ALIGN='LEFT'>+ FifoDistributionPolicy()<BR/>+ FifoDistributionPolicy(int)<BR/>+ getName(): String<BR/>+ allocate(List, int): Map&lt;Beneficiary, Integer&gt;</TD></TR></TABLE>>];
+  }
+
+  "com.resala.beneficiary.BeneficiaryRepository" -> "com.resala.beneficiary.Distribution" [style=dashed, arrowhead=vee];
+  "com.resala.beneficiary.BeneficiaryService" -> "com.resala.beneficiary.BeneficiaryRepository" [style=solid, arrowhead=vee];
+  "com.resala.beneficiary.BeneficiaryService" -> "com.resala.beneficiary.Distribution" [style=dashed, arrowhead=vee];
+  "com.resala.beneficiary.BeneficiaryService" -> "com.resala.beneficiary.policy.DistributionPolicy" [style=solid, arrowhead=vee];
+  "com.resala.beneficiary.policy.ByNeedDistributionPolicy" -> "com.resala.beneficiary.policy.DistributionPolicy" [style=dashed, arrowhead=onormal];
+  "com.resala.beneficiary.policy.EqualDistributionPolicy" -> "com.resala.beneficiary.policy.DistributionPolicy" [style=dashed, arrowhead=onormal];
+  "com.resala.beneficiary.policy.FifoDistributionPolicy" -> "com.resala.beneficiary.policy.DistributionPolicy" [style=dashed, arrowhead=onormal];
+}

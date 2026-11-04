@@ -1,0 +1,34 @@
+\section{Client requirements}
+
+The requirements below describe the problems the branch staff face and the outcome the client needs, not just the screens that were built. Each row states the need and the requirement that delivers it.
+
+\begingroup
+\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{xltabular}{\textwidth}{@{}L{0.06\textwidth}YL{0.28\textwidth}@{}}
+\caption{Client needs and their implementation.}\label{tab:client}\\
+\toprule
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{Addressed by} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{Addressed by} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\textbf{CR1} & \textbf{Year-end statements.} At year end, staff rebuild each donor's total by hand. The client needs an accurate statement for any donor and year, covering monetary donations only, without re-entering data. & \textbf{FR-D6}; Donations \(\rightarrow\) Yearly Statement \\
+\addlinespace[2pt]
+\textbf{CR2} & \textbf{Safe volunteer assignment.} Coordinators assign volunteers from memory, which causes skill mismatches and no-shows. The client needs every assignment checked against availability and the required skill before it is confirmed. & \textbf{FR-V4}; Volunteers \(\rightarrow\) Register to Event \\
+\addlinespace[2pt]
+\textbf{CR3} & \textbf{Volunteer certificates.} Certificates are calculated by hand and issued late. The client needs a certificate produced only after 20 verified hours, showing the correct total. & \textbf{FR-V5, FR-V6}; Volunteers \(\rightarrow\) Print Certificate \\
+\addlinespace[2pt]
+\textbf{CR4} & \textbf{Event changes.} Attendees are not told when an event changes, so some travel for nothing. The client needs every registered attendee informed automatically when the event is updated, opened, closed or rescheduled. & \textbf{FR-E6}; automatic, and Events \(\rightarrow\) Send Reminder \\
+\addlinespace[2pt]
+\textbf{CR5} & \textbf{Aid history.} Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary that staff can check before distributing again. & \textbf{FR-B3, FR-B4}; Beneficiaries \(\rightarrow\) Distribute Aid / History \\
+\addlinespace[2pt]
+\textbf{CR6} & \textbf{Staff-maintained lists.} Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & \textbf{FR-R1 to FR-R5}; Lookups \\
+\addlinespace[2pt]
+\textbf{CR7} & \textbf{One message screen.} Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. & \textbf{FR-C1 to FR-C3}; Messages \\
+\end{xltabular}
+\endgroup

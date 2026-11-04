@@ -41,7 +41,7 @@ public class AuditLogManager {
                 Platform.runLater(() -> addEntry(entry));
             }
         } catch (IllegalStateException e) {
-            // Headless / console test mode where JavaFX toolkit is not active
+            // Console mode may run without JavaFX.
             addEntry(entry);
         }
     }

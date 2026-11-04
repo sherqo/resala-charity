@@ -3,7 +3,6 @@ package com.resala.donation;
 import java.time.LocalDate;
 import java.util.Objects;
 
-// Factory Method creator
 public class DonationFactory {
 
   private static final int MIN_DONATION_YEAR = 2000;

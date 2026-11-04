@@ -1,0 +1,24 @@
+\section{Main data}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.26\textwidth}Y@{}}
+\toprule
+\textbf{Entity} & \textbf{Key fields} \\
+\midrule
+Donor & id, name, type, email, phone, active \\
+Donation & id, donor, type, date, reference number, status (plus amount, check number for checks, or item details for in-kind) \\
+Payment & id, payer, amount, fee, currency, method, status \\
+Volunteer & id, name, email, phone, available \\
+Skill & id, name \\
+Event & id, title, event type, date, capacity, hours, status \\
+EventRegistration & id, event, attendee name and email, ticket reference, checked in \\
+VolunteerEventAssignment & id, volunteer, event, skill, work date, hours \\
+Beneficiary & id, name, phone, household size, need type, status \\
+Distribution & id, beneficiary, donation (optional), item, quantity, date \\
+EventType & id, name (editable lookup for events) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The main relationships are: a donor makes many donations; an event has many registrations; a volunteer can be assigned to many events; a beneficiary receives many distributions.

@@ -32,7 +32,6 @@ public final class DataTable<T> {
     public static class Builder<T> {
         private final List<ColumnSpec<T>> columns = new ArrayList<>();
         private ObservableList<T> items = FXCollections.observableArrayList();
-        private Consumer<T> onRowDoubleClick = null;
 
         public Builder<T> column(String name, int width, Function<T, String> mapper) {
             columns.add(new ColumnSpec<>(name, width, mapper));
@@ -44,11 +43,6 @@ public final class DataTable<T> {
             return this;
         }
 
-        public Builder<T> onRowDoubleClick(Consumer<T> handler) {
-            this.onRowDoubleClick = handler;
-            return this;
-        }
-
         public DataTable<T> build() {
             TableView<T> table = new TableView<>(items);
             table.getStyleClass().add("table-view");
@@ -57,18 +51,6 @@ public final class DataTable<T> {
             Label emptyLabel = new Label("No records found");
             emptyLabel.getStyleClass().add("empty-hint");
             table.setPlaceholder(emptyLabel);
-
-            table.setRowFactory(tv -> {
-                TableRow<T> row = new TableRow<>();
-                if (onRowDoubleClick != null) {
-                    row.setOnMouseClicked(e -> {
-                        if (e.getClickCount() == 2 && !row.isEmpty()) {
-                            onRowDoubleClick.accept(row.getItem());
-                        }
-                    });
-                }
-                return row;
-            });
 
             for (int i = 0; i < columns.size(); i++) {
                 ColumnSpec<T> spec = columns.get(i);

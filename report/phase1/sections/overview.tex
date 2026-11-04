@@ -1,0 +1,30 @@
+\section{Project overview}
+
+Resala Charity Management System is a desktop application for organizing the daily work of a non-profit organization. It brings donations, donors, volunteers, events, beneficiaries, communication, and reference data into one local system. The project has a graphical interface and a console interface, uses a local database, and follows an MVC structure.
+
+The goal of Phase~1 is to establish a clear structure and to apply the required design patterns. The interface, control logic, business rules, and data storage are separated, so the project can be extended in later phases without rewriting the existing modules.
+
+\begin{tcolorbox}[colback=softBlue,colframe=asuBlue,title=Phase 1 scope]
+The current version supports the main management screens, local storage, reference-data maintenance, MVC organisation, and the required patterns: Strategy, Observer, Decorator, Factory, and Singleton.
+\end{tcolorbox}
+
+\subsection{Implemented modules}
+
+\begin{itemize}
+  \item \textbf{Donations:} donors and donations of three types (online, check, in-kind), receipts, filtering, and a yearly tax statement. Payment is simulated for demonstration.
+  \item \textbf{Volunteers:} skills, availability, worked hours, assignment to suitable events, and certificates.
+  \item \textbf{Events:} creation, editable event types, attendee registration, attendance, and automatic notifications when an event changes.
+  \item \textbf{Beneficiaries:} needs, aid distribution, distribution history, and a selectable distribution policy.
+  \item \textbf{Communication:} email, SMS, and social channels, selectable at runtime and simulated in this version.
+  \item \textbf{Reference data:} event types and skills, with full create, read, update, and delete operations.
+\end{itemize}
+
+\subsection{Objectives}
+
+The brief asks for flexibility, maintainability, and reusability. The project meets these goals in three ways:
+
+\begin{itemize}
+  \item \textbf{Flexibility:} new donation types, notification channels, and distribution policies can be added without changing the services that use them.
+  \item \textbf{Maintainability:} each layer has one responsibility, and screens never contain business rules or storage code.
+  \item \textbf{Reusability:} receipts, notifications, and storage interfaces are written once and composed where they are needed.
+\end{itemize}

@@ -264,7 +264,42 @@ class VolunteerEventIntegrationTest {
   }
 
   @Test
-  void eventCanBeReopenedAfterClose() {
+  void checkInCreditsOnlyTheCheckedInVolunteer() {
+    Event event = eventService.create(new EventRequest(
+      "Team Day",
+      1,
+      LocalDate.now().plusDays(4),
+      10,
+      5,
+      "Two volunteers"
+    ));
+    eventService.open(event.getId());
+
+    Volunteer first = volunteerRepo.save(
+      new Volunteer("First Volunteer", "first@example.com", "100", true)
+    );
+    Volunteer second = volunteerRepo.save(
+      new Volunteer("Second Volunteer", "second@example.com", "200", true)
+    );
+    Skill skill = volunteerService.createSkill("Team Work");
+    volunteerService.addSkill(first.getId(), skill.getId());
+    volunteerService.addSkill(second.getId(), skill.getId());
+
+    volunteerService.assign(first.getId(), (int) event.getId(), skill.getId());
+    volunteerService.assign(second.getId(), (int) event.getId(), skill.getId());
+
+    EventRegistration firstReg = registrationRepo
+      .findByVolunteerAndEvent(first.getId(), event.getId())
+      .orElseThrow();
+    eventController.checkIn(firstReg.getId());
+
+    assertEquals(5.0, volunteerService.summary(first.getId()).getTotalHours());
+    assertEquals(0.0, volunteerService.summary(second.getId()).getTotalHours(),
+      "Checking in one volunteer must not credit the others");
+  }
+
+  @Test
+  void closedEventCannotBeReopened() {
     Event event = eventService.create(new EventRequest(
       "Final Event",
       1,
@@ -276,9 +311,12 @@ class VolunteerEventIntegrationTest {
     eventService.open(event.getId());
     eventController.close(event.getId());
 
-    // Event should be reopenable
-    eventService.open(event.getId());
-    assertEquals(Event.Status.OPEN, eventService.getEvent(event.getId()).getStatus());
+    // Closed events are final.
+    EventException ex = assertThrows(EventException.class, () ->
+      eventService.open(event.getId())
+    );
+    assertEquals(EventError.EVENT_CLOSED_FINAL, ex.error());
+    assertEquals(Event.Status.CLOSED, eventService.getEvent(event.getId()).getStatus());
   }
 
   private Skill createSkillFor(Volunteer volunteer, String name) {

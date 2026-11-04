@@ -63,12 +63,6 @@ public class BeneficiaryService {
     repository.delete(id);
   }
 
-  // ── Impact Scoring ─────────────────────────────────────────────────────────
-
-  public int getImpactScore(long beneficiaryId) {
-    return getBeneficiary(beneficiaryId).getImpactScore();
-  }
-
   public void setImpactScore(long beneficiaryId, int score) {
     if (score < 0 || score > 10) {
       throw new IllegalArgumentException("Impact score must be between 0 and 10.");
@@ -77,8 +71,6 @@ public class BeneficiaryService {
     b.setImpactScore(score);
     repository.save(b);
   }
-
-  // ── Need Types Lookup CRUD (B2) ──────────────────────────────────────────
 
   public List<NeedType> listNeedTypes() {
     return repository.findAllNeedTypes();
@@ -112,8 +104,6 @@ public class BeneficiaryService {
     repository.deleteNeedType(id);
   }
 
-  // ── Distribution Logic (B3 & B4) ──────────────────────────────────────────
-
   public Distribution recordDistribution(
       long beneficiaryId,
       Long donationId,
@@ -141,15 +131,9 @@ public class BeneficiaryService {
   }
 
   public List<Distribution> getDistributionHistory(long beneficiaryId) {
-    getBeneficiary(beneficiaryId); // ensures beneficiary exists
+    getBeneficiary(beneficiaryId);
     return repository.findDistributionsByBeneficiary(beneficiaryId);
   }
-
-  public List<Distribution> getAllDistributions() {
-    return repository.findAllDistributions();
-  }
-
-  // ── Strategy-based Distribution ───────────────────────────────────────────
 
   public Map<Beneficiary, Integer> previewDistribution(int totalItems) {
     if (totalItems <= 0) {
@@ -201,8 +185,6 @@ public class BeneficiaryService {
     }
     return recorded;
   }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
 
   private void validate(Beneficiary b) {
     if (b.getName() == null || b.getName().isBlank()) {

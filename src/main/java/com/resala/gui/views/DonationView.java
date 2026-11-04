@@ -9,6 +9,7 @@ import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
 import com.resala.gui.components.FormDialog;
+import com.resala.gui.components.PreviewDialog;
 import com.resala.gui.components.ModalOverlay;
 import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
@@ -64,12 +65,12 @@ public class DonationView extends BaseView implements DonationObserver {
         this.paymentController = paymentController;
         this.donationsTable = (DataTable<Donation>) this.table;
 
-        // Secondary actions in toolbar
         Button receiptBtn = Toolbar.ghost("View Receipt", e -> showReceiptDialog());
+        Button statementBtn = Toolbar.ghost("Yearly Statement", e -> showStatementDialog());
         Button editBtn = Toolbar.ghost("Edit", e -> editSelected());
         Button deleteBtn = Toolbar.ghost("Delete", e -> deleteSelected());
         Button filterBtn = Toolbar.ghost("Filter", e -> showFilterDialog());
-        toolbar.getChildren().addAll(receiptBtn, editBtn, deleteBtn, filterBtn);
+        toolbar.getChildren().addAll(receiptBtn, statementBtn, editBtn, deleteBtn, filterBtn);
 
         this.primaryActionButton = Toolbar.primary("Add Donation", e -> showAddDonationDialog());
     }
@@ -99,7 +100,6 @@ public class DonationView extends BaseView implements DonationObserver {
             .column("Reference", 150, (java.util.function.Function<Donation, String>) d -> d.getReferenceNumber() != null ? d.getReferenceNumber() : "")
             .column("Date", 120, (java.util.function.Function<Donation, String>) d -> d.getDonationDate().toString())
             .items(FXCollections.observableArrayList())
-            .onRowDoubleClick(d -> {})
             .build();
     }
 
@@ -159,7 +159,7 @@ public class DonationView extends BaseView implements DonationObserver {
                     request = new DonationRequest(donorId, type, 0L, itemDescription, quantity,
                         estimatedValueMinor, null, LocalDate.now(), notes);
                 } else {
-                    // Check: referenceNumber is the check number
+
                     request = new DonationRequest(donorId, type, amountMinor, null, null, null,
                         referenceNumber, LocalDate.now(), notes);
                 }
@@ -172,7 +172,6 @@ public class DonationView extends BaseView implements DonationObserver {
         });
     }
 
-    /** Lets the user pick a gateway method, collect dummy details, and charge the payment. */
     private void payOnline(long donorId, long amountMinor, String notes) {
         PaymentMethod method = choosePaymentMethod();
         if (method == null) {
@@ -190,7 +189,7 @@ public class DonationView extends BaseView implements DonationObserver {
             appShell.getToast().show(appShell.getStage(), "Payment cancelled.", Toast.Type.INFO);
             return;
         }
-        // The method strategy validates the raw details and issues the one-time token.
+        // This method checks the entered details and creates a demo token.
         String token = method.tokenize(instrument);
 
         String reference = UUID.randomUUID().toString();
@@ -234,7 +233,6 @@ public class DonationView extends BaseView implements DonationObserver {
         return methods.stream().filter(m -> m.displayName().equals(chosen)).findFirst().orElse(null);
     }
 
-    /** Dummy card form; validation and tokenization happen in {@link com.resala.payment.CardPaymentMethod}. */
     private CardDetails cardDetails() {
         var fields = List.of(
             new FormDialog.Field("holder", "Card holder", FormDialog.Type.TEXT, true),
@@ -253,7 +251,6 @@ public class DonationView extends BaseView implements DonationObserver {
             (String) values.get("cvv"));
     }
 
-    /** Dummy wallet form; validation and tokenization happen in {@link com.resala.payment.WalletPaymentMethod}. */
     private WalletDetails walletDetails() {
         var fields = List.of(
             new FormDialog.Field("phone", "Wallet phone", FormDialog.Type.TEXT, true, "01012345678")
@@ -285,100 +282,36 @@ public class DonationView extends BaseView implements DonationObserver {
             return;
         }
 
+        try {
+            String receiptText = donationController.receipt(selected.getId());
+            showReceiptPreview(receiptText);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
+    }
+
+    private void showReceiptPreview(String text) {
+        PreviewDialog.show(appShell, "Donation Receipt", text);
+    }
+
+    private void showStatementDialog() {
         var fields = List.of(
-            new FormDialog.Field("tax", "Include Tax Receipt", FormDialog.Type.CHECKBOX, false, "Tax Receipt"),
-            new FormDialog.Field("thankYou", "Include Thank You Note", FormDialog.Type.CHECKBOX, false, "Thank You Note")
+            new FormDialog.Field("donorId", "Donor ID", FormDialog.Type.NUMBER, true),
+            new FormDialog.Field("year", "Year", FormDialog.Type.NUMBER, true,
+                String.valueOf(LocalDate.now().getYear()))
         );
 
-        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Receipt Options", fields);
+        Optional<Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Yearly Statement", fields);
         result.ifPresent(map -> {
             try {
-                String receiptText = donationController.receipt(selected.getId());
-                showReceiptPreview(receiptText);
+                long donorId = Long.parseLong(map.get("donorId").toString().trim());
+                int year = Integer.parseInt(map.get("year").toString().trim());
+                String statement = donationController.yearlyStatement(donorId, year);
+                PreviewDialog.show(appShell, "Yearly Statement", statement);
             } catch (Exception ex) {
                 appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
             }
         });
-    }
-
-    private void showReceiptPreview(String text) {
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
-
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(560);
-                    card.setMinWidth(480);
-                    card.setMaxHeight(560);
-
-                    // Header
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label("Donation Receipt");
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    // Body
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(text);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    // Footer
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-            return;
-        }
-
-        // Fallback
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(appShell.getStage());
-        dialog.setTitle("Donation Receipt");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(new TextArea(text));
-        dialog.showAndWait();
     }
 
     private void deleteSelected() {

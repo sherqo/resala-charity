@@ -45,10 +45,10 @@ public class FeedObserver implements DonationObserver, EventObserver {
     }
 
     private void addToFeed(String entry) {
-        // Add to top of list (most recent first)
+
         ObservableList<String> items = feedList.getItems();
         items.add(0, entry);
-        // Keep only last 50 entries
+
         while (items.size() > 50) {
             items.remove(items.size() - 1);
         }

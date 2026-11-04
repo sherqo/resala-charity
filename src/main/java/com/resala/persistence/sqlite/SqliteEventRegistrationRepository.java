@@ -67,9 +67,4 @@ public class SqliteEventRegistrationRepository extends JdbcRepository implements
   public Optional<EventRegistration> findByVolunteerAndEvent(long volunteerId, long eventId) {
     return queryOne("SELECT * FROM event_registrations WHERE volunteer_id=? AND event_id=?", REG_MAPPER, volunteerId, eventId);
   }
-
-  @Override
-  public void deleteByVolunteerAndEvent(long volunteerId, long eventId) {
-    execute("DELETE FROM event_registrations WHERE volunteer_id=? AND event_id=?", volunteerId, eventId);
-  }
 }

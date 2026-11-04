@@ -1,0 +1,69 @@
+\section{Phase 1 design patterns}
+
+This section describes each required pattern, how it is applied in the project, and why it was chosen. The same structure is used for all six patterns so that the design can be compared and defended consistently.
+
+\subsection{Strategy pattern}
+
+\textbf{Intent.} Define a family of algorithms, encapsulate each one, and make them interchangeable at runtime.
+
+\textbf{How it is applied.} The communication module defines one notification strategy with three implementations: email, SMS, and social media. The notifier holds the current strategy and forwards every message to it. When the user changes the channel in the Messages screen, the notifier replaces the strategy, and every later message goes through the new channel. The same idea is used a second time in the beneficiary module, where the distribution policy can be changed between equal, by-need, and first-come-first-served allocation.
+
+\textbf{Why this pattern.} Adding a new channel or a new distribution policy requires one new class that follows the same interface. The notifier, the controllers, and the screens do not change. This is the clearest demonstration of the flexibility objective in the brief.
+
+\subsection{Observer pattern}
+
+\textbf{Intent.} Define a one-to-many dependency so that when one object changes state, all its dependents are notified automatically.
+
+\textbf{How it is applied.} The donation service and the event service act as subjects. After a donation is recorded, the service notifies its observers: one adds the entry to the activity feed, and another sends a thank-you message through the notifier. When an event is updated, opened, closed, or reminded, the event service notifies its observers, and the event observer informs the registered attendees.
+
+\textbf{Why this pattern.} The service that records a donation has no reference to the feed, the notifier, or any screen. A new reaction, such as a loyalty tracker, is added as a new observer without editing the service. This keeps the module closed for modification and open for extension.
+
+\subsection{Decorator pattern}
+
+\textbf{Intent.} Attach additional responsibilities to an object dynamically, without creating a subclass for every combination.
+
+\textbf{How it is applied.} A receipt is built from a base receipt and optional decorators. The tax decorator adds the tax section, and the thank-you decorator adds a thank-you message. A monetary donation can therefore receive tax information while every receipt can include a thank-you message.
+
+\textbf{Why this pattern.} Two optional features would otherwise require four subclasses: basic, basic with tax, basic with thank-you, and both. With the decorator, the client composes the sections it needs at runtime, and a third optional section would add one class rather than doubling the hierarchy again.
+
+\subsection{Factory pattern}
+
+\textbf{Intent.} Provide one creation point so that the caller does not depend on the concrete product classes.
+
+\textbf{How it is applied.} The donation factory receives the donation type and creates the matching donation: online, check, or in-kind. Each type has its own validation; an online donation needs a positive amount, a check needs a check number, and an in-kind donation needs an item and a quantity. The factory keeps these rules in one place and returns the abstract donation to the service. A second, smaller use of the pattern creates the family of console screens, so the interface can be assembled without naming concrete screens.
+
+\textbf{Why this pattern.} Adding a new donation type requires one new class and one branch in the factory. The service, the controllers, and the screens stay unchanged, and the creation rules do not leak into the interface code.
+
+\subsection{Singleton pattern}
+
+\textbf{Intent.} Ensure that a class has exactly one instance and provide a global access point to it.
+
+\textbf{How it is applied.} Three shared services are singletons: the database manager, the configuration manager, and the audit log. The database manager owns the single connection and creates the schema once. The configuration manager loads the application settings once. The audit log collects events from every module in one place.
+
+\textbf{Why this pattern.} Several connections to the same local database would cause locking problems, and several audit logs would lose events. A private constructor and a single access point guarantee one instance without passing it through every constructor.
+
+\subsection{MVC}
+
+\textbf{Intent.} Separate presentation, control, and domain logic so that each can change independently.
+
+\textbf{How it is applied.} MVC is used across the main modules. A screen handles the interface, a controller receives the screen request, and a service performs the operation. The repository sits below the service and hides the storage. Table~\ref{tab:mvc} summarises the roles and what each one must not do.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.16\textwidth}L{0.30\textwidth}Y@{}}
+\toprule
+\textbf{Role} & \textbf{Example} & \textbf{Must not do} \\
+\midrule
+Model & Donation, Volunteer, Event & Contain storage code or interface code. \\
+View & Donation screen, console donation menu & Contain business rules or open a database connection. \\
+Controller & Donation controller & Print to the console or read keyboard input directly. \\
+Service & Donation service & Know which screen called it. \\
+Repository & Donation repository & Expose storage details to the service. \\
+\bottomrule
+\end{tabularx}
+\caption{The MVC roles and their boundaries.}
+\label{tab:mvc}
+\end{table}
+
+\textbf{Why this pattern.} The strongest evidence is that the project has two complete user interfaces, graphical and console, built on the same controllers and services. If the business rules had been placed in the screens, the second interface would have required duplicating them.

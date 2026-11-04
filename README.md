@@ -12,7 +12,8 @@ Java app for managing donations, volunteers, events, and beneficiaries.
 ```bash
 mvn compile
 mvn -q exec:java
+mvn javafx:run
 ```
 
 The SQLite database is created at `data/resala.db` on first run. Delete it to reset.
-Schema: `src/main/resources/schema.sql`. Sample data: `seed.sql`.
+Schema: `src/main/resources/schema.sql` (it also inserts the sample lookup data).

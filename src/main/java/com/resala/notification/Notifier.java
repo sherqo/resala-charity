@@ -11,7 +11,6 @@ public class Notifier {
     this.strategy = Objects.requireNonNull(strategy, "Strategy must not be null");
   }
 
-  /** Swap the active channel at runtime. */
   public void setStrategy(NotificationStrategy strategy) {
     this.strategy = Objects.requireNonNull(strategy, "Strategy must not be null");
     String channelName = strategy.getClass().getSimpleName().replace("Strategy", "");
@@ -25,13 +24,10 @@ public class Notifier {
     );
   }
 
-  public NotificationStrategy getStrategy() {
-    return strategy;
-  }
-
-  /** Delegates to whichever strategy is currently active. */
   public void send(String recipient, String subject, String body) {
-    strategy.send(recipient, subject, body);
+    // Some channels (SMS) do not have a subject.
+    String safeSubject = subject == null ? "" : subject;
+    strategy.send(recipient, safeSubject, body);
 
     String channelName = strategy.getClass().getSimpleName().replace("Strategy", "");
     AuditLogManager.getInstance().log(
@@ -39,8 +35,8 @@ public class Notifier {
         "Notifications",
         "Outgoing Notifications",
         recipient,
-        subject != null && !subject.isBlank() ? subject : "Notification dispatched",
-        "Channel: " + channelName.toUpperCase() + "\nRecipient: " + recipient + "\nSubject: " + subject + "\n\nBody:\n" + body
+        !safeSubject.isBlank() ? safeSubject : "Notification dispatched",
+        "Channel: " + channelName.toUpperCase() + "\nRecipient: " + recipient + "\nSubject: " + safeSubject + "\n\nBody:\n" + body
     );
   }
 }

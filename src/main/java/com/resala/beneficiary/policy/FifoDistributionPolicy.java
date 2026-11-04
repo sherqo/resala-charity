@@ -18,10 +18,6 @@ public class FifoDistributionPolicy implements DistributionPolicy {
     this.quotaPerBeneficiary = Math.max(1, quotaPerBeneficiary);
   }
 
-  public int getQuotaPerBeneficiary() {
-    return quotaPerBeneficiary;
-  }
-
   @Override
   public String getName() {
     return "FIFO (First-In, First-Out by Registration, quota=" + quotaPerBeneficiary + ")";
@@ -41,7 +37,7 @@ public class FifoDistributionPolicy implements DistributionPolicy {
       return allocation;
     }
 
-    // Sort by ID ascending (earliest registered first)
+    // Lower IDs are treated as earlier registrations.
     List<Beneficiary> sorted = candidates.stream()
         .sorted(Comparator.comparingLong(Beneficiary::getId))
         .toList();

@@ -1,0 +1,149 @@
+@startuml
+title Core managers and persistence
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.core" {
+  class AuditLogManager <<singleton>> {
+    -counter: AtomicLong
+    -logs: ObservableList<AuditLog>
+    +getInstance()
+    +log()
+    -addEntry()
+    +getLogs()
+    +clear()
+  }
+  class ConfigManager <<singleton>> {
+    -instance: ConfigManager
+    -props: Properties
+    +getInstance()
+    +get()
+  }
+  class DatabaseManager <<singleton>> {
+    -instance: DatabaseManager
+    -connection: Connection
+    +getInstance()
+    +getConnection()
+    +close()
+    -runScript()
+    -migrate()
+    -readResource()
+    -createParentDirectory()
+  }
+  class JdbcRepository {
+    #conn: Connection
+    #execute()
+    #query()
+    #queryOne()
+    #insertReturnKey()
+    -bind()
+    -dbError()
+    #str()
+    #num()
+    #lng()
+    #dbl()
+  }
+  class TransactionManager {
+    -connection: Connection
+    +inTransaction()
+  }
+}
+package "com.resala.persistence.sqlite" {
+  class SqliteBeneficiaryRepository {
+    +save()
+    +findById()
+    +findAll()
+    +delete()
+    +saveDistribution()
+    +findDistributionsByBeneficiary()
+    +findAllNeedTypes()
+    +findNeedTypeById()
+    +saveNeedType()
+    +deleteNeedType()
+    -insert()
+  }
+  class SqliteDonationRepository {
+    +save()
+    +findById()
+    +find()
+    +delete()
+    +update()
+    +monetaryTotalForDonorYear()
+    +findByReferenceNumber()
+    -nullableInteger()
+    -nullableLong()
+  }
+  class SqliteDonorRepository {
+    +save()
+    +findById()
+    +findActive()
+    +archive()
+  }
+  class SqliteEventRegistrationRepository {
+    +register()
+    +findById()
+    +findByEvent()
+    +checkIn()
+    +countRegistered()
+    +findByVolunteerAndEvent()
+  }
+  class SqliteEventRepository {
+    +save()
+    +findById()
+    +findAll()
+    +delete()
+  }
+  class SqliteEventTypeRepository {
+    +findAll()
+    +findById()
+    +findByName()
+    +save()
+    +rename()
+    +delete()
+    +isInUse()
+  }
+  class SqlitePaymentRepository {
+    +save()
+    +findById()
+    +findByIdempotencyKey()
+    +findAll()
+    -insert()
+    -update()
+    -nullableLong()
+    -nullableInstant()
+    -nullableError()
+  }
+  class SqliteVolunteerRepository {
+    +save()
+    +findById()
+    +findAll()
+    +findBySkill()
+    +delete()
+    +setAvailability()
+    +findAllSkills()
+    +findSkillById()
+    +findSkillByName()
+    +saveSkill()
+    +renameSkill()
+    +isSkillInUse()
+    +deleteSkill()
+    +findSkillsForVolunteer()
+    +addSkill()
+    +removeSkill()
+    +saveAssignment()
+    +findAssignmentById()
+    +findAssignments()
+    +hasAssignment()
+    +creditVolunteerHours()
+    -insertVolunteer()
+    -insertAssignment()
+  }
+}
+SqliteBeneficiaryRepository --|> JdbcRepository
+SqliteDonationRepository --|> JdbcRepository
+SqliteDonorRepository --|> JdbcRepository
+SqliteEventRegistrationRepository --|> JdbcRepository
+SqliteEventRepository --|> JdbcRepository
+SqliteEventTypeRepository --|> JdbcRepository
+SqlitePaymentRepository --|> JdbcRepository
+SqliteVolunteerRepository --|> JdbcRepository
+@enduml

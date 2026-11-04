@@ -18,7 +18,6 @@ public class EventService implements EventSubject {
     this.registrations = registrations;
   }
 
-  // Observer Registration (EventSubject)
   @Override
   public void addObserver(EventObserver observer) {
     observers.add(observer);
@@ -35,8 +34,6 @@ public class EventService implements EventSubject {
     }
   }
 
-  // CRUD
-  /** Creates a new event in DRAFT status. */
   public Event create(EventRequest request) {
     validate(request);
     try {
@@ -90,7 +87,6 @@ public class EventService implements EventSubject {
     return saved;
   }
 
-  /** Permanently deletes an event. Only allowed while in DRAFT (no registrations). */
   public void delete(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.DRAFT) {
@@ -103,12 +99,13 @@ public class EventService implements EventSubject {
     }
   }
 
-  // Lifecycle
-  /** DRAFT → OPEN: starts accepting registrations. CLOSED events are final. */
   public Event open(long id) {
     Event event = getEvent(id);
     if (event.getStatus() == Event.Status.OPEN) {
       throw new EventException(EventError.EVENT_ALREADY_OPEN, null);
+    }
+    if (event.getStatus() == Event.Status.CLOSED) {
+      throw new EventException(EventError.EVENT_CLOSED_FINAL, null);
     }
     event.setStatus(Event.Status.OPEN);
     Event saved;
@@ -121,7 +118,6 @@ public class EventService implements EventSubject {
     return saved;
   }
 
-  /** OPEN → CLOSED: stops accepting registrations and notifies attendees. */
   public Event close(long id) {
     Event event = getEvent(id);
     if (event.getStatus() != Event.Status.OPEN) {
@@ -138,7 +134,6 @@ public class EventService implements EventSubject {
     return saved;
   }
 
-  // Registration
   public EventRegistration register(long eventId, String attendeeName, String attendeeEmail) {
     Event event = getEvent(eventId);
     if (event.getStatus() != Event.Status.OPEN) {
@@ -169,9 +164,12 @@ public class EventService implements EventSubject {
     }
   }
 
-  /** Marks a registration as checked-in (E5). */
-  public void checkIn(long registrationId) {
-    try {
+  public void sendReminder(long id) {
+    Event event = getEvent(id);
+    notifyObservers(event, "Reminder: " + event.getTitle() + " is on " + event.getDate() + ".");
+  }
+
+  public void checkIn(long registrationId) {    try {
       registrations.checkIn(registrationId);
     } catch (IllegalArgumentException e) {
       throw new EventException(EventError.REGISTRATION_NOT_FOUND, "#" + registrationId);
@@ -185,7 +183,6 @@ public class EventService implements EventSubject {
       .orElseThrow(() -> new EventException(EventError.REGISTRATION_NOT_FOUND, "#" + id));
   }
 
-  // Queries
   public List<Event> findAll() {
     try {
       return events.findAll();
@@ -236,7 +233,6 @@ public class EventService implements EventSubject {
     );
   }
 
-  // Private helpers
   private static final String LINE = "----------------------------------------";
 
   private void validate(EventRequest req) {

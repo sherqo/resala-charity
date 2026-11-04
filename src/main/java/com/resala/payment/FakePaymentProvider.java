@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+// This simulates payment results and does not move real money.
 public class FakePaymentProvider {
 
   private final List<PaymentMethod> availableMethods =
@@ -13,7 +14,7 @@ public class FakePaymentProvider {
   private final AtomicLong sequence = new AtomicLong(1000);
   private final long latencyMillis;
 
-  public FakePaymentProvider() { this(200); }
+  public FakePaymentProvider() { this(0); }
   public FakePaymentProvider(long latencyMillis) { this.latencyMillis = latencyMillis; }
 
   public List<PaymentMethod> availableMethods() { return availableMethods; }
@@ -24,7 +25,6 @@ public class FakePaymentProvider {
       try { Thread.sleep(latencyMillis); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 
-    // A real gateway refuses card/wallet charges that arrive without a token.
     if (method.requiresToken() && (token == null || token.isBlank())) {
       return new ProviderTxn("FAKE-REJECT", "05", "Missing payment token", cents, currency);
     }

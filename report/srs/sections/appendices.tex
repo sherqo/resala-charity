@@ -1,0 +1,63 @@
+\appendix
+
+\section{CRUD lookup table: event types}
+\label{app:crud-event-types}
+
+Event type is the Phase~1 lookup-table example. It is an editable value used when creating an event. C = Create, R = Read, U = Update, D = Delete.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.34\textwidth}L{0.13\textwidth}L{0.12\textwidth}Y@{}}
+\toprule
+\textbf{Function / use case} & \textbf{EventType} & \textbf{Event} & \textbf{Interface entry point} \\
+\midrule
+Create a new event type & C & -- & Lookups \(\rightarrow\) Add \\
+Browse all event types & R & -- & Lookups table; event form \\
+Rename an event type & U & -- & Lookups \(\rightarrow\) Rename \\
+Delete an unused event type & D & R (guard) & Lookups \(\rightarrow\) Delete \\
+Assign a type when creating or editing an event & R & C / U & Events \(\rightarrow\) Create / Edit \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Skills use the same screen and the same four operations. A skill is used by the volunteer--skill relation, so the delete guard protects volunteer records in the same way.
+
+\section{CRUD table: donation module (extra example)}
+\label{app:crud-donations}
+
+C = Create, R = Read, U = Update, D = Delete. For donors, ``D'' means archive.
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}YL{0.12\textwidth}L{0.14\textwidth}L{0.14\textwidth}@{}}
+\toprule
+\textbf{Function / requirement} & \textbf{Donor} & \textbf{Donation} & \textbf{Payment} \\
+\midrule
+Register a donor & C & -- & -- \\
+Search donors & R & -- & -- \\
+Edit donor details & U & -- & -- \\
+Archive donor & D & -- & -- \\
+Record a donation & R & C & -- \\
+View and filter donations & R & R & -- \\
+Edit a donation & -- & U & -- \\
+Delete a donation & -- & D & -- \\
+Take an online payment & R & C & C \\
+Generate a receipt & R & R & -- \\
+Generate a yearly tax statement & R & R & -- \\
+View payment history & R & -- & R \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Limits and out of scope for Phase 1}
+\label{app:limits}
+
+The following items are planned for Phase~2 and are not required now: admin pages, the extra patterns (Command, Adapter, Facade, Template Method, Iterator, State, Proxy), and real email or SMS providers.
+
+Current limits of Phase~1:
+
+\begin{itemize}
+  \item payment and messaging are simulated;
+  \item authentication is not part of this phase, so there are no user accounts or permission checks; anyone who runs the application can use every screen;
+  \item need types are supported by the beneficiary module but are not yet exposed on the lookup screen.
+\end{itemize}

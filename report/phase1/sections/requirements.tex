@@ -1,0 +1,65 @@
+\section{Client requirements and lookup CRUD}
+
+\subsection{Client requirements}
+
+The requirements were written from the point of view of the staff who operate the system, not from the point of view of the code. Each one describes a problem in the current manual process and the outcome the client needs. The last column links the need to the module that delivers it.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}L{0.05\textwidth}YL{0.28\textwidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Client need and expected outcome} & \textbf{Addressed by} \\
+\midrule
+\textbf{CR1} & \textbf{Year-end statements.} At year end, staff rebuild each donor's total by hand. The client needs an accurate statement for any donor and year, covering monetary donations only. & \textbf{FR-D6}; Donations \(\rightarrow\) Yearly Statement \\
+\addlinespace[1.5pt]
+\textbf{CR2} & \textbf{Safe volunteer assignment.} Coordinators assign volunteers from memory, which causes skill mismatches and no-shows. The client needs every assignment checked against availability and the required skill. & \textbf{FR-V4}; Volunteers \(\rightarrow\) Register to Event \\
+\addlinespace[1.5pt]
+\textbf{CR3} & \textbf{Volunteer certificates.} Certificates are calculated by hand and issued late. The client needs a certificate produced only after 20 verified hours, showing the correct total. & \textbf{FR-V5, FR-V6}; Volunteers \(\rightarrow\) Print Certificate \\
+\addlinespace[1.5pt]
+\textbf{CR4} & \textbf{Event changes.} Attendees are not told when an event changes, so some travel for nothing. The client needs every registered attendee informed automatically. & \textbf{FR-E6}; automatic, and Events \(\rightarrow\) Send Reminder \\
+\addlinespace[1.5pt]
+\textbf{CR5} & \textbf{Aid history.} Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary. & \textbf{FR-B3, FR-B4}; Beneficiaries \(\rightarrow\) Distribute Aid / History \\
+\addlinespace[1.5pt]
+\textbf{CR6} & \textbf{Staff-maintained lists.} Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. & \textbf{FR-R1 to FR-R5}; Lookups \\
+\addlinespace[1.5pt]
+\textbf{CR7} & \textbf{One message screen.} Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. & \textbf{FR-C1 to FR-C3}; Messages \\
+\bottomrule
+\end{tabularx}
+\caption{Client needs and their implementation.}
+\label{tab:cr}
+\end{table}
+
+\subsection{Lookup-table CRUD: event types}
+
+Event type was selected as the Phase~1 lookup-table example. It is an editable value used when creating an event, and the same screen also supports skills. Following the lecturer's guidance, the lookup is treated as application data, and the four operations are mapped to the functions that use them.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.36\textwidth}L{0.14\textwidth}L{0.13\textwidth}Y@{}}
+\toprule
+\textbf{Function or use case} & \textbf{EventType} & \textbf{Event} & \textbf{Interface entry point} \\
+\midrule
+Create a new event type & C & -- & Lookups \(\rightarrow\) Add \\
+Browse all event types & R & -- & Lookups table; event form \\
+Rename an event type & U & -- & Lookups \(\rightarrow\) Rename \\
+Delete an unused event type & D & R (guard) & Lookups \(\rightarrow\) Delete \\
+Assign a type when creating or editing an event & R & C / U & Events \(\rightarrow\) Create / Edit \\
+\bottomrule
+\end{tabularx}
+\caption{CRUD matrix for the chosen lookup module.}
+\label{tab:crud}
+\end{table}
+
+The service enforces the following rules, so they apply to both interfaces:
+
+\begin{itemize}
+  \item the name is required, trimmed, and must be unique;
+  \item rename updates the stored value, so every event that references the type shows the new name;
+  \item delete is refused when the type is already used by an event, which protects existing records;
+  \item every operation refreshes the open screens, so the event form immediately shows the new list.
+\end{itemize}
+
+Skills use the same screen and the same four operations. A skill is referenced by the volunteer--skill relation, so the delete guard protects volunteer records in the same way. Two working tables show that the lookup screen is a general mechanism rather than a single hard-coded form.

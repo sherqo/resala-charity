@@ -2,19 +2,19 @@
 
 **Phase:** 1 (Client requirements, 0.5 marks)
 
-> Requirements collected from users at Resala, extending the basic requirements from the brief. Each requirement is traced to the module/class that implements it.
+> Client-facing needs that drove Phase 1. They are derived from the project brief and the branch workflow, and each one is traced to the module that implements it.
 
 ## Requirements
 
-| ID | Requirement | Module | Class / feature that handles it |
-|----|-------------|--------|---------------------------------|
-| CR1 | Generate a yearly tax statement per donor (sum of monetary donations for a year) | Donations | `DonationService.yearlyStatement(donorId, year)` |
-| CR2 | Validate volunteer skill and availability before assigning to an event | Volunteers | `VolunteerService.validateAssignment(...)` |
-| CR3 | Issue a volunteer certificate after 20 cumulative hours | Volunteers | `CertificateGenerator.generate(...)`, `VolunteerService.certificate(volunteerId)` |
-| CR4 | Notify registered attendees and volunteers when an event is updated or rescheduled | Events | `EventSubject` + `EventNotificationObserver` (Observer pattern) |
-| CR5 | Record aid distribution per beneficiary (item, event, date) | Beneficiaries | `DistributionService.distributeAid(...)`, `distributions` table |
-| CR6 | Full CRUD (create, read, update, delete) for skills and event types lookup tables | Lookups | `LookupView`, `VolunteerController`, `EventController` |
-| CR7 | Support email, SMS, and social media channels, swappable at runtime | Communication | `NotificationStrategy` + `EmailStrategy`/`SmsStrategy`/`SocialStrategy`, `Notifier` (Strategy pattern) |
+| ID | Client need and expected outcome | Addressed by |
+|----|----------------------------------|--------------|
+| CR1 | **Year-end statements.** At year end, staff rebuild each donor's total by hand. The client needs an accurate statement for any donor and year, covering monetary donations only, without re-entering data. | **FR-D6**; Donations: `DonationService.yearlyStatement(donorId, year)` |
+| CR2 | **Safe volunteer assignment.** Coordinators assign volunteers from memory, which causes skill mismatches and no-shows. The client needs every assignment checked against availability and the required skill before it is confirmed. | **FR-V4**; Volunteers: `VolunteerService.validateAssignment(...)` |
+| CR3 | **Volunteer certificates.** Certificates are calculated by hand and issued late. The client needs a certificate produced only after 20 verified hours, showing the correct total. | **FR-V5, FR-V6**; Volunteers: `CertificateGenerator.generate(...)`, `VolunteerService.certificate(...)` |
+| CR4 | **Event changes.** Attendees are not told when an event changes, so some travel for nothing. The client needs every registered attendee informed automatically when the event is updated, opened, closed or rescheduled. | **FR-E6**; Events: `EventSubject` + `EventNotificationObserver` |
+| CR5 | **Aid history.** Aid is recorded on paper, so the branch cannot say who received what, when, or whether it was already given. The client needs one history per beneficiary that staff can check before distributing again. | **FR-B3, FR-B4**; Beneficiaries: `BeneficiaryService.recordDistribution(...)`, `/distributeByPolicy(...)` |
+| CR6 | **Staff-maintained lists.** Every new event type or skill currently needs a developer. The client needs staff to add, rename and remove these values themselves without breaking existing records. | **FR-R1 to FR-R5**; Lookups: `LookupView`, `EventController.renameEventType(...)`, `VolunteerController.renameSkill(...)` |
+| CR7 | **One message screen.** Supporters use different channels, and the branch cannot run a separate tool for each. The client needs one message screen where the channel can be changed immediately. | **FR-C1 to FR-C3**; Communication: `NotificationStrategy` + `EmailStrategy`/`SmsStrategy`/`SocialStrategy`, `Notifier` |
 
 ## Traceability to Phase 1 deliverables
 
@@ -26,5 +26,5 @@
 | Observer | Donation received and event updated notifications |
 | Strategy | Email/SMS/social communication channels, swappable at runtime |
 | Singleton | `DatabaseManager`, `ConfigManager` |
-| CRUD lookup tables | Skills and event types CRUD via `LookupView` |
+| CRUD lookup tables | Event types (the chosen module) and skills via `LookupView` |
 | MVC | Controllers + console/JavaFX views separated by layer |

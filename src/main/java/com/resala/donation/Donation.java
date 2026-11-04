@@ -3,7 +3,6 @@ package com.resala.donation;
 import com.resala.model.DonationType;
 import java.time.LocalDate;
 
-// abstract product — DonationFactory is the Creator
 public abstract class Donation {
 
   private long id;

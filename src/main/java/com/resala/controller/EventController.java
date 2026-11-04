@@ -24,7 +24,6 @@ public class EventController {
     this.volunteerService = volunteerService;
   }
 
-  // --- Events ---
   public Event create(EventRequest request)              { return service.create(request); }
   public Event update(long id, EventRequest request)     { return service.update(id, request); }
   public void  delete(long id)                           { service.delete(id); }
@@ -45,16 +44,17 @@ public class EventController {
     EventRegistration reg = service.getRegistration(registrationId);
     if (reg.isVolunteer()) {
       Event event = service.getEvent(reg.getEventId());
-      volunteerService.creditEventHours(event);
+      volunteerService.creditVolunteerHours(event, reg.getVolunteerId());
     }
   }
   public String attendanceReport(long eventId)           { return service.attendanceReport(eventId); }
+
+  public void sendReminder(long eventId)                 { service.sendReminder(eventId); }
 
   public List<EventRegistration> getRegistrations(long eventId) {
     return service.getRegistrations(eventId);
   }
 
-  // --- Event Types ---
   public List<EventType> listEventTypes()                        { return eventTypeService.findAll(); }
   public EventType       getEventType(int id)                    { return eventTypeService.getById(id); }
   public EventType       createEventType(String name)            { return eventTypeService.create(name); }

@@ -12,10 +12,8 @@ import com.resala.view.UiFactory;
 import com.resala.view.VolunteerView;
 import java.util.Scanner;
 
-// Concrete factory — produces the console family of views
 public class ConsoleUiFactory implements UiFactory {
 
-  // Shared Scanner so all views read from the same stdin stream
   private final Scanner input;
 
   public ConsoleUiFactory(Scanner input) {

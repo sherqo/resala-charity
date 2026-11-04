@@ -35,7 +35,6 @@ public class DashboardView extends BaseView implements DonationObserver, EventOb
     private final EventController eventController;
     private final VolunteerController volunteerController;
 
-    // Stat cards for live updates
     private final VBox totalDonationsCard;
     private final VBox totalDonorsCard;
     private final VBox totalVolunteersCard;
@@ -60,25 +59,20 @@ public class DashboardView extends BaseView implements DonationObserver, EventOb
         this.volunteerController = volunteerController;
         this.recentDonationsTable = (DataTable<Donation>) this.table;
 
-        // Create stat cards (neutral Notion aesthetic)
         this.totalDonationsCard = StatCard.of("Total Donations", "0");
         this.totalDonorsCard = StatCard.of("Total Donors", "0");
         this.totalVolunteersCard = StatCard.of("Total Volunteers", "0");
         this.totalEventsCard = StatCard.of("Total Events", "0");
         this.upcomingEventsCard = StatCard.of("Upcoming Events", "0");
 
-        // Feed list (connected to shared feed in appShell)
         this.feedList = appShell.getFeedList();
         feedList.getStyleClass().add("feed-list-view");
         feedList.setPrefHeight(180);
 
-        // Build layout
         buildLayout();
 
-        // Primary action button for header
         this.primaryActionButton = Toolbar.primary("Add Donation", e -> appShell.showView("Donations"));
 
-        // Initial refresh
         refresh();
     }
 
@@ -113,7 +107,7 @@ public class DashboardView extends BaseView implements DonationObserver, EventOb
     }
 
     private void buildLayout() {
-        // Stat cards grid
+
         GridPane statGrid = new GridPane();
         statGrid.getStyleClass().add("stat-grid");
         statGrid.setHgap(16);
@@ -124,19 +118,16 @@ public class DashboardView extends BaseView implements DonationObserver, EventOb
         statGrid.add(totalEventsCard, 3, 0);
         statGrid.add(upcomingEventsCard, 4, 0);
 
-        // Recent donations section
         VBox recentSection = new VBox(8);
         Label recentTitle = new Label("Recent Donations");
         recentTitle.getStyleClass().add("card-title");
         recentSection.getChildren().addAll(recentTitle, getTableView());
 
-        // Feed section
         VBox feedSection = new VBox(8);
         Label feedTitle = new Label("Activity Feed");
         feedTitle.getStyleClass().add("card-title");
         feedSection.getChildren().addAll(feedTitle, feedList);
 
-        // Main content: stat grid + recent + feed
         VBox content = new VBox(24);
         content.setPadding(new Insets(0, 0, 24, 0));
         content.getChildren().addAll(statGrid, recentSection, feedSection);
@@ -162,7 +153,6 @@ public class DashboardView extends BaseView implements DonationObserver, EventOb
             .count();
         StatCard.valueLabel(upcomingEventsCard).setText(String.valueOf(upcoming));
 
-        // Update recent donations table (latest 5)
         List<Donation> recent = donations.stream()
             .sorted((a, b) -> Long.compare(b.getId(), a.getId()))
             .limit(5)

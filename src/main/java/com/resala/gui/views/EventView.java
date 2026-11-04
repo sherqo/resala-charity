@@ -7,25 +7,24 @@ import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
 import com.resala.gui.components.DataTable;
 import com.resala.gui.components.FormDialog;
-import com.resala.gui.components.ModalOverlay;
+import com.resala.gui.components.PreviewDialog;
 import com.resala.gui.components.Toolbar;
 import com.resala.gui.components.Toast;
 import com.resala.model.Event;
 import com.resala.model.EventType;
 import com.resala.notification.EventObserver;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -226,7 +225,7 @@ public class EventView extends BaseView implements EventObserver {
             eventController.close(selected.getId());
             appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(),
-                "Event \"" + selected.getTitle() + "\" is now CLOSED. " + selected.getHours() + " volunteer hour(s) credited to assigned volunteers.",
+                "Event \"" + selected.getTitle() + "\" is now CLOSED.",
                 Toast.Type.SUCCESS);
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
@@ -450,98 +449,12 @@ public class EventView extends BaseView implements EventObserver {
         }
     }
 
-    private void showRescheduleDialog() {
-        Event selected = eventsTable.getTableView().getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            appShell.getToast().show(appShell.getStage(), "Select an event first.", Toast.Type.WARNING);
-            return;
-        }
-        try {
-            String report = eventController.attendanceReport(selected.getId());
-            showReportPreview(report);
-        } catch (Exception ex) {
-            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
-        }
-    }
-
     private void showReportPreview(String text) {
         showTextPreview("Event Attendance Report", text);
     }
 
     private void showTextPreview(String title, String text) {
-        if (appShell != null && appShell.getModalOverlay() != null) {
-            ModalOverlay.show(appShell, new ModalOverlay.ModalCard<Void>() {
-                private java.util.function.Consumer<Void> closeCallback;
-
-                @Override
-                public Node getNode() {
-                    VBox card = new VBox();
-                    card.getStyleClass().add("modal-card");
-                    card.setMaxWidth(620);
-                    card.setMinWidth(520);
-                    card.setMaxHeight(560);
-
-                    HBox header = new HBox();
-                    header.getStyleClass().add("modal-header");
-                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-                    Label titleLabel = new Label(title);
-                    titleLabel.getStyleClass().add("modal-title");
-
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                    Button closeBtn = new Button("✕");
-                    closeBtn.getStyleClass().add("modal-close-btn");
-                    closeBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    header.getChildren().addAll(titleLabel, spacer, closeBtn);
-
-                    VBox body = new VBox(10);
-                    body.getStyleClass().add("modal-body");
-
-                    TextArea area = new TextArea(text);
-                    area.setEditable(false);
-                    area.setWrapText(true);
-                    area.getStyleClass().add("preview-area");
-                    VBox.setVgrow(area, Priority.ALWAYS);
-                    body.getChildren().add(area);
-                    VBox.setVgrow(body, Priority.ALWAYS);
-
-                    HBox footer = new HBox(8);
-                    footer.getStyleClass().add("modal-footer");
-                    footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-
-                    Region footerSpacer = new Region();
-                    HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-
-                    Button doneBtn = new Button("Close");
-                    doneBtn.getStyleClass().addAll("btn", "btn-ghost");
-                    doneBtn.setOnAction(e -> {
-                        if (closeCallback != null) closeCallback.accept(null);
-                    });
-
-                    footer.getChildren().addAll(footerSpacer, doneBtn);
-                    card.getChildren().addAll(header, body, footer);
-                    return card;
-                }
-
-                @Override
-                public void setCloseHandler(java.util.function.Consumer<Void> closeCallback) {
-                    this.closeCallback = closeCallback;
-                }
-            });
-            return;
-        }
-
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(appShell.getStage());
-        dialog.setTitle(title);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(new TextArea(text));
-        dialog.showAndWait();
+        PreviewDialog.show(appShell, title, text);
     }
 
     private void showRemindDialog() {
@@ -551,9 +464,14 @@ public class EventView extends BaseView implements EventObserver {
             return;
         }
         List<EventRegistration> regs = eventController.getRegistrations(selected.getId());
-        appShell.getToast().show(appShell.getStage(),
-            "Reminder sent to " + regs.size() + " attendees for " + selected.getTitle(),
-            Toast.Type.INFO);
+        try {
+            eventController.sendReminder(selected.getId());
+            appShell.getToast().show(appShell.getStage(),
+                "Reminder sent to " + regs.size() + " attendees for " + selected.getTitle(),
+                Toast.Type.SUCCESS);
+        } catch (Exception ex) {
+            appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+        }
     }
 
     private void deleteSelected() {

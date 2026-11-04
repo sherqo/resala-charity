@@ -3,7 +3,6 @@ package com.resala.gui.components;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 
 public final class StatCard {
 
@@ -24,10 +23,6 @@ public final class StatCard {
 
         card.getChildren().addAll(labelNode, valueNode);
         return card;
-    }
-
-    public static VBox of(String label, String value, Paint accent) {
-        return of(label, value);
     }
 
     public static Label valueLabel(VBox statCard) {

@@ -76,8 +76,6 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
     System.out.println("Welcome to Resala Charity Donation System");
   }
 
-  /* ---------- donor flow ---------- */
-
   private void addDonor() {
     System.out.println("\n--- Add Donor ---");
     System.out.println("Required: name, type (INDIVIDUAL or ORGANIZATION).");
@@ -118,8 +116,6 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
       System.out.println("Cancelled.");
     }
   }
-
-  /* ---------- donation flow ---------- */
 
   private void recordDonation() {
     System.out.println("\n--- Record Donation ---");
@@ -216,7 +212,6 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
     return methods.get(choice - 1);
   }
 
-  /** Collects the raw dummy details for the chosen method; the strategy validates them. */
   private PaymentInstrument collectInstrument(PaymentMethod method) {
     if (method instanceof CardPaymentMethod) {
       System.out.println("\n--- Card details (dummy data only, nothing is charged) ---");
@@ -264,8 +259,6 @@ public class ConsoleDonationView extends AbstractConsoleView implements Donation
     int year = readInt("Year (e.g. 2026): ");
     System.out.println("\n" + controller.yearlyStatement(donorId, year));
   }
-
-  /* ---------- helpers ---------- */
 
   private long chooseOrCreateDonor() {
     System.out.println("\nSelect donor:");

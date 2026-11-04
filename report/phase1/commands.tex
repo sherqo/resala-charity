@@ -1,0 +1,40 @@
+\definecolor{asuBlue}{HTML}{143B66}
+\definecolor{softBlue}{HTML}{EDF4FB}
+\setlist[itemize]{nosep,leftmargin=*,topsep=3pt,partopsep=0pt}
+\setlist[enumerate]{nosep,leftmargin=*,topsep=3pt,partopsep=0pt}
+\titleformat{\section}{\Large\bfseries\color{asuBlue}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{12pt plus 2pt minus 2pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 2pt}{4pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Resala Charity Management System}
+\rhead{Phase 1}
+\cfoot{\thepage}
+\setlength{\headheight}{14pt}
+\hypersetup{colorlinks=true,linkcolor=asuBlue,urlcolor=asuBlue,pdftitle={Resala Charity Management System - Phase 1 Report}}
+\widowpenalty=10000
+\clubpenalty=10000
+\emergencystretch=1.5em
+
+% Grey box used while the final diagrams are being prepared.
+\newtcolorbox{diagrambox}[1]{
+  colback=gray!3,
+  colframe=black!25,
+  boxrule=0.5pt,
+  arc=2pt,
+  height=0.36\textheight,
+  valign=center,
+  halign=center,
+  fontupper=\small\color{black!55},
+  title={#1},
+  coltitle=black!70,
+  colbacktitle=gray!10
+}
+
+% Compact table used for the CRUD and traceability matrices.
+\newcommand{\smalltable}{\small}
+
+% Ragged-right columns keep narrow tables from stretching words.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}

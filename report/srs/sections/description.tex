@@ -1,0 +1,85 @@
+\section{Overall description}
+
+\subsection{Users}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.28\textwidth}Y@{}}
+\toprule
+\textbf{User} & \textbf{What they need from the system} \\
+\midrule
+Branch administrator & Runs the branch. Needs the full set of management screens, including reference data. \\
+Event organiser & Runs events. Needs the event, registration and attendance screens. \\
+Volunteer & Does not operate the system. Their record, skills and hours are managed by staff. \\
+Donors, beneficiaries, attendees & Do not use the system. They appear as records and receive messages (email, SMS, social). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Phase~1 has no login, user accounts, or permission checks. This table describes who the system is for, not what it enforces: anyone who runs the application can open every screen.
+
+\subsection{Operating environment}
+
+\begin{itemize}
+  \item a Java application with a JavaFX graphical interface and a console interface;
+  \item a local SQLite database;
+  \item a normal desktop running Windows, Linux or macOS.
+\end{itemize}
+
+\subsection{Constraints}
+
+\begin{itemize}
+  \item the code follows MVC: views show data, controllers take input, services hold business rules, and repositories hold the data-access SQL, while the shared database manager only opens the connection and creates the schema;
+  \item Phase~1 uses only the six patterns taught so far (see Section~\ref{sec:patterns}); more patterns are added in Phase~2;
+  \item money is stored as whole minor units (piastres) to avoid rounding errors.
+\end{itemize}
+
+\subsection{Assumptions}
+
+\begin{itemize}
+  \item messages (email, SMS, social) are simulated in Phase~1, so no real provider is required;
+  \item online payments use a fake payment provider;
+  \item one organization uses the system on one machine;
+  \item authentication (login) is not part of Phase~1;
+  \item need types are supported by the beneficiary module but are not yet editable on the lookup screen.
+\end{itemize}
+
+\subsection{Architecture (MVC)}
+
+The system is built in layers. The graphical and the console interface use the same controllers and services, so each business rule is written once and behaves the same in both.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.27\textwidth}Y@{}}
+\toprule
+\textbf{Layer} & \textbf{Responsibility} \\
+\midrule
+Views & Display data, collect input and show feedback. \\
+Controllers & Receive requests from the screens and pass them to the services. \\
+Services & Validate data and apply the rules of each module. \\
+Repositories & Define the storage operations without exposing storage details. \\
+Storage implementations & Carry out the repository operations on the local database. \\
+Core services & Shared configuration, database access, transactions and audit log. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Table~\ref{tab:mvc-roles} lists the MVC roles and what each one must not do.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.16\textwidth}L{0.30\textwidth}Y@{}}
+\toprule
+\textbf{MVC role} & \textbf{Example} & \textbf{Must not} \\
+\midrule
+Model & Donation, Volunteer, Event & Contain storage or interface code. \\
+View & Donation screen, console donation menu & Contain business rules or open a database connection. \\
+Controller & Donation controller & Print to the console or read the keyboard directly. \\
+Service & Donation service & Know which screen called it. \\
+Repository & Donation repository & Expose storage details to the service. \\
+\bottomrule
+\end{tabularx}
+\caption{MVC roles and their boundaries.}
+\label{tab:mvc-roles}
+\end{table}

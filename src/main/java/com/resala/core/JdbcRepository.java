@@ -1,7 +1,5 @@
 package com.resala.core;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.*;
@@ -10,17 +8,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-//Java Database Connectivity
 public abstract class JdbcRepository {
     protected final Connection conn;
 
     protected JdbcRepository(Connection c) {
         if (c == null) throw new IllegalArgumentException("Connection is null");
         conn = c;
-    }
-
-    protected  JdbcRepository() {
-        this(DatabaseManager.getInstance().getConnection());
     }
 
     protected  int execute(String sql, Object... params){
@@ -30,7 +23,7 @@ public abstract class JdbcRepository {
         } catch (SQLException e) {
             throw dbError(sql, e);
         }
-    } // PreparedStatement + bind + UPDATE/INSERT/DELETE
+    }
     protected <T> List<T> query(String sql, RowMapper<T> mapper, Object... params){
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             bind(ps, params);
@@ -67,8 +60,7 @@ public abstract class JdbcRepository {
             else                     ps.setObject(i + 1, params[i]);
         }
     }
-    @Contract("_, _ -> new")
-    private @NotNull RuntimeException dbError(String sql, SQLException e) {
+    private RuntimeException dbError(String sql, SQLException e) {
         return new IllegalStateException("SQL failed: " + sql + " -> " + e.getMessage(), e);
     }
 

@@ -2,14 +2,12 @@ package com.resala.gui.views;
 
 import com.resala.gui.AppShell;
 import com.resala.gui.BaseView;
-import com.resala.gui.components.DataTable;
 import com.resala.gui.components.Toast;
 import com.resala.gui.components.Toolbar;
 import com.resala.notification.EmailStrategy;
 import com.resala.notification.Notifier;
 import com.resala.notification.SmsStrategy;
 import com.resala.notification.SocialStrategy;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -25,26 +23,16 @@ public class CommView extends BaseView {
     private ListView<String> logList;
     private ToggleGroup channelGroup;
 
-    public CommView(AppShell appShell) {
-        super(Toolbar.of(), createDummyTable());
+    public CommView(AppShell appShell, Notifier notifier) {
+        super(Toolbar.of(), null);
         this.appShell = appShell;
-        this.notifier = new Notifier(new EmailStrategy());
+        this.notifier = notifier;
 
         getStyleClass().add("view");
         setPadding(new Insets(20, 24, 20, 24));
         setSpacing(20);
 
-        // Remove the dummy table from the view
-        getChildren().remove(1);
-
         buildLayout();
-    }
-
-    private static DataTable<String> createDummyTable() {
-        return DataTable.<String>builder()
-            .column("Dummy", 100, (java.util.function.Function<String, String>) s -> s)
-            .items(FXCollections.observableArrayList())
-            .build();
     }
 
     @Override
@@ -53,7 +41,7 @@ public class CommView extends BaseView {
     }
 
     private void buildLayout() {
-        // --- 1. Composer Section (Single unified card) ---
+
         VBox composerCard = new VBox(14);
         composerCard.getStyleClass().add("card");
         composerCard.setPadding(new Insets(18, 20, 18, 20));
@@ -61,7 +49,6 @@ public class CommView extends BaseView {
         Label composeTitle = new Label("Compose Notification");
         composeTitle.getStyleClass().add("card-title");
 
-        // Channel Selection (Restrained radio group, no emojis)
         HBox channelRow = new HBox(16);
         channelRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -99,7 +86,6 @@ public class CommView extends BaseView {
             }
         });
 
-        // Form Fields Grid
         GridPane formGrid = new GridPane();
         formGrid.setHgap(16);
         formGrid.setVgap(12);
@@ -139,7 +125,6 @@ public class CommView extends BaseView {
         GridPane.setHgrow(subjectField, Priority.ALWAYS);
         GridPane.setHgrow(bodyArea, Priority.ALWAYS);
 
-        // Action row
         HBox actionRow = new HBox(12);
         actionRow.setAlignment(Pos.CENTER_RIGHT);
 
@@ -177,7 +162,6 @@ public class CommView extends BaseView {
 
         composerCard.getChildren().addAll(composeTitle, channelRow, formGrid, actionRow);
 
-        // --- 2. Activity / Delivery Log Section (Flat layout) ---
         VBox logSection = new VBox(8);
         VBox.setVgrow(logSection, Priority.ALWAYS);
 
@@ -196,6 +180,6 @@ public class CommView extends BaseView {
 
     @Override
     public void refresh() {
-        // Stateless view - no remote refresh needed
+
     }
 }

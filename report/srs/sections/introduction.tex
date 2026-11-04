@@ -1,0 +1,43 @@
+\section{Introduction}
+
+\subsection{Purpose}
+
+This document defines the requirements for the Resala Charity Management System. It states what the system must do, who uses it, and what is outside the scope of Phase~1.
+
+\subsection{Scope}
+
+The system helps a non-profit organization run its daily work in one application:
+
+\begin{itemize}
+  \item \textbf{Donations:} record donors and donations, issue receipts, take payments.
+  \item \textbf{Volunteers:} keep volunteer records, skills and hours, and issue certificates.
+  \item \textbf{Events:} create events, register attendees, track attendance.
+  \item \textbf{Beneficiaries:} keep beneficiary records and track the help they receive.
+  \item \textbf{Communication:} send notifications to donors, volunteers and attendees.
+  \item \textbf{Reference data:} keep editable lists of event types and skills.
+\end{itemize}
+
+The goal is a system that is easy to change (flexible), easy to read (maintainable), and built from reusable parts (reusable). Design patterns are used to reach these goals.
+
+\begin{tcolorbox}[colback=softBlue,colframe=asuBlue,title=Phase 1 scope]
+The current version has the main management screens, local storage, reference-data maintenance, an MVC structure, and the required patterns: Strategy, Observer, Decorator, Factory and Singleton. It has a graphical interface and a console interface that share the same controllers and services.
+\end{tcolorbox}
+
+\subsection{Definitions}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.20\textwidth}Y@{}}
+\toprule
+\textbf{Term} & \textbf{Meaning} \\
+\midrule
+Donor & A person or organization that gives money or goods. \\
+Donation & One gift: online, by check, or in kind (goods). \\
+Beneficiary & A person or family that receives help. \\
+Distribution & One record of help given to a beneficiary. \\
+Staff user & The person at the branch who operates the system. \\
+CRUD & Create, Read, Update, Delete. \\
+MVC & Model, View, Controller: the layered structure of the code. \\
+\bottomrule
+\end{tabularx}
+\end{center}

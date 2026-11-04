@@ -14,7 +14,7 @@ public class PaymentService {
   private final PaymentRepository payments;
   private final PaymentGateway gateway;
   private final TransactionManager tx;
-  private final PaymentSettlement settlement; // optional, may be null
+  private final PaymentSettlement settlement;
 
   public PaymentService(PaymentRepository payments, PaymentGateway gateway,
                         TransactionManager tx, PaymentSettlement settlement) {
@@ -43,7 +43,7 @@ public class PaymentService {
     try {
       payments.save(payment);
     } catch (RuntimeException e) {
-      // Another request may have inserted the same key between our lookup and save.
+      // Another request may save this key after our lookup.
       Optional<Payment> raced = payments.findByIdempotencyKey(request.idempotencyKey());
       if (raced.isPresent()) return resumeOrReturn(raced.get(), request);
       return PaymentOutcome.rejected(new PaymentException(PaymentError.PERSISTENCE_FAILURE, null,
@@ -60,7 +60,7 @@ public class PaymentService {
           payment.getIdempotencyKey(), payment.getAmountMinor(), payment.getCurrency(),
           payment.getPaymentMethod(), token, description));
     } catch (RuntimeException e) {
-      // The provider may have accepted the charge. Keep the payment pending for a same-key retry.
+      // A timeout can happen after the provider accepts a payment, so leave it pending for retry.
       LOGGER.warning("Unexpected gateway error for payment " + payment.getId() + ": " + e);
       return PaymentOutcome.pending(payment, PaymentError.PROVIDER_UNAVAILABLE, "Unexpected gateway error");
     }
@@ -85,7 +85,7 @@ public class PaymentService {
       long recordId;
       try {
         recordId = tx.inTransaction(() -> {
-          // Mark paid first so the settlement can verify the completed payment.
+          // Mark it paid first so settlement can verify it.
           payment.markPaid("NONE", 0);
           payments.save(payment);
           long settledId = settlement.settle(payment);
@@ -100,7 +100,7 @@ public class PaymentService {
       try {
         settlement.afterCommit(payment, recordId);
       } catch (RuntimeException e) {
-        // The payment is already committed; a notification failure must not turn it into a failure.
+        // The payment is already saved, so a notification error should not undo it.
         LOGGER.warning("afterCommit failed for payment " + payment.getId() + ": " + e);
       }
       AuditLogManager.getInstance().log(
@@ -142,10 +142,6 @@ public class PaymentService {
     return gateway.getAvailableMethods();
   }
 
-  public List<Payment> history(String payerType, long payerId) {
-    return payments.findByPayer(payerType, payerId);
-  }
-
   public Payment get(long paymentId) {
     return payments.findById(paymentId)
         .orElseThrow(() -> new PaymentException(PaymentError.INVALID_STATE, paymentId, "not found", null));
@@ -166,7 +162,7 @@ public class PaymentService {
     if (existing.getStatus() == PaymentStatus.FAILED) {
       return PaymentOutcome.failed(existing);
     }
-    // PENDING: re-charge with the same key; provider idempotency prevents a double charge.
+    // Retry pending payments with the same key to avoid charging twice.
     return charge(existing, request.paymentToken(), request.description());
   }
 
@@ -178,7 +174,6 @@ public class PaymentService {
         && payment.getPaymentMethodCode().equals(request.paymentMethod().code());
   }
 
-  /** A timeout or provider outage may still have charged the card, so the same key must be retried. */
   private boolean isAmbiguous(PaymentError reason) {
     return reason == PaymentError.PROVIDER_TIMEOUT
         || reason == PaymentError.PROVIDER_UNAVAILABLE;

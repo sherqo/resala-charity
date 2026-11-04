@@ -1,0 +1,40 @@
+\section{Design and architecture}
+
+The system follows an MVC structure. Screens display data and collect user actions. Controllers receive these actions and pass them to services. Services apply the business rules and use repository interfaces to read and write data. The repository implementations contain the storage details.
+
+The same structure supports both interfaces. The graphical interface and the console interface use the same controllers and services, so a business rule is written once and behaves identically in both. This is the practical proof of the MVC boundary.
+
+\begin{figure}[H]
+  \centering
+  \begin{diagrambox}{Placeholder: layered architecture diagram}
+    Diagram placeholder --- the final figure will show the layers below,\\
+    the direction of calls, and the position of the notification and core services.
+  \end{diagrambox}
+  \caption{Layered architecture of the system.}
+  \label{fig:architecture}
+\end{figure}
+
+\subsection{Main responsibilities}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.27\textwidth}Y@{}}
+\toprule
+\textbf{Layer} & \textbf{Responsibility} \\
+\midrule
+Views & Display data, collect input, and show feedback to the user. \\
+Controllers & Receive requests from the screens and delegate them to the services. \\
+Services & Validate data and enforce the rules of each module. \\
+Repositories & Define the storage operations without exposing storage details. \\
+Storage implementations & Carry out the repository operations on the local database. \\
+Core services & Provide shared configuration, database access, transactions, and audit logging. \\
+\bottomrule
+\end{tabularx}
+\caption{Responsibility of each layer.}
+\label{tab:layers}
+\end{table}
+
+\subsection{One operation across all layers}
+
+When a donation is recorded, the screen collects the form values, the controller passes the request to the donation service, and the service applies the rules and asks the factory to create the correct donation. The repository saves the result, the service notifies its observers, and the screen refreshes. The console interface performs the same operation through the same controller and service, so no rule is duplicated between the two interfaces.

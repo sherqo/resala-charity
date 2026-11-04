@@ -12,17 +12,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-// business logic
 public class DonationService implements DonationSubject {
 
   private final DonorRepository donors;
   private final DonationRepository donations;
   private final PaymentRepository payments;
   private final List<DonationObserver> observers = new ArrayList<>();
-
-  public DonationService(DonorRepository donors, DonationRepository donations) {
-    this(donors, donations, null);
-  }
 
   public DonationService(DonorRepository donors, DonationRepository donations, PaymentRepository payments) {
     this.donors = donors;
@@ -35,7 +30,10 @@ public class DonationService implements DonationSubject {
       "Donor name is required"
     );
     if (donor.getType() == null) throw new IllegalArgumentException("Donor type is required");
-    donor.setActive(true);
+    // Only new donors become active automatically. Editing keeps the current flag.
+    if (donor.getId() == 0) {
+      donor.setActive(true);
+    }
     return donors.save(donor);
   }
 
@@ -52,7 +50,6 @@ public class DonationService implements DonationSubject {
     return donation;
   }
 
-  /** Records an online donation whose payment is already confirmed. Does NOT notify observers. */
   public Donation recordConfirmed(DonationRequest request) {
     Donor donor = donors.findById(request.donorId()).orElseThrow(() -> new IllegalArgumentException("Donor not found"));
     if (!donor.isActive()) throw new IllegalArgumentException("Archived donors cannot make new donations");
@@ -100,7 +97,6 @@ public class DonationService implements DonationSubject {
     }
   }
 
-  /** Call only after the payment transaction commits. */
   public void notifyRecorded(Donation donation, Donor donor) {
     notifyObservers(donation, donor);
   }

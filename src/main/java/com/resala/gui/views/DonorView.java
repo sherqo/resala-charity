@@ -33,8 +33,9 @@ public class DonorView extends BaseView {
         this.donationController = donationController;
         this.donorsTable = (DataTable<Donor>) this.table;
 
+        Button editBtn = Toolbar.ghost("Edit", e -> showEditDonorDialog());
         Button deleteBtn = Toolbar.ghost("Archive Donor", e -> deleteSelected());
-        toolbar.getChildren().add(deleteBtn);
+        toolbar.getChildren().addAll(editBtn, deleteBtn);
 
         this.primaryActionButton = Toolbar.primary("Add Donor", e -> showAddDonorDialog());
     }
@@ -95,8 +96,52 @@ public class DonorView extends BaseView {
         });
     }
 
-    private void deleteSelected() {
+    private void showEditDonorDialog() {
         Donor selected = donorsTable.getTableView().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            appShell.getToast().show(appShell.getStage(), "Select a donor first.", Toast.Type.WARNING);
+            return;
+        }
+
+        Donor current = donationController.getDonor(selected.getId());
+        // COMBO selects the first item, so put the current type first.
+        String[] typeOptions = current.getType() == Donor.Type.INDIVIDUAL
+            ? new String[]{Donor.Type.INDIVIDUAL.name(), Donor.Type.ORGANIZATION.name()}
+            : new String[]{Donor.Type.ORGANIZATION.name(), Donor.Type.INDIVIDUAL.name()};
+
+        var fields = List.of(
+            new FormDialog.Field("name", "Name", FormDialog.Type.TEXT, true, current.getName()),
+            new FormDialog.Field("type", "Type", FormDialog.Type.COMBO, true, (Object[]) typeOptions),
+            new FormDialog.Field("email", "Email", FormDialog.Type.TEXT, false,
+                current.getEmail() == null ? "" : current.getEmail()),
+            new FormDialog.Field("phone", "Phone", FormDialog.Type.TEXT, false,
+                current.getPhone() == null ? "" : current.getPhone())
+        );
+
+        Optional<java.util.Map<String, Object>> result = FormDialog.show(appShell.getStage(), "Edit Donor", fields);
+        result.ifPresent(map -> {
+            try {
+                String name = (String) map.get("name");
+                Donor.Type type = Donor.Type.valueOf((String) map.get("type"));
+                String email = (String) map.get("email");
+                String phone = (String) map.get("phone");
+
+                Donor donor = donationController.getDonor(selected.getId());
+                donor.setName(name);
+                donor.setType(type);
+                donor.setEmail(email == null || email.isBlank() ? null : email.trim());
+                donor.setPhone(phone == null || phone.isBlank() ? null : phone.trim());
+
+                donationController.saveDonor(donor);
+                appShell.refreshAll();
+                appShell.getToast().show(appShell.getStage(), "Donor updated.", Toast.Type.SUCCESS);
+            } catch (Exception ex) {
+                appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);
+            }
+        });
+    }
+
+    private void deleteSelected() {        Donor selected = donorsTable.getTableView().getSelectionModel().getSelectedItem();
         if (selected == null) {
             appShell.getToast().show(appShell.getStage(), "Select a donor first.", Toast.Type.WARNING);
             return;

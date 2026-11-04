@@ -1,0 +1,110 @@
+@startuml
+title Notifications, observers and audit
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.core" {
+  class AuditLogManager <<singleton>> {
+    -counter: AtomicLong
+    -logs: ObservableList<AuditLog>
+    +getInstance()
+    +log()
+    -addEntry()
+    +getLogs()
+    +clear()
+  }
+  class ConfigManager <<singleton>> {
+    -instance: ConfigManager
+    -props: Properties
+    +getInstance()
+    +get()
+  }
+  class DatabaseManager <<singleton>> {
+    -instance: DatabaseManager
+    -connection: Connection
+    +getInstance()
+    +getConnection()
+    +close()
+    -runScript()
+    -migrate()
+    -readResource()
+    -createParentDirectory()
+  }
+  class JdbcRepository {
+    #conn: Connection
+    #execute()
+    #query()
+    #queryOne()
+    #insertReturnKey()
+    -bind()
+    -dbError()
+    #str()
+    #num()
+    #lng()
+    #dbl()
+  }
+  class TransactionManager {
+    -connection: Connection
+    +inTransaction()
+  }
+}
+package "com.resala.notification" {
+  interface DonationObserver <<interface>> {
+    +onDonationRecorded()
+  }
+  interface DonationSubject <<interface>> {
+    +addObserver()
+    +removeObserver()
+  }
+  class EmailStrategy {
+    +send()
+  }
+  class EventNotificationObserver {
+    -registrationRepository: EventRegistrationRepository
+    -notifier: Notifier
+    +onEventUpdated()
+  }
+  interface EventObserver <<interface>> {
+    +onEventUpdated()
+  }
+  interface EventSubject <<interface>> {
+    +addObserver()
+    +removeObserver()
+  }
+  class FeedObserver {
+    -feedList: ListView<String>
+    -statusLabel: Label
+    -timeFormatter: DateTimeFormatter
+    +onDonationRecorded()
+    +onEventUpdated()
+    -addToFeed()
+  }
+  interface NotificationStrategy <<interface>> {
+    +send()
+  }
+  class Notifier {
+    -strategy: NotificationStrategy
+    +setStrategy()
+    +send()
+  }
+  class SmsStrategy {
+    +send()
+  }
+  class SocialStrategy {
+    +send()
+  }
+  class ThankYouNotificationObserver {
+    -notifier: Notifier
+    +onDonationRecorded()
+  }
+}
+EmailStrategy ..|> NotificationStrategy
+EventNotificationObserver ..|> EventObserver
+EventNotificationObserver --> Notifier
+FeedObserver ..|> DonationObserver
+FeedObserver ..|> EventObserver
+Notifier --> NotificationStrategy
+SmsStrategy ..|> NotificationStrategy
+SocialStrategy ..|> NotificationStrategy
+ThankYouNotificationObserver ..|> DonationObserver
+ThankYouNotificationObserver --> Notifier
+@enduml

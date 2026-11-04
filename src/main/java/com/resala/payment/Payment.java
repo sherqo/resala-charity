@@ -94,7 +94,6 @@ public final class Payment {
     validate();
   }
 
-  /** Attaches the settled business record to a payment that is already marked paid. */
   public void attachReference(String referenceType, long referenceId) {
     if (status != PaymentStatus.PAID) {
       throw new PaymentException(PaymentError.INVALID_STATE, id > 0 ? Long.valueOf(id) : null,
@@ -173,5 +172,4 @@ public final class Payment {
   public Instant getPaidAt() { return paidAt; }
 
   public boolean isPaid() { return status == PaymentStatus.PAID; }
-  public boolean isTerminal() { return status.isTerminal(); }
 }

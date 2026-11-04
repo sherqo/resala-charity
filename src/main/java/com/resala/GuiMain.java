@@ -29,7 +29,6 @@ import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
 import com.resala.persistence.sqlite.SqliteEventRepository;
 import com.resala.persistence.sqlite.SqlitePaymentRepository;
 import com.resala.persistence.sqlite.SqliteVolunteerRepository;
-import com.resala.view.JavaFxUiFactory;
 import com.resala.volunteer.VolunteerService;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -42,10 +41,8 @@ public class GuiMain extends Application {
         DatabaseManager database = DatabaseManager.getInstance();
         Connection conn = database.getConnection();
 
-        // Shared Notification System (Strategy Pattern)
         Notifier notifier = new Notifier(new EmailStrategy());
 
-        // Donation module (Observer: new donation → thank you notification)
         SqlitePaymentRepository paymentRepository = new SqlitePaymentRepository(conn);
         DonationService donationService = new DonationService(
             new SqliteDonorRepository(conn),
@@ -55,7 +52,6 @@ public class GuiMain extends Application {
         donationService.addObserver(new ThankYouNotificationObserver(notifier));
         DonationController donationController = new DonationController(donationService);
 
-        // Online payments (gateway → settlement → donation)
         PaymentService paymentService = new PaymentService(
             paymentRepository,
             new FakePaymentGatewayAdapter(new FakePaymentProvider()),
@@ -64,7 +60,6 @@ public class GuiMain extends Application {
         );
         PaymentController paymentController = new PaymentController(paymentService);
 
-        // Event module (Observer: event update/close → attendee notification)
         SqliteEventRegistrationRepository eventRegistrationRepo = new SqliteEventRegistrationRepository(conn);
         EventService eventService = new EventService(
             new SqliteEventRepository(conn),
@@ -73,7 +68,6 @@ public class GuiMain extends Application {
         eventService.addObserver(new EventNotificationObserver(eventRegistrationRepo, notifier));
         EventTypeService eventTypeService = new EventTypeService(new SqliteEventTypeRepository(conn));
 
-        // Volunteer module (connected with event registrations)
         VolunteerService volunteerService = new VolunteerService(
             new SqliteVolunteerRepository(conn),
             new SqliteEventRepository(conn),
@@ -86,27 +80,23 @@ public class GuiMain extends Application {
             volunteerService
         );
 
-        // Beneficiary module
         BeneficiaryService beneficiaryService = new BeneficiaryService(new SqliteBeneficiaryRepository(conn));
         BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
 
-        // Create JavaFX UI Factory (Abstract Factory pattern)
-        JavaFxUiFactory uiFactory = new JavaFxUiFactory(
-            donationController, paymentController,
-            eventController, volunteerController,
-            donationService, eventService
-        );
-
-        // Launch AppShell
         new AppShell(stage,
             donationController, eventController, volunteerController,
             paymentController, paymentService,
             donationService, eventService,
-            beneficiaryController
+            beneficiaryController, notifier
         ).show();
     }
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    @Override
+    public void stop() {
+        DatabaseManager.getInstance().close();
     }
 }

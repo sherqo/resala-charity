@@ -36,13 +36,8 @@ public class VolunteerService {
     this.certificateGenerator = new CertificateGenerator();
   }
 
-  public VolunteerService(VolunteerRepository volunteers, EventRepository events) {
-    this(volunteers, events, null);
-  }
-
-  // Volunteer CRUD
   public Volunteer create(Volunteer request) {
-    // to ensure name is not empty 
+
     validate(request);
     Volunteer volunteer = new Volunteer(
       request.getName().trim(),
@@ -86,7 +81,6 @@ public class VolunteerService {
     return volunteer;
   }
 
-  // Skills
   public List<Skill> listSkills() {
     return volunteers.findAllSkills();
   }
@@ -112,8 +106,23 @@ public class VolunteerService {
     return volunteers.saveSkill(new Skill(0, cleanName));
   }
 
-  public void deleteSkill(int skillId) {
+  public Skill renameSkill(int skillId, String newName) {
+    if (newName == null || newName.isBlank()) {
+      throw new IllegalArgumentException("Skill name is required");
+    }
+
     getSkill(skillId);
+    String cleanName = newName.trim();
+    Skill existing = volunteers.findSkillByName(cleanName);
+    if (existing != null && existing.getId() != skillId) {
+      throw new IllegalStateException("Skill already exists: " + cleanName);
+    }
+
+    volunteers.renameSkill(skillId, cleanName);
+    return getSkill(skillId);
+  }
+
+  public void deleteSkill(int skillId) {    getSkill(skillId);
     if (volunteers.isSkillInUse(skillId)) {
       throw new IllegalStateException(
         "Cannot delete skill #" + skillId +
@@ -123,7 +132,6 @@ public class VolunteerService {
     volunteers.deleteSkill(skillId);
   }
 
-  // Volunteer Skills
   public List<Skill> getVolunteerSkills(int volunteerId) {
     getVolunteer(volunteerId);
     return volunteers.findSkillsForVolunteer(volunteerId);
@@ -145,12 +153,10 @@ public class VolunteerService {
     return volunteers.findBySkill(skillId);
   }
 
-  // Assignments & Event Registrations
   public List<Event> listEvents() {
     return events.findAll();
   }
 
-  /** Returns only OPEN events with available capacity that volunteers can register for. */
   public List<Event> listOpenEvents() {
     return events.findAll().stream()
       .filter(e -> e.getStatus() == Event.Status.OPEN)
@@ -166,7 +172,7 @@ public class VolunteerService {
 
     validateAssignment(volunteer, event, skill);
 
-    // Enforce event capacity across registrations
+    // Count all registrations before checking capacity.
     if (eventRegistrations != null) {
       int registered = eventRegistrations.countRegistered(eventId);
       if (registered >= event.getCapacity()) {
@@ -174,7 +180,7 @@ public class VolunteerService {
       }
     }
 
-    // Connect to event registration: register volunteer as an attendee for the event
+    // Volunteers are also stored as event attendees.
     if (eventRegistrations != null) {
       Optional<EventRegistration> existing = eventRegistrations.findByVolunteerAndEvent(volunteerId, eventId);
       if (existing.isEmpty()) {
@@ -239,35 +245,27 @@ public class VolunteerService {
     return eventRegistrations.findByVolunteerAndEvent(volunteerId, eventId);
   }
 
-  public int creditEventHours(Event event) {
+  public int creditVolunteerHours(Event event, int volunteerId) {
     if (event == null || event.getHours() <= 0) {
       return 0;
     }
 
-    int credited = volunteers.creditEventHours((int) event.getId(), event.getHours());
+    int credited = volunteers.creditVolunteerHours(
+      (int) event.getId(), volunteerId, event.getHours());
     if (credited > 0) {
-      // Volunteers who earned hours attended the event, so keep attendance in sync.
-      if (eventRegistrations != null) {
-        eventRegistrations.findByEvent(event.getId()).stream()
-          .filter(EventRegistration::isVolunteer)
-          .filter(r -> !r.isCheckedIn())
-          .forEach(r -> eventRegistrations.checkIn(r.getId()));
-      }
-
       AuditLogManager.getInstance().log(
-          "Event Closed",
+          "Event Check-In",
           "Volunteers / Events",
           "Observer Triggers",
-          credited + " volunteer assignment(s)",
+          "Volunteer #" + volunteerId,
           "Hours credited for " + event.getTitle(),
-          "Event #" + event.getId() + " (" + event.getTitle() + ") closed.\n"
-          + "Credited " + event.getHours() + " hour(s) to " + credited + " assigned volunteer(s)."
+          "Event #" + event.getId() + " (" + event.getTitle() + ") check-in.\n"
+          + "Credited " + event.getHours() + " hour(s) to volunteer #" + volunteerId + "."
       );
     }
     return credited;
   }
 
-  // Summaries and certificate
   public VolunteerSummary summary(int volunteerId) {
     getVolunteer(volunteerId);
 
@@ -293,7 +291,6 @@ public class VolunteerService {
     return certificateGenerator.generate(volunteer, summary(volunteerId));
   }
 
-  // Private helpers
   private Event getEvent(int eventId) {
     return events.findById(eventId)
       .orElseThrow(() -> new IllegalArgumentException("Event not found: #" + eventId));

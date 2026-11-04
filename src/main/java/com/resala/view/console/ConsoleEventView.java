@@ -32,13 +32,14 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       System.out.println("2) Create event");
       System.out.println("3) Edit event");
       System.out.println("4) Delete event");
-      System.out.println("5) Open event (DRAFT / CLOSED → OPEN)");
+      System.out.println("5) Open event (DRAFT → OPEN)");
       System.out.println("6) Close event (OPEN → CLOSED)");
       System.out.println("7) Register attendee");
       System.out.println("8) Check in attendee");
       System.out.println("9) View registrations");
       System.out.println("A) Attendance report");
-      System.out.println("B) Manage event types");
+      System.out.println("B) Send reminder");
+      System.out.println("C) Manage event types");
       System.out.println("0) Back");
       System.out.println(LINE);
       System.out.print("Choose an option: ");
@@ -55,7 +56,8 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
           case "8" -> checkIn();
           case "9" -> viewRegistrations();
           case "A" -> attendanceReport();
-          case "B" -> manageEventTypes();
+          case "B" -> sendReminder();
+          case "C" -> manageEventTypes();
           case "0" -> running = false;
           default  -> System.out.println("Invalid option.");
         }
@@ -74,9 +76,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // =========================================================================
-  // Event Types sub-menu
-  // =========================================================================
   private void manageEventTypes() {
     boolean running = true;
     while (running) {
@@ -103,10 +102,10 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
       }
       catch (NumberFormatException e) {
         printError("Invalid number entered. Please enter a valid integer.");
-      } 
+      }
       catch (IllegalArgumentException | IllegalStateException e) {
         printError(e.getMessage());
-      } 
+      }
       System.out.println();
     }
   }
@@ -152,9 +151,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // =========================================================================
-  // Events
-  // =========================================================================
   private void listEvents() {
     List<EventType> types = controller.listEventTypes();
     List<Event> events = controller.listEvents();
@@ -204,7 +200,6 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     }
   }
 
-  // Lifecycle
   private void openEvent() {
     System.out.println("\n--- Open Event ---");
     long id = readLong("Event ID to open: ");
@@ -216,11 +211,9 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n--- Close Event ---");
     long id = readLong("Event ID to close: ");
     Event event = controller.close(id);
-    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED. "
-      + event.getHours() + " volunteer hour(s) credited to assigned volunteers.");
+    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED.");
   }
 
-  // Registration
   private void registerAttendee() {
     System.out.println("\n--- Register Attendee ---");
     listEvents();
@@ -252,15 +245,19 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n" + controller.attendanceReport(eventId));
   }
 
-  // =========================================================================
-  // Helpers
-  // =========================================================================
+  private void sendReminder() {
+    System.out.println("\n--- Send Reminder ---");
+    long eventId = readLong("Event ID: ");
+    controller.sendReminder(eventId);
+    printSuccess("Reminder sent to registered attendees.");
+  }
+
   private EventRequest readEventRequest(Event current) {
     String title   = value("Title",              current == null ? null : current.getTitle());
     String typeStr = value("Event type ID",      current == null ? null : String.valueOf(current.getEventTypeId()));
     String dateStr = value("Date (YYYY-MM-DD)",  current == null ? null : current.getDate().toString());
     String capStr  = value("Capacity",           current == null ? null : String.valueOf(current.getCapacity()));
-    String hoursStr = value("Volunteer hours credited after event closes",
+    String hoursStr = value("Volunteer hours credited after check-in",
                             current == null ? null : String.valueOf(current.getHours()));
     String desc    = value("Description",        current == null ? null : current.getDescription());
 

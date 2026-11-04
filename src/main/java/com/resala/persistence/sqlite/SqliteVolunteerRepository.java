@@ -124,6 +124,12 @@ public class SqliteVolunteerRepository extends JdbcRepository implements Volunte
   }
 
   @Override
+  public void renameSkill(int skillId, String newName) {
+    int updated = execute("UPDATE skills SET name=? WHERE id=?", newName, skillId);
+    if (updated == 0) throw new IllegalArgumentException("Skill not found: #" + skillId);
+  }
+
+  @Override
   public boolean isSkillInUse(int skillId) {
     List<Integer> rows = query(
       "SELECT (SELECT COUNT(*) FROM volunteer_skills WHERE skill_id = ?) + (SELECT COUNT(*) FROM volunteer_hours WHERE skill_id = ?)",
@@ -192,11 +198,11 @@ public class SqliteVolunteerRepository extends JdbcRepository implements Volunte
   }
 
   @Override
-  public int creditEventHours(int eventId, int hours) {
+  public int creditVolunteerHours(int eventId, int volunteerId, int hours) {
     if (hours <= 0) return 0;
     return execute(
-      "UPDATE volunteer_hours SET hours=? WHERE event_id=? AND hours<?",
-      hours, eventId, hours
+      "UPDATE volunteer_hours SET hours=? WHERE event_id=? AND volunteer_id=? AND hours<?",
+      hours, eventId, volunteerId, hours
     );
   }
 

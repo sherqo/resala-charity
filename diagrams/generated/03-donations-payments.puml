@@ -1,0 +1,473 @@
+@startuml
+title Donations and payments
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.donation" {
+  class BasicReceipt {
+    -donation: Donation
+    -donor: Donor
+    +render()
+    +money()
+  }
+  class CheckDonation {
+    -amountMinor: long
+    +getAmountMinor()
+    +getItemDescription()
+    +getQuantity()
+    +getEstimatedValueMinor()
+  }
+  class Donation {
+    -id: long
+    -donorId: long
+    -type: DonationType
+    -donationDate: LocalDate
+    -notes: String
+    -referenceNumber: String
+    -status: DonationStatus
+    +getId()
+    +setId()
+    +getDonorId()
+    +getType()
+    +getDonationDate()
+    +getReferenceNumber()
+    +setReferenceNumber()
+    +getStatus()
+    +setStatus()
+    +getNotes()
+    +getAmountMinor()
+    +getItemDescription()
+    +getQuantity()
+    +getEstimatedValueMinor()
+  }
+  class DonationFactory {
+    +create()
+    -createOnline()
+    -createCheck()
+    -createInKind()
+  }
+  class DonationFilter {
+    -donorId: Long
+    -type: DonationType
+    -from: LocalDate
+    -to: LocalDate
+    +toString()
+    +hashCode()
+    +equals()
+    +donorId()
+    +type()
+    +from()
+    +to()
+  }
+  class DonationPaymentSettlement {
+    -donations: DonationService
+    +referenceType()
+    +settle()
+    +afterCommit()
+  }
+  interface DonationRepository <<interface>> {
+    +save()
+    +findById()
+    +find()
+    +monetaryTotalForDonorYear()
+    +delete()
+    +update()
+    +findByReferenceNumber()
+  }
+  class DonationRequest {
+    -donorId: long
+    -type: DonationType
+    -amountMinor: Long
+    -itemDescription: String
+    -quantity: Integer
+    -estimatedValueMinor: Long
+    -referenceNumber: String
+    -donationDate: LocalDate
+    -notes: String
+    +toString()
+    +hashCode()
+    +equals()
+    +donorId()
+    +type()
+    +amountMinor()
+    +itemDescription()
+    +quantity()
+    +estimatedValueMinor()
+    +referenceNumber()
+    +donationDate()
+    +notes()
+  }
+  class DonationService {
+    -donors: DonorRepository
+    -donations: DonationRepository
+    -payments: PaymentRepository
+    -observers: List<DonationObserver>
+    +saveDonor()
+    +record()
+    +recordConfirmed()
+    -checkDuplicateReference()
+    -requireCompletedPayment()
+    +notifyRecorded()
+    +findActiveDonors()
+    +findDonations()
+    +getDonation()
+    +getDonor()
+    +archiveDonor()
+    +updateDonation()
+    +deleteDonation()
+    +receipt()
+    +yearlyStatement()
+    +addObserver()
+    +removeObserver()
+    -notifyObservers()
+  }
+  class DonationStatus {
+    +values()
+    +valueOf()
+    -$values()
+  }
+  interface DonorRepository <<interface>> {
+    +save()
+    +findById()
+    +findActive()
+    +archive()
+  }
+  class InKindDonation {
+    -itemDescription: String
+    -quantity: int
+    -estimatedValueMinor: Long
+    +getAmountMinor()
+    +getItemDescription()
+    +getQuantity()
+    +getEstimatedValueMinor()
+  }
+  class OnlineDonation {
+    -amountMinor: long
+    +getAmountMinor()
+    +getItemDescription()
+    +getQuantity()
+    +getEstimatedValueMinor()
+  }
+  interface Receipt <<interface>> {
+    +render()
+  }
+  class ReceiptDecorator {
+    #receipt: Receipt
+  }
+  class TaxReceiptDecorator {
+    +render()
+  }
+  class ThankYouReceiptDecorator {
+    +render()
+  }
+}
+package "com.resala.payment" {
+  class CardDetails {
+    -holder: String
+    -number: String
+    -expiry: String
+    -cvv: String
+    +last4()
+    +toString()
+    +hashCode()
+    +equals()
+    +holder()
+    +number()
+    +expiry()
+    +cvv()
+  }
+  class CardPaymentMethod {
+    +code()
+    +displayName()
+    +feeRate()
+    +requiresToken()
+    +validate()
+    +tokenize()
+    -requireText()
+    -parseExpiry()
+    -passesLuhn()
+  }
+  class CashPaymentMethod {
+    +code()
+    +displayName()
+    +feeRate()
+    +validate()
+    +tokenize()
+  }
+  class FakePaymentGatewayAdapter {
+    -provider: FakePaymentProvider
+    +getAvailableMethods()
+    +charge()
+  }
+  class FakePaymentProvider {
+    -availableMethods: List<PaymentMethod>
+    -byKey: Map<String, FakePaymentProvider$ProviderTxn>
+    -sequence: AtomicLong
+    -latencyMillis: long
+    +availableMethods()
+    +makePayment()
+  }
+  class GatewayResult {
+    -approved: boolean
+    -amountMinor: long
+    -currency: String
+    -message: String
+    -failureReason: PaymentError
+    +approved()
+    +failed()
+    +toString()
+    +hashCode()
+    +equals()
+    +approved()
+    +amountMinor()
+    +currency()
+    +message()
+    +failureReason()
+  }
+  class Payment {
+    -id: long
+    -payerType: String
+    -payerId: long
+    -amountMinor: long
+    -feeMinor: long
+    -currency: String
+    -paymentMethodCode: String
+    -idempotencyKey: String
+    -status: PaymentStatus
+    -referenceType: String
+    -referenceId: Long
+    -failureReason: PaymentError
+    -failureMessage: String
+    -notes: String
+    -createdAt: Instant
+    -updatedAt: Instant
+    -paidAt: Instant
+    +createPending()
+    +restore()
+    +markPaid()
+    +attachReference()
+    +markFailed()
+    -require()
+    -validate()
+    +getId()
+    +setId()
+    +getPayerType()
+    +getPayerId()
+    +getAmountMinor()
+    +getFeeMinor()
+    +getCurrency()
+    +getPaymentMethodCode()
+    +getPaymentMethod()
+    +getIdempotencyKey()
+    +getStatus()
+    +getReferenceType()
+    +getReferenceId()
+    +getFailureReason()
+    +getFailureMessage()
+    +getNotes()
+    +setNotes()
+    +getCreatedAt()
+    +getUpdatedAt()
+    +getPaidAt()
+    +isPaid()
+  }
+  class PaymentCommand {
+    -idempotencyKey: String
+    -amountMinor: long
+    -currency: String
+    -paymentMethod: PaymentMethod
+    -token: String
+    -description: String
+    +toString()
+    +hashCode()
+    +equals()
+    +idempotencyKey()
+    +amountMinor()
+    +currency()
+    +paymentMethod()
+    +token()
+    +description()
+  }
+  class PaymentError {
+    -code: String
+    -message: String
+    -retryable: boolean
+    +values()
+    +valueOf()
+    +message()
+    +retryable()
+    -$values()
+  }
+  class PaymentException {
+    -error: PaymentError
+    -paymentId: Long
+    +error()
+    +paymentId()
+    +userMessage()
+  }
+  interface PaymentGateway <<interface>> {
+    +getAvailableMethods()
+    +charge()
+  }
+  interface PaymentInstrument <<interface>> {
+  }
+  interface PaymentMethod <<interface>> {
+    +code()
+    +displayName()
+    +feeRate()
+    +validate()
+    +requiresToken()
+    +tokenize()
+  }
+  class PaymentMethods {
+    +fromCode()
+    +all()
+  }
+  class PaymentOutcome {
+    -paymentId: long
+    -status: PaymentStatus
+    -referenceId: Long
+    -message: String
+    -error: PaymentError
+    +isPaid()
+    +canRetry()
+    +paid()
+    +failed()
+    +pending()
+    +rejected()
+    +toString()
+    +hashCode()
+    +equals()
+    +paymentId()
+    +status()
+    +referenceId()
+    +message()
+    +error()
+  }
+  interface PaymentRepository <<interface>> {
+    +save()
+    +findById()
+    +findByIdempotencyKey()
+    +findAll()
+    +findByReference()
+  }
+  class PaymentRequest {
+    -idempotencyKey: String
+    -payerType: String
+    -payerId: long
+    -amountMinor: long
+    -currency: String
+    -paymentMethod: PaymentMethod
+    -paymentToken: String
+    -description: String
+    -notes: String
+    +toString()
+    +hashCode()
+    +equals()
+    +idempotencyKey()
+    +payerType()
+    +payerId()
+    +amountMinor()
+    +currency()
+    +paymentMethod()
+    +paymentToken()
+    +description()
+    +notes()
+  }
+  class PaymentService {
+    -payments: PaymentRepository
+    -gateway: PaymentGateway
+    -tx: TransactionManager
+    -settlement: PaymentSettlement
+    +pay()
+    -charge()
+    +availableMethods()
+    +get()
+    +listPayments()
+    -resumeOrReturn()
+    -matches()
+    -isAmbiguous()
+    -validate()
+  }
+  interface PaymentSettlement <<interface>> {
+    +referenceType()
+    +settle()
+    +afterCommit()
+  }
+  class PaymentStatus {
+    +values()
+    +valueOf()
+    +validate()
+    +canTransitionTo()
+    -$values()
+  }
+  class WalletDetails {
+    -phone: String
+    +digits()
+    +last4()
+    +toString()
+    +hashCode()
+    +equals()
+    +phone()
+  }
+  class WalletPaymentMethod {
+    +code()
+    +displayName()
+    +feeRate()
+    +requiresToken()
+    +validate()
+    +tokenize()
+  }
+}
+BasicReceipt --> Donation
+BasicReceipt ..|> Receipt
+CheckDonation --|> Donation
+CheckDonation ..> DonationStatus
+Donation --> DonationStatus
+DonationFactory ..> Donation
+DonationPaymentSettlement --> DonationService
+DonationPaymentSettlement ..|> PaymentSettlement
+DonationRepository ..> Donation
+DonationService ..> Donation
+DonationService --> DonationRepository
+DonationService --> DonorRepository
+DonationService --> PaymentRepository
+InKindDonation --|> Donation
+InKindDonation ..> DonationStatus
+OnlineDonation --|> Donation
+OnlineDonation ..> DonationStatus
+ReceiptDecorator --> Receipt
+ReceiptDecorator ..|> Receipt
+TaxReceiptDecorator ..> Receipt
+TaxReceiptDecorator --|> ReceiptDecorator
+ThankYouReceiptDecorator ..> Receipt
+ThankYouReceiptDecorator --|> ReceiptDecorator
+CardDetails ..|> PaymentInstrument
+CardPaymentMethod ..|> PaymentMethod
+CashPaymentMethod ..|> PaymentMethod
+FakePaymentGatewayAdapter --> FakePaymentProvider
+FakePaymentGatewayAdapter ..> GatewayResult
+FakePaymentGatewayAdapter ..|> PaymentGateway
+FakePaymentGatewayAdapter ..> PaymentMethod
+FakePaymentProvider --> PaymentMethod
+GatewayResult --> PaymentError
+Payment --> PaymentError
+Payment ..> PaymentMethod
+Payment --> PaymentStatus
+PaymentCommand --> PaymentMethod
+PaymentException --> PaymentError
+PaymentGateway ..> GatewayResult
+PaymentGateway ..> PaymentMethod
+PaymentMethods ..> PaymentMethod
+PaymentOutcome --> PaymentError
+PaymentOutcome --> PaymentStatus
+PaymentRepository ..> Payment
+PaymentRequest --> PaymentMethod
+PaymentService ..> Payment
+PaymentService --> PaymentGateway
+PaymentService ..> PaymentMethod
+PaymentService ..> PaymentOutcome
+PaymentService --> PaymentRepository
+PaymentService --> PaymentSettlement
+WalletDetails ..|> PaymentInstrument
+WalletPaymentMethod ..|> PaymentMethod
+@enduml
