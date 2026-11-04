@@ -249,23 +249,17 @@ public class VolunteerView extends BaseView {
         if (selected == null) return;
 
         List<Skill> skills = volunteerController.getVolunteerSkills(selected.getId());
-        StringBuilder current = new StringBuilder("Skills for " + selected.getName() + ":
-");
+        StringBuilder current = new StringBuilder("Skills for " + selected.getName() + ":\n");
         if (skills.isEmpty()) {
-            current.append("(none)
-");
+            current.append("(none)\n");
         } else {
             for (Skill skill : skills) {
-                current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("
-");
+                current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("\n");
             }
         }
-        current.append("
-Available skills:
-");
+        current.append("\nAvailable skills:\n");
         for (Skill skill : volunteerController.listSkills()) {
-            current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("
-");
+            current.append("#").append(skill.getId()).append("  ").append(skill.getName()).append("\n");
         }
         PreviewDialog.show(appShell, "Volunteer Skills", current.toString());
 
@@ -309,15 +303,12 @@ Available skills:
 
         VolunteerSummary summary = volunteerController.summary(selected.getId());
         StringBuilder text = new StringBuilder();
-        text.append("Total hours: ").append(summary.getTotalHours()).append("
-
-");
+        text.append("Total hours: ").append(summary.getTotalHours()).append("\n\n");
         if (summary.getHoursByEvent().isEmpty()) {
             text.append("No hours recorded yet.");
         } else {
             for (var entry : summary.getHoursByEvent().entrySet()) {
-                text.append(entry.getKey()).append(": ").append(entry.getValue()).append("
-");
+                text.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
             }
         }
         PreviewDialog.show(appShell, "Volunteer Hours", text.toString());

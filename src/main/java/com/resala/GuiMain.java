@@ -29,7 +29,6 @@ import com.resala.persistence.sqlite.SqliteEventRegistrationRepository;
 import com.resala.persistence.sqlite.SqliteEventRepository;
 import com.resala.persistence.sqlite.SqlitePaymentRepository;
 import com.resala.persistence.sqlite.SqliteVolunteerRepository;
-import com.resala.view.JavaFxUiFactory;
 import com.resala.volunteer.VolunteerService;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -83,12 +82,6 @@ public class GuiMain extends Application {
 
         BeneficiaryService beneficiaryService = new BeneficiaryService(new SqliteBeneficiaryRepository(conn));
         BeneficiaryController beneficiaryController = new BeneficiaryController(beneficiaryService);
-
-        JavaFxUiFactory uiFactory = new JavaFxUiFactory(
-            donationController, paymentController,
-            eventController, volunteerController,
-            donationService, eventService
-        );
 
         new AppShell(stage,
             donationController, eventController, volunteerController,
