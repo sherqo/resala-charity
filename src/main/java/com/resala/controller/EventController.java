@@ -44,7 +44,7 @@ public class EventController {
     EventRegistration reg = service.getRegistration(registrationId);
     if (reg.isVolunteer()) {
       Event event = service.getEvent(reg.getEventId());
-      volunteerService.creditEventHours(event);
+      volunteerService.creditVolunteerHours(event, reg.getVolunteerId());
     }
   }
   public String attendanceReport(long eventId)           { return service.attendanceReport(eventId); }

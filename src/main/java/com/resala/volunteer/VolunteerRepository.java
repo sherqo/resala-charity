@@ -28,5 +28,5 @@ public interface VolunteerRepository {
   List<VolunteerEventAssignment> findAssignments(int volunteerId);
   boolean hasAssignment(int volunteerId, int eventId);
 
-  int creditEventHours(int eventId, int hours);
+  int creditVolunteerHours(int eventId, int volunteerId, int hours);
 }

@@ -209,8 +209,7 @@ public class ConsoleEventView extends AbstractConsoleView implements EventView {
     System.out.println("\n--- Close Event ---");
     long id = readLong("Event ID to close: ");
     Event event = controller.close(id);
-    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED. "
-      + event.getHours() + " volunteer hour(s) credited to assigned volunteers.");
+    printSuccess("Event \"" + event.getTitle() + "\" is now CLOSED.");
   }
 
   private void registerAttendee() {

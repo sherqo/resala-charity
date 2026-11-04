@@ -104,6 +104,9 @@ public class EventService implements EventSubject {
     if (event.getStatus() == Event.Status.OPEN) {
       throw new EventException(EventError.EVENT_ALREADY_OPEN, null);
     }
+    if (event.getStatus() == Event.Status.CLOSED) {
+      throw new EventException(EventError.EVENT_CLOSED_FINAL, null);
+    }
     event.setStatus(Event.Status.OPEN);
     Event saved;
     try {

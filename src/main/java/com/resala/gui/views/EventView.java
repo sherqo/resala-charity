@@ -208,7 +208,7 @@ public class EventView extends BaseView implements EventObserver {
             eventController.close(selected.getId());
             appShell.refreshAll();
             appShell.getToast().show(appShell.getStage(),
-                "Event \"" + selected.getTitle() + "\" is now CLOSED. " + selected.getHours() + " volunteer hour(s) credited to assigned volunteers.",
+                "Event \"" + selected.getTitle() + "\" is now CLOSED.",
                 Toast.Type.SUCCESS);
         } catch (Exception ex) {
             appShell.getToast().show(appShell.getStage(), "Error: " + ex.getMessage(), Toast.Type.ERROR);

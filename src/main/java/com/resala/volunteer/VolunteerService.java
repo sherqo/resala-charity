@@ -234,29 +234,22 @@ public class VolunteerService {
     return eventRegistrations.findByVolunteerAndEvent(volunteerId, eventId);
   }
 
-  public int creditEventHours(Event event) {
+  public int creditVolunteerHours(Event event, int volunteerId) {
     if (event == null || event.getHours() <= 0) {
       return 0;
     }
 
-    int credited = volunteers.creditEventHours((int) event.getId(), event.getHours());
+    int credited = volunteers.creditVolunteerHours(
+      (int) event.getId(), volunteerId, event.getHours());
     if (credited > 0) {
-      // Volunteers with credited hours should also be marked as checked in.
-      if (eventRegistrations != null) {
-        eventRegistrations.findByEvent(event.getId()).stream()
-          .filter(EventRegistration::isVolunteer)
-          .filter(r -> !r.isCheckedIn())
-          .forEach(r -> eventRegistrations.checkIn(r.getId()));
-      }
-
       AuditLogManager.getInstance().log(
-          "Event Closed",
+          "Event Check-In",
           "Volunteers / Events",
           "Observer Triggers",
-          credited + " volunteer assignment(s)",
+          "Volunteer #" + volunteerId,
           "Hours credited for " + event.getTitle(),
-          "Event #" + event.getId() + " (" + event.getTitle() + ") closed.\n"
-          + "Credited " + event.getHours() + " hour(s) to " + credited + " assigned volunteer(s)."
+          "Event #" + event.getId() + " (" + event.getTitle() + ") check-in.\n"
+          + "Credited " + event.getHours() + " hour(s) to volunteer #" + volunteerId + "."
       );
     }
     return credited;
