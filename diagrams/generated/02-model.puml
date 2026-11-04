@@ -1,0 +1,171 @@
+@startuml
+title Domain model
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.model" {
+  class AuditLog {
+    -id: long
+    -timestamp: LocalDateTime
+    -pattern: String
+    -module: String
+    -category: String
+    -recipient: String
+    -summary: String
+    -details: String
+    +getId()
+    +getTimestamp()
+    +getPattern()
+    +getModule()
+    +getCategory()
+    +getRecipient()
+    +getSummary()
+    +getDetails()
+  }
+  class Beneficiary {
+    -id: long
+    -name: String
+    -phone: String
+    -householdSize: int
+    -needTypeId: int
+    -status: Beneficiary$Status
+    -notes: String
+    -impactScore: int
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+    +getPhone()
+    +setPhone()
+    +getHouseholdSize()
+    +setHouseholdSize()
+    +getNeedTypeId()
+    +setNeedTypeId()
+    +getStatus()
+    +setStatus()
+    +getNotes()
+    +setNotes()
+    +getImpactScore()
+    +setImpactScore()
+  }
+  class DonationType {
+    +values()
+    +valueOf()
+    -$values()
+  }
+  class Donor {
+    -id: long
+    -name: String
+    -type: Donor$Type
+    -email: String
+    -phone: String
+    -active: boolean
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+    +getType()
+    +setType()
+    +getEmail()
+    +setEmail()
+    +getPhone()
+    +setPhone()
+    +isActive()
+    +setActive()
+  }
+  class Event {
+    -id: long
+    -title: String
+    -eventTypeId: int
+    -date: LocalDate
+    -capacity: int
+    -hours: int
+    -status: Event$Status
+    -description: String
+    +getId()
+    +setId()
+    +getTitle()
+    +setTitle()
+    +getEventTypeId()
+    +setEventTypeId()
+    +getDate()
+    +setDate()
+    +getCapacity()
+    +setCapacity()
+    +getHours()
+    +setHours()
+    +getStatus()
+    +setStatus()
+    +getDescription()
+    +setDescription()
+  }
+  class EventType {
+    -id: int
+    -name: String
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+    +toString()
+  }
+  class NeedType {
+    -id: int
+    -name: String
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+    +toString()
+  }
+  class Skill {
+    -id: int
+    -name: String
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+  }
+  class Volunteer {
+    -id: int
+    -name: String
+    -email: String
+    -phone: String
+    -available: boolean
+    +getId()
+    +setId()
+    +getName()
+    +setName()
+    +getEmail()
+    +setEmail()
+    +getPhone()
+    +setPhone()
+    +isAvailable()
+    +setAvailable()
+  }
+  class VolunteerEventAssignment {
+    -id: int
+    -volunteerId: int
+    -eventId: int
+    -skillId: int
+    -workDate: LocalDate
+    -hours: int
+    -eventTitle: String
+    -skillName: String
+    +getId()
+    +setId()
+    +getVolunteerId()
+    +setVolunteerId()
+    +getEventId()
+    +setEventId()
+    +getSkillId()
+    +setSkillId()
+    +getWorkDate()
+    +setWorkDate()
+    +getHours()
+    +setHours()
+    +getEventTitle()
+    +setEventTitle()
+    +getSkillName()
+    +setSkillName()
+  }
+}
+@enduml

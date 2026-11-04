@@ -1,0 +1,91 @@
+@startuml
+title Beneficiaries and aid distribution
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.beneficiary" {
+  interface BeneficiaryRepository <<interface>> {
+    +save()
+    +findById()
+    +findAll()
+    +delete()
+    +saveDistribution()
+    +findDistributionsByBeneficiary()
+    +findAllNeedTypes()
+    +findNeedTypeById()
+    +saveNeedType()
+    +deleteNeedType()
+  }
+  class BeneficiaryService {
+    -repository: BeneficiaryRepository
+    -distributionPolicy: DistributionPolicy
+    +setDistributionPolicy()
+    +getDistributionPolicy()
+    +add()
+    +update()
+    +findAll()
+    +findById()
+    +getBeneficiary()
+    +delete()
+    +setImpactScore()
+    +listNeedTypes()
+    +getNeedType()
+    +addNeedType()
+    +updateNeedType()
+    +deleteNeedType()
+    +recordDistribution()
+    +getDistributionHistory()
+    +previewDistribution()
+    +distributeByPolicy()
+    -validate()
+  }
+  class Distribution {
+    -id: long
+    -beneficiaryId: long
+    -donationId: Long
+    -itemDescription: String
+    -quantity: int
+    -distributionDate: LocalDate
+    -notes: String
+    +getId()
+    +setId()
+    +getBeneficiaryId()
+    +setBeneficiaryId()
+    +getDonationId()
+    +setDonationId()
+    +getItemDescription()
+    +setItemDescription()
+    +getQuantity()
+    +setQuantity()
+    +getDistributionDate()
+    +setDistributionDate()
+    +getNotes()
+    +setNotes()
+  }
+}
+package "com.resala.beneficiary.policy" {
+  class ByNeedDistributionPolicy {
+    +getName()
+    +allocate()
+  }
+  interface DistributionPolicy <<interface>> {
+    +allocate()
+    +getName()
+  }
+  class EqualDistributionPolicy {
+    +getName()
+    +allocate()
+  }
+  class FifoDistributionPolicy {
+    -quotaPerBeneficiary: int
+    +getName()
+    +allocate()
+  }
+}
+BeneficiaryRepository ..> Distribution
+BeneficiaryService --> BeneficiaryRepository
+BeneficiaryService ..> Distribution
+BeneficiaryService --> DistributionPolicy
+ByNeedDistributionPolicy ..|> DistributionPolicy
+EqualDistributionPolicy ..|> DistributionPolicy
+FifoDistributionPolicy ..|> DistributionPolicy
+@enduml

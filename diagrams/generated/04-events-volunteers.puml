@@ -1,0 +1,205 @@
+@startuml
+title Events and volunteers
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.event" {
+  class EventError {
+    -code: String
+    -message: String
+    -retryable: boolean
+    +values()
+    +valueOf()
+    +code()
+    +message()
+    +retryable()
+    -$values()
+  }
+  class EventException {
+    -error: EventError
+    +error()
+    +code()
+    +retryable()
+  }
+  class EventRegistration {
+    -id: long
+    -eventId: long
+    -attendeeName: String
+    -attendeeEmail: String
+    -ticketRef: String
+    -checkedIn: boolean
+    -volunteerId: Integer
+    -skillId: Integer
+    +getId()
+    +setId()
+    +getEventId()
+    +setEventId()
+    +getAttendeeName()
+    +setAttendeeName()
+    +getAttendeeEmail()
+    +setAttendeeEmail()
+    +getTicketRef()
+    +setTicketRef()
+    +isCheckedIn()
+    +setCheckedIn()
+    +getVolunteerId()
+    +setVolunteerId()
+    +getSkillId()
+    +setSkillId()
+    +isVolunteer()
+  }
+  interface EventRegistrationRepository <<interface>> {
+    +register()
+    +findById()
+    +findByEvent()
+    +checkIn()
+    +countRegistered()
+    +findByVolunteerAndEvent()
+  }
+  interface EventRepository <<interface>> {
+    +save()
+    +findById()
+    +findAll()
+    +delete()
+  }
+  class EventRequest {
+    -title: String
+    -eventTypeId: int
+    -date: LocalDate
+    -capacity: int
+    -hours: int
+    -description: String
+    +toString()
+    +hashCode()
+    +equals()
+    +title()
+    +eventTypeId()
+    +date()
+    +capacity()
+    +hours()
+    +description()
+  }
+  class EventService {
+    -events: EventRepository
+    -registrations: EventRegistrationRepository
+    -observers: List<EventObserver>
+    +addObserver()
+    +removeObserver()
+    -notifyObservers()
+    +create()
+    +update()
+    +delete()
+    +open()
+    +close()
+    +register()
+    +sendReminder()
+    +checkIn()
+    +getRegistration()
+    +findAll()
+    +getEvent()
+    +getRegistrations()
+    +attendanceReport()
+    -validate()
+  }
+  interface EventTypeRepository <<interface>> {
+    +findAll()
+    +findById()
+    +findByName()
+    +save()
+    +rename()
+    +delete()
+    +isInUse()
+  }
+  class EventTypeService {
+    -repo: EventTypeRepository
+    +findAll()
+    +getById()
+    +create()
+    +rename()
+    +delete()
+    -requireName()
+    -checkUnique()
+  }
+}
+package "com.resala.volunteer" {
+  interface VolunteerRepository <<interface>> {
+    +save()
+    +findById()
+    +findAll()
+    +delete()
+    +setAvailability()
+    +findBySkill()
+    +findAllSkills()
+    +findSkillById()
+    +findSkillByName()
+    +saveSkill()
+    +renameSkill()
+    +isSkillInUse()
+    +deleteSkill()
+    +findSkillsForVolunteer()
+    +addSkill()
+    +removeSkill()
+    +saveAssignment()
+    +findAssignmentById()
+    +findAssignments()
+    +hasAssignment()
+    +creditVolunteerHours()
+  }
+  class VolunteerService {
+    -volunteers: VolunteerRepository
+    -events: EventRepository
+    -eventRegistrations: EventRegistrationRepository
+    -certificateGenerator: CertificateGenerator
+    +create()
+    +update()
+    +delete()
+    +setAvailability()
+    +listVolunteers()
+    +getVolunteer()
+    +listSkills()
+    +getSkill()
+    +createSkill()
+    +renameSkill()
+    +deleteSkill()
+    +getVolunteerSkills()
+    +addSkill()
+    +removeSkill()
+    +searchBySkill()
+    +listEvents()
+    +listOpenEvents()
+    +assign()
+    +getAssignment()
+    +listAssignments()
+    +getEventRegistration()
+    +creditVolunteerHours()
+    +summary()
+    +certificate()
+    -getEvent()
+    -validateAssignment()
+    -validate()
+    -isNull()
+  }
+}
+package "com.resala.volunteer.helpers" {
+  class CertificateGenerator {
+    +generate()
+  }
+  class VolunteerSummary {
+    -totalHours: double
+    -hoursByEvent: Map<String, Double>
+    +getTotalHours()
+    +getHoursByEvent()
+  }
+}
+EventException --> EventError
+EventRegistrationRepository ..> EventRegistration
+EventService ..> EventRegistration
+EventService --> EventRegistrationRepository
+EventService --> EventRepository
+EventTypeService --> EventTypeRepository
+VolunteerService ..> EventRegistration
+VolunteerService --> EventRegistrationRepository
+VolunteerService --> EventRepository
+VolunteerService --> VolunteerRepository
+VolunteerService --> CertificateGenerator
+VolunteerService ..> VolunteerSummary
+@enduml

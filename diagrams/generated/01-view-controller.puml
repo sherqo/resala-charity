@@ -1,0 +1,517 @@
+@startuml
+title View and controller layer
+skinparam classAttributeIconSize 0
+hide empty members
+package "com.resala.controller" {
+  class BeneficiaryController {
+    -service: BeneficiaryService
+    +add()
+    +update()
+    +getBeneficiary()
+    +listBeneficiaries()
+    +delete()
+    +recordDistribution()
+    +getDistributionHistory()
+    +setDistributionPolicy()
+    +getDistributionPolicy()
+    +previewDistribution()
+    +distributeByPolicy()
+    +listNeedTypes()
+    +getNeedType()
+    +addNeedType()
+    +updateNeedType()
+    +deleteNeedType()
+    +setImpactScore()
+  }
+  class DonationController {
+    -service: DonationService
+    +saveDonor()
+    +archiveDonor()
+    +deleteDonation()
+    +updateDonation()
+    +getDonor()
+    +findDonors()
+    +recordDonation()
+    +findDonations()
+    +receipt()
+    +yearlyStatement()
+  }
+  class EventController {
+    -service: EventService
+    -eventTypeService: EventTypeService
+    -volunteerService: VolunteerService
+    +create()
+    +update()
+    +delete()
+    +open()
+    +close()
+    +listEvents()
+    +getEvent()
+    +register()
+    +checkIn()
+    +attendanceReport()
+    +sendReminder()
+    +getRegistrations()
+    +listEventTypes()
+    +getEventType()
+    +createEventType()
+    +renameEventType()
+    +deleteEventType()
+  }
+  class PaymentController {
+    -payments: PaymentService
+    +availableMethods()
+    +payDonation()
+    +getPayment()
+    +listPayments()
+  }
+  class VolunteerController {
+    -service: VolunteerService
+    +create()
+    +update()
+    +delete()
+    +setAvailability()
+    +listVolunteers()
+    +getVolunteer()
+    +listSkills()
+    +getSkill()
+    +createSkill()
+    +renameSkill()
+    +deleteSkill()
+    +getVolunteerSkills()
+    +addSkill()
+    +removeSkill()
+    +searchBySkill()
+    +listEvents()
+    +listOpenEvents()
+    +assign()
+    +getEventRegistration()
+    +listAssignments()
+    +summary()
+    +certificate()
+  }
+}
+package "com.resala.gui" {
+  class AppShell <<singleton>> {
+    -stage: Stage
+    -views: Map<String, BaseView>
+    -feedList: ListView<String>
+    -statusLabel: Label
+    -currentView: BaseView
+    -donationController: DonationController
+    -eventController: EventController
+    -volunteerController: VolunteerController
+    -paymentController: PaymentController
+    -paymentService: PaymentService
+    -beneficiaryController: BeneficiaryController
+    -notifier: Notifier
+    -donationSubject: DonationSubject
+    -eventSubject: EventSubject
+    -feedObserver: FeedObserver
+    -toast: Toast
+    -confirmDialog: ConfirmDialog
+    -instance: AppShell
+    -rootPane: StackPane
+    -mainLayout: BorderPane
+    -modalOverlay: StackPane
+    -navItems: List<AppShell$NavItem>
+    -headerBar: AppShell$HeaderBar
+    -contentStack: StackPane
+    +getInstance()
+    +getStage()
+    +getToast()
+    +getConfirmDialog()
+    +getFeedList()
+    +getModalOverlay()
+    +show()
+    -buildRoot()
+    -buildSidebar()
+    -buildMainPane()
+    -buildStatusBar()
+    -buildViews()
+    +refreshAll()
+    +showView()
+    -getSubtitle()
+  }
+  class BaseView {
+    #toolbar: HBox
+    #table: DataTable<?>
+    +getTableView()
+    +refresh()
+    +getPrimaryAction()
+  }
+  interface Refreshable <<interface>> {
+    +refresh()
+  }
+}
+package "com.resala.gui.views" {
+  class AuditLogView {
+    -appShell: AppShell
+    -filteredLogs: FilteredList<AuditLog>
+    -logTable: DataTable<AuditLog>
+    -categoryFilter: ComboBox<String>
+    -searchField: TextField
+    -primaryActionButton: Button
+    -createToolbar()
+    -createLogTable()
+    -applyFilter()
+    -showSelectedDetails()
+    +getPrimaryAction()
+    +refresh()
+  }
+  class "BeneficiaryView" as BeneficiaryView_views {
+    -appShell: AppShell
+    -beneficiaryController: BeneficiaryController
+    -beneficiariesTable: DataTable<Beneficiary>
+    -primaryActionButton: Button
+    +getPrimaryAction()
+    -createToolbar()
+    -createBeneficiariesTable()
+    -showAddBeneficiaryDialog()
+    -comboOptions()
+    -showAidDialog()
+    -previewText()
+    -showHistoryDialog()
+    -showImpactDialog()
+    -deleteSelected()
+    +refresh()
+  }
+  class CommView {
+    -appShell: AppShell
+    -notifier: Notifier
+    -logList: ListView<String>
+    -channelGroup: ToggleGroup
+    +getPrimaryAction()
+    -buildLayout()
+    +refresh()
+  }
+  class DashboardView {
+    -appShell: AppShell
+    -donationController: DonationController
+    -eventController: EventController
+    -volunteerController: VolunteerController
+    -totalDonationsCard: VBox
+    -totalDonorsCard: VBox
+    -totalVolunteersCard: VBox
+    -totalEventsCard: VBox
+    -upcomingEventsCard: VBox
+    -recentDonationsTable: DataTable<Donation>
+    -feedList: ListView<String>
+    -primaryActionButton: Button
+    +onDonationRecorded()
+    +onEventUpdated()
+    +getPrimaryAction()
+    -createToolbar()
+    -createRecentDonationsTable()
+    -buildLayout()
+    +refresh()
+    -formatAmount()
+  }
+  class "DonationView" as DonationView_views {
+    -appShell: AppShell
+    -donationController: DonationController
+    -paymentController: PaymentController
+    -donationsTable: DataTable<Donation>
+    -currentFilter: DonationFilter
+    -primaryActionButton: Button
+    +onDonationRecorded()
+    +getPrimaryAction()
+    -createToolbar()
+    -createDonationsTable()
+    -showAddDonationDialog()
+    -payOnline()
+    -choosePaymentMethod()
+    -cardDetails()
+    -walletDetails()
+    -parseMinorUnits()
+    -blankToNull()
+    -showReceiptDialog()
+    -showReceiptPreview()
+    -showStatementDialog()
+    -deleteSelected()
+    -editSelected()
+    +refresh()
+    -showFilterDialog()
+    -formatAmount()
+  }
+  class DonorView {
+    -appShell: AppShell
+    -donationController: DonationController
+    -donorsTable: DataTable<Donor>
+    -primaryActionButton: Button
+    +getPrimaryAction()
+    -createToolbar()
+    -createDonorsTable()
+    -showAddDonorDialog()
+    -showEditDonorDialog()
+    -deleteSelected()
+    +refresh()
+  }
+  class "EventView" as EventView_views {
+    -appShell: AppShell
+    -eventController: EventController
+    -eventsTable: DataTable<Event>
+    -eventTypeNames: Map<Integer, String>
+    -primaryActionButton: Button
+    +onEventUpdated()
+    +getPrimaryAction()
+    -createToolbar()
+    -showCreateEventDialog()
+    -showEditDialog()
+    -openSelected()
+    -closeSelected()
+    -showRegisterDialog()
+    -showAttendanceReport()
+    -showReportPreview()
+    -showRemindDialog()
+    -deleteSelected()
+    +refresh()
+  }
+  class LookupView {
+    -appShell: AppShell
+    -volunteerController: VolunteerController
+    -eventController: EventController
+    -lookupTable: DataTable<Object>
+    -tableSelector: ComboBox<String>
+    -currentTable: LookupView$LookupTable
+    -primaryActionButton: Button
+    +getPrimaryAction()
+    -createToolbar()
+    -createGenericTable()
+    -buildTableSelector()
+    -showAddDialog()
+    -showRenameDialog()
+    -deleteSelected()
+    +refresh()
+    -idOf()
+    -nameOf()
+  }
+  class PaymentView {
+    -appShell: AppShell
+    -paymentController: PaymentController
+    -paymentsTable: DataTable<Payment>
+    -primaryActionButton: Button
+    +getPrimaryAction()
+    -createToolbar()
+    -createPaymentsTable()
+    -showSelectedDetails()
+    +refresh()
+  }
+  class "VolunteerView" as VolunteerView_views {
+    -appShell: AppShell
+    -volunteerController: VolunteerController
+    -volunteersTable: DataTable<Volunteer>
+    -primaryActionButton: Button
+    +getPrimaryAction()
+    -createToolbar()
+    -createVolunteersTable()
+    -showAddVolunteerDialog()
+    -showAssignDialog()
+    -showCertificateDialog()
+    -showCertificatePreview()
+    -selectedVolunteer()
+    -showEditVolunteerDialog()
+    -toggleAvailability()
+    -showSkillsDialog()
+    -showHoursDialog()
+    -deleteSelected()
+    +refresh()
+  }
+}
+package "com.resala.view" {
+  interface "BeneficiaryView" as BeneficiaryView_view <<interface>> {
+    +start()
+  }
+  interface "DonationView" as DonationView_view <<interface>> {
+    +start()
+  }
+  interface "EventView" as EventView_view <<interface>> {
+    +start()
+  }
+  interface UiFactory <<interface>> {
+    +createDonationView()
+    +createEventView()
+    +createBeneficiaryView()
+    +createVolunteerView()
+  }
+  interface "VolunteerView" as VolunteerView_view <<interface>> {
+    +start()
+  }
+}
+package "com.resala.view.console" {
+  class AbstractConsoleView {
+    #input: Scanner
+    #readLine()
+    #readLine()
+    #requiredLine()
+    #readLong()
+    #readInt()
+    #value()
+    #printError()
+    #printSuccess()
+    #blankToNull()
+    #truncate()
+  }
+  class ConsoleBeneficiaryView {
+    -controller: BeneficiaryController
+    +start()
+    -listBeneficiaries()
+    -addBeneficiary()
+    -editBeneficiary()
+    -deleteBeneficiary()
+    -recordDistribution()
+    -viewDistributionHistory()
+    -distributeWithPolicy()
+    -manageNeedTypes()
+    -listNeedTypes()
+    -addNeedType()
+    -editNeedType()
+    -deleteNeedType()
+    -printNeedTypesInline()
+    -readNeedTypeId()
+    -needTypeName()
+  }
+  class ConsoleDonationView {
+    -controller: DonationController
+    -payments: PaymentController
+    +start()
+    -printHeader()
+    -addDonor()
+    -findDonors()
+    -editDonor()
+    -archiveDonor()
+    -recordDonation()
+    -recordOnlineDonation()
+    -choosePaymentMethod()
+    -collectInstrument()
+    -listDonations()
+    -printReceipt()
+    -printYearlyStatement()
+    -chooseOrCreateDonor()
+    -chooseDonationType()
+    -readDonor()
+    -printDonors()
+    -printDonations()
+    -moneyToMinor()
+    -formatMoney()
+  }
+  class ConsoleEventView {
+    -controller: EventController
+    +start()
+    -manageEventTypes()
+    -listEventTypes()
+    -addEventType()
+    -renameEventType()
+    -deleteEventType()
+    -listEvents()
+    -createEvent()
+    -editEvent()
+    -deleteEvent()
+    -openEvent()
+    -closeEvent()
+    -registerAttendee()
+    -checkIn()
+    -viewRegistrations()
+    -attendanceReport()
+    -sendReminder()
+    -readEventRequest()
+    -viewRegistrationsFor()
+  }
+  class ConsoleUiFactory {
+    -input: Scanner
+    +createDonationView()
+    +createEventView()
+    +createBeneficiaryView()
+    +createVolunteerView()
+  }
+  class ConsoleVolunteerView {
+    -controller: VolunteerController
+    +start()
+    -listVolunteers()
+    -createVolunteer()
+    -editVolunteer()
+    -deleteVolunteer()
+    -setAvailability()
+    -showVolunteerSkills()
+    -addSkill()
+    -removeSkill()
+    -searchBySkill()
+    -createSkill()
+    -deleteSkill()
+    -renameSkill()
+    -assignVolunteer()
+    -viewAssignments()
+    -showSummary()
+    -showCertificate()
+    -printVolunteers()
+    -printSkills()
+    -printEvents()
+    -printAssignments()
+    -printTotals()
+    -readVolunteerRequest()
+    -readYesNo()
+    -formatHours()
+  }
+}
+AppShell --> BeneficiaryController
+AppShell --> DonationController
+AppShell --> EventController
+AppShell --> PaymentController
+AppShell --> VolunteerController
+AppShell --> BaseView
+BaseView ..|> Refreshable
+AuditLogView --> AppShell
+AuditLogView --|> BaseView
+BeneficiaryView_views --> BeneficiaryController
+BeneficiaryView_views --> AppShell
+BeneficiaryView_views --|> BaseView
+CommView --> AppShell
+CommView --|> BaseView
+DashboardView --> DonationController
+DashboardView --> EventController
+DashboardView --> VolunteerController
+DashboardView --> AppShell
+DashboardView --|> BaseView
+DonationView_views --> DonationController
+DonationView_views --> PaymentController
+DonationView_views --> AppShell
+DonationView_views --|> BaseView
+DonorView --> DonationController
+DonorView --> AppShell
+DonorView --|> BaseView
+EventView_views --> EventController
+EventView_views --> AppShell
+EventView_views --|> BaseView
+LookupView --> EventController
+LookupView --> VolunteerController
+LookupView --> AppShell
+LookupView --|> BaseView
+PaymentView --> PaymentController
+PaymentView --> AppShell
+PaymentView --|> BaseView
+VolunteerView_views --> VolunteerController
+VolunteerView_views --> AppShell
+VolunteerView_views --|> BaseView
+UiFactory ..> BeneficiaryView_view
+UiFactory ..> DonationView_view
+UiFactory ..> EventView_view
+UiFactory ..> VolunteerView_view
+ConsoleBeneficiaryView --> BeneficiaryController
+ConsoleBeneficiaryView ..|> BeneficiaryView_view
+ConsoleBeneficiaryView --|> AbstractConsoleView
+ConsoleDonationView --> DonationController
+ConsoleDonationView --> PaymentController
+ConsoleDonationView ..|> DonationView_view
+ConsoleDonationView --|> AbstractConsoleView
+ConsoleEventView --> EventController
+ConsoleEventView ..|> EventView_view
+ConsoleEventView --|> AbstractConsoleView
+ConsoleUiFactory ..> BeneficiaryView_view
+ConsoleUiFactory ..> DonationView_view
+ConsoleUiFactory ..> EventView_view
+ConsoleUiFactory ..|> UiFactory
+ConsoleUiFactory ..> VolunteerView_view
+ConsoleVolunteerView --> VolunteerController
+ConsoleVolunteerView ..|> VolunteerView_view
+ConsoleVolunteerView --|> AbstractConsoleView
+@enduml
