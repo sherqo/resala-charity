@@ -1,0 +1,15 @@
+\section{Class diagram}
+
+The class diagram covers the whole project. Following the course guidance, it shows the main classes with only their important fields and methods, not every accessor. The diagram is organised by module, and the six Phase~1 patterns are marked with a colour legend so that each pattern can be located immediately.
+
+\begin{figure}[H]
+  \centering
+  \begin{diagrambox}{Placeholder: full-project class diagram}
+    Diagram placeholder --- final A3 drawing.\\
+    Colour legend: Factory, Decorator, Observer, Strategy, Singleton, MVC boundary.
+  \end{diagrambox}
+  \caption{Complete class diagram of the Resala Charity Management System.}
+  \label{fig:classdiagram}
+\end{figure}
+
+The diagram is divided into eight areas: the entry and interface, the controllers, donations and receipts, events and volunteers, beneficiaries, notifications, persistence, and core services. It shows the relationships that carry the design, not only the data model: the factory with its product family, the decorator chain around the basic receipt, the subjects with their observers, the notifier with its interchangeable strategies, the shared services marked as singletons, and the dashed MVC boundary between the four layers.

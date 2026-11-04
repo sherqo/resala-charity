@@ -1,0 +1,74 @@
+\section{Client requirements and lookup CRUD}
+
+\subsection{Client requirements}
+
+The requirements were written from the point of view of the staff who operate the system, not from the point of view of the code. We imagined a short interview with a branch coordinator and asked what makes the current manual process difficult. Each answer was written as a testable requirement and connected to the module that implements it.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}L{0.05\textwidth}L{0.31\textwidth}L{0.26\textwidth}Y@{}}
+\toprule
+\textbf{ID} & \textbf{Client requirement} & \textbf{Handled by} & \textbf{Where the user finds it} \\
+\midrule
+CR1 & Yearly tax statement per donor, summing monetary donations for a year & Donation module: yearly statement & Donations \(\rightarrow\) Yearly Statement \\
+CR2 & Validate a volunteer's skill and availability before assignment & Volunteer module: assignment validation & Volunteers \(\rightarrow\) Register to Event \\
+CR3 & Issue a certificate after the required cumulative hours & Volunteer module: hours and certificate & Volunteers \(\rightarrow\) Print Certificate \\
+CR4 & Notify attendees when an event is updated or rescheduled & Event module: observer notifications & Automatic; Events \(\rightarrow\) Send Reminder \\
+CR5 & Record aid distribution per beneficiary with item, optional donation link, and date & Beneficiary module: distribution record & Beneficiaries \(\rightarrow\) Distribute Aid / History \\
+CR6 & Full CRUD for the chosen lookup table, event types; skills also full CRUD & Reference-data module & Lookups \\
+CR7 & Email, SMS, and social channels, swappable at runtime & Communication module: channel strategy & Messages \\
+\bottomrule
+\end{tabularx}
+\caption{Client requirements and their implementation.}
+\label{tab:cr}
+\end{table}
+
+\subsection{Lookup-table CRUD: event types}
+
+Event type was selected as the Phase~1 lookup-table example. It is an editable value used when creating an event, and the same screen also supports skills. Following the lecturer's guidance, the lookup is treated as application data, and create, read, update, and delete are assigned according to how each function is used.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.36\textwidth}L{0.14\textwidth}L{0.13\textwidth}Y@{}}
+\toprule
+\textbf{Function or use case} & \textbf{EventType} & \textbf{Event} & \textbf{Interface entry point} \\
+\midrule
+Create a new event type & C & -- & Lookups \(\rightarrow\) Add \\
+Browse all event types & R & -- & Lookups table; event form \\
+Rename an event type & U & -- & Lookups \(\rightarrow\) Rename \\
+Delete an unused event type & D & R (guard) & Lookups \(\rightarrow\) Delete \\
+Assign a type when creating or editing an event & R & C / U & Events \(\rightarrow\) Create / Edit \\
+\bottomrule
+\end{tabularx}
+\caption{CRUD matrix for the chosen lookup module.}
+\label{tab:crud}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{0.34\textwidth}YYYY@{}}
+\toprule
+\textbf{Actor} & \textbf{Create} & \textbf{Read} & \textbf{Update} & \textbf{Delete} \\
+\midrule
+Charity administrator & Yes & Yes & Yes & Yes, only when unused \\
+Event organiser & No & Yes & No & No \\
+Volunteer & No & Yes & No & No \\
+\bottomrule
+\end{tabularx}
+\caption{Actors and their allowed operations on event types.}
+\label{tab:actors}
+\end{table}
+
+The service enforces the following rules, so they apply to both interfaces:
+
+\begin{itemize}
+  \item the name is required, trimmed, and must be unique;
+  \item rename updates the stored value, so every event that references the type shows the new name;
+  \item delete is refused when the type is already used by an event, which protects existing records;
+  \item every operation refreshes the open screens, so the event form immediately shows the new list.
+\end{itemize}
+
+Skills use the same screen and the same four operations. A skill is referenced by the volunteer--skill relation, so the delete guard protects volunteer records in the same way. Two working tables show that the lookup screen is a general mechanism rather than a single hard-coded form.
