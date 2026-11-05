@@ -1,0 +1,183 @@
+# Resala Charity — Presentation (JavaFX GUI · console UI · controllers)
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+direction: right
+
+entry: Entry points {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  Main: {
+    shape: class
+    "«console» wires modules, Scanner UI": ""
+    "+main(String[])": void
+  }
+  GuiMain: {
+    shape: class
+    "«JavaFX Application» wires modules, starts Stage": ""
+    "+start(Stage)": void
+  }
+}
+
+controllers: com.resala.controller {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  DonationController: { shape: class; "-service": DonationService }
+  EventController: { shape: class; "-service": EventService; "-eventTypeService": EventTypeService; "-volunteerService": VolunteerService }
+  VolunteerController: { shape: class; "-service": VolunteerService }
+  PaymentController: { shape: class; "-payments": PaymentService }
+  BeneficiaryController: { shape: class; "-service": BeneficiaryService }
+}
+
+gui: com.resala.gui {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  AppShell: {
+    shape: class
+    "«singleton shell» — Stage, navigation, feed sidebar": ""
+    "-views": "Map<String, BaseView>"
+    "+AppShell(Stage, controllers...)": ""
+    "+show(String)": void
+  }
+  BaseView: {
+    shape: class
+    "«abstract» extends VBox": ""
+    "#toolbar": HBox
+    "#table": "DataTable<?>"
+  }
+  Refreshable: {
+    shape: class
+    "«interface»": ""
+    "+refresh()": void
+  }
+
+  components: components {
+    style.fill: "#FDFDFB"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    Card: { shape: class }
+    ConfirmDialog: { shape: class }
+    DataTable: { shape: class }
+    FormDialog: { shape: class }
+    ModalOverlay: { shape: class }
+    StatCard: { shape: class }
+    Toast: { shape: class }
+    Toolbar: { shape: class }
+  }
+
+  views: views {
+    style.fill: "#FDFDFB"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    DashboardView: { shape: class }
+    DonorView: { shape: class }
+    DonationView: { shape: class }
+    PaymentView: { shape: class }
+    EventView: { shape: class }
+    VolunteerView: { shape: class }
+    BeneficiaryView: { shape: class }
+    LookupView: { shape: class }
+    CommView: { shape: class }
+    AuditLogView: { shape: class }
+  }
+}
+
+view: com.resala.view {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  UiFactory: {
+    shape: class
+    "«abstract factory»": ""
+    "+createDonationView(DonationController, PaymentController)": DonationView
+    "+createEventView(EventController)": EventView
+    "+createBeneficiaryView(BeneficiaryController)": BeneficiaryView
+    "+createVolunteerView(VolunteerController)": VolunteerView
+  }
+  DonationView: { shape: class; "«interface»": ""; "+start()": void }
+  EventView: { shape: class; "«interface»": ""; "+start()": void }
+  VolunteerView: { shape: class; "«interface»": ""; "+start()": void }
+  BeneficiaryView: { shape: class; "«interface»": ""; "+start()": void }
+  JavaFxUiFactory: { shape: class; "«concrete factory» JavaFX — wraps AppShell views": "" }
+
+  console: console {
+    style.fill: "#FDFDFB"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    AbstractConsoleView: { shape: class; "«abstract»": ""; "-input": Scanner }
+    ConsoleUiFactory: { shape: class; "«concrete factory» console": "" }
+    ConsoleDonationView: { shape: class }
+    ConsoleEventView: { shape: class }
+    ConsoleVolunteerView: { shape: class }
+    ConsoleBeneficiaryView: { shape: class }
+  }
+}
+
+external: Services (wired by entry points) {
+  style.fill: "#FDFDFB"
+  style.stroke: "#D8D5C9"
+  style.font-size: 14
+  style.bold: true
+
+  DonationService: { shape: class }
+  EventService: { shape: class }
+  VolunteerService: { shape: class }
+  PaymentService: { shape: class }
+  BeneficiaryService: { shape: class }
+  EventTypeService: { shape: class }
+}
+
+entry.Main -> controllers: "creates" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+entry.GuiMain -> controllers: "creates" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+entry.GuiMain -> gui.AppShell: "starts" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+entry.Main -> view.console.ConsoleUiFactory: "uses" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+
+gui.AppShell -> gui.views: "hosts" { style.font-size: 12; style.font-color: "#6B675C" }
+gui.AppShell -> controllers: "calls" { style.font-size: 12; style.font-color: "#6B675C" }
+gui.BaseView -> gui.Refreshable: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+gui.views -> gui.BaseView: extends { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleDonationView -> view.console.AbstractConsoleView: extends { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleEventView -> view.console.AbstractConsoleView: extends { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleVolunteerView -> view.console.AbstractConsoleView: extends { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleBeneficiaryView -> view.console.AbstractConsoleView: extends { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+
+view.console.ConsoleUiFactory -> view.UiFactory: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.JavaFxUiFactory -> view.UiFactory: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleUiFactory -> view.console.ConsoleDonationView: creates { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleUiFactory -> view.console.ConsoleEventView: creates { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleUiFactory -> view.console.ConsoleVolunteerView: creates { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleUiFactory -> view.console.ConsoleBeneficiaryView: creates { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+view.UiFactory -> view.DonationView: "" { style.stroke-dash: 4 }
+view.UiFactory -> view.EventView: "" { style.stroke-dash: 4 }
+view.UiFactory -> view.VolunteerView: "" { style.stroke-dash: 4 }
+view.UiFactory -> view.BeneficiaryView: "" { style.stroke-dash: 4 }
+view.console.ConsoleDonationView -> view.DonationView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleEventView -> view.EventView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleVolunteerView -> view.VolunteerView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+view.console.ConsoleBeneficiaryView -> view.BeneficiaryView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+
+controllers.DonationController -> external.DonationService: ""
+controllers.EventController -> external.EventService: ""
+controllers.EventController -> external.EventTypeService: ""
+controllers.EventController -> external.VolunteerService: "check-in credits hours" { style.font-size: 12; style.font-color: "#6B675C" }
+controllers.VolunteerController -> external.VolunteerService: ""
+controllers.PaymentController -> external.PaymentService: "donations only" { style.font-size: 12; style.font-color: "#6B675C" }
+controllers.BeneficiaryController -> external.BeneficiaryService: ""

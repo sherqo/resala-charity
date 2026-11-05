@@ -1,0 +1,54 @@
+# «pattern» Abstract Factory — annotated participants
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+boundary: "«pattern» Abstract Factory — view families" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  UiFactory: {
+    shape: class
+    "«abstract factory» interface": ""
+    "+createDonationView(DonationController, PaymentController)": DonationView
+    "+createEventView(EventController)": EventView
+    "+createBeneficiaryView(BeneficiaryController)": BeneficiaryView
+    "+createVolunteerView(VolunteerController)": VolunteerView
+  }
+  ConsoleUiFactory: { shape: class; "«concrete factory» console": "" }
+  JavaFxUiFactory: { shape: class; "«concrete factory» JavaFX": "" }
+
+  DonationView: { shape: class; "«abstract product» interface": ""; "+start()": void }
+  EventView: { shape: class; "«abstract product» interface": ""; "+start()": void }
+  VolunteerView: { shape: class; "«abstract product» interface": ""; "+start()": void }
+  BeneficiaryView: { shape: class; "«abstract product» interface": ""; "+start()": void }
+
+  ConsoleDonationView: { shape: class }
+  ConsoleEventView: { shape: class }
+  ConsoleVolunteerView: { shape: class }
+  ConsoleBeneficiaryView: { shape: class }
+}
+
+main: { shape: class; "«client» Main (console) · GuiMain (JavaFX)": "pick factory → views for whole family" }
+
+boundary.ConsoleUiFactory -> boundary.UiFactory: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.JavaFxUiFactory -> boundary.UiFactory: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.ConsoleUiFactory -> boundary.ConsoleDonationView: creates { style.stroke-dash: 4 }
+boundary.ConsoleUiFactory -> boundary.ConsoleEventView: creates { style.stroke-dash: 4 }
+boundary.ConsoleUiFactory -> boundary.ConsoleVolunteerView: creates { style.stroke-dash: 4 }
+boundary.ConsoleUiFactory -> boundary.ConsoleBeneficiaryView: creates { style.stroke-dash: 4 }
+boundary.ConsoleDonationView -> boundary.DonationView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.ConsoleEventView -> boundary.EventView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.ConsoleVolunteerView -> boundary.VolunteerView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.ConsoleBeneficiaryView -> boundary.BeneficiaryView: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.UiFactory -> boundary.DonationView: "" { style.stroke-dash: 4 }
+boundary.UiFactory -> boundary.EventView: "" { style.stroke-dash: 4 }
+boundary.UiFactory -> boundary.VolunteerView: "" { style.stroke-dash: 4 }
+boundary.UiFactory -> boundary.BeneficiaryView: "" { style.stroke-dash: 4 }
+main -> boundary.UiFactory: ""

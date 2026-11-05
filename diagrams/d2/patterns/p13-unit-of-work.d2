@@ -1,0 +1,50 @@
+# «pattern» Unit of Work — atomic payment settlement
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: down
+
+boundary: "«pattern» Unit of Work — TransactionManager" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  PaymentService: {
+    shape: class
+    "«client / participant»": ""
+    "+pay(PaymentRequest)": PaymentOutcome
+  }
+  TransactionManager: {
+    shape: class
+    "«unit of work»": ""
+    "-connection": Connection
+    "+inTransaction(Supplier<T>)": T
+  }
+  DonationPaymentSettlement: {
+    shape: class
+    "«settlement callback»": ""
+    "+settle(Payment)": long
+    "+afterCommit(Payment, long)": void
+  }
+  DonationRepository: { shape: class; "«participant» records donation": "" }
+  PaymentRepository: { shape: class; "«participant» saves Payment twice": "" }
+
+  caption: "intent — markPaid + settle + attachReference commit or roll back as ONE unit;\nafterCommit (notification) runs only on success, never inside the transaction" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.PaymentService -> boundary.TransactionManager: "3 · inTransaction(…)" { style.font-size: 12; style.font-color: "#4A463C" }
+boundary.TransactionManager -> boundary.PaymentRepository: "markPaid → save" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#4A463C" }
+boundary.TransactionManager -> boundary.DonationPaymentSettlement: "settle(payment)" { style.font-size: 12; style.font-color: "#4A463C" }
+boundary.DonationPaymentSettlement -> boundary.DonationRepository: "record donation" { style.font-size: 12; style.font-color: "#4A463C" }
+boundary.DonationPaymentSettlement -> boundary.PaymentRepository: "attachReference → save" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#4A463C" }

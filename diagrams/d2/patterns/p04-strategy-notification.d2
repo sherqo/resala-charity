@@ -1,0 +1,51 @@
+# «pattern» Strategy — notification channel
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Strategy — notification channel" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  NotificationStrategy: {
+    shape: class
+    "«interface» strategy": ""
+    "+send(String recipient, String subject, String body)": void
+  }
+  EmailStrategy: { shape: class; "«concrete strategy» prints [EMAIL]": ""; "+send(...)": void }
+  SmsStrategy: { shape: class; "«concrete strategy» prints [SMS], subject merged into body": ""; "+send(...)": void }
+  SocialStrategy: { shape: class; "«concrete strategy» prints [SOCIAL] @recipient": ""; "+send(...)": void }
+
+  Notifier: {
+    shape: class
+    "«context»": ""
+    "-strategy": NotificationStrategy
+    "+setStrategy(NotificationStrategy)": void
+    "+send(String, String, String)": void
+  }
+
+  caption: "intent — interchangeable channel at runtime via setStrategy(); every send is audit-logged" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+donation_obs: { shape: class; "«client» ThankYouNotificationObserver": "" }
+event_obs: { shape: class; "«client» EventNotificationObserver": "" }
+
+boundary.EmailStrategy -> boundary.NotificationStrategy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.SmsStrategy -> boundary.NotificationStrategy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.SocialStrategy -> boundary.NotificationStrategy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.Notifier -> boundary.NotificationStrategy: "delegates to"
+donation_obs -> boundary.Notifier: ""
+event_obs -> boundary.Notifier: ""

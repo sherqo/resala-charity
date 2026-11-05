@@ -1,0 +1,277 @@
+# Resala Charity — Payment module (Strategy · Adapter · Facade-ish service)
+vars: {
+  d2-config: {
+    layout-engine: tala
+    theme-id: 1
+  }
+}
+
+
+payment: com.resala.payment {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  Payment: {
+    shape: class
+    "«final, aggregate»": ""
+    "-id": long
+    "-payerType": String
+    "-payerId": long
+    "-amountMinor": long
+    "-feeMinor": long
+    "-currency": String
+    "-paymentMethodCode": String
+    "-idempotencyKey": String
+    "-status": PaymentStatus
+    "-referenceType": String
+    "-referenceId": Long
+    "-failureReason": PaymentError
+    "+createPending(...)": Payment
+    "+markPaid(String, long)": void
+    "+markFailed(PaymentError, String)": void
+    "+attachReference(String, long)": void
+    "+isPaid()": boolean
+  }
+
+  state: "«pattern» State — enum-guarded transitions" {
+    style.stroke-dash: 5
+    style.stroke: "#174E5B"
+    style.fill: "#FDFDFB"
+    style.font-size: 14
+    style.font-color: "#174E5B"
+    style.bold: true
+
+    PaymentStatus: {
+      shape: class
+      "«state enum»": "PENDING → PAID · FAILED"
+      "+canTransitionTo(PaymentStatus)": boolean
+      "+isTerminal()": boolean
+      "+validate(Payment)": void
+    }
+  }
+
+  PaymentError: {
+    shape: class
+    "«enum»": "PAY-001…PAY-009 · PAY-101…PAY-103"
+    "+code()": String
+    "+message()": String
+    "+retryable()": boolean
+  }
+
+  PaymentException: {
+    shape: class
+    "-error": PaymentError
+    "-paymentId": Long
+    "+error()": PaymentError
+    "+userMessage()": String
+  }
+
+  adapter: "«pattern» Adapter — payment gateway" {
+    style.stroke-dash: 5
+    style.stroke: "#174E5B"
+    style.fill: "#FDFDFB"
+    style.font-size: 14
+    style.font-color: "#174E5B"
+    style.bold: true
+
+    PaymentGateway: {
+      shape: class
+      "«target interface»": ""
+      "+getAvailableMethods()": "List<PaymentMethod>"
+      "+charge(PaymentCommand)": GatewayResult
+    }
+
+    FakePaymentGatewayAdapter: {
+      shape: class
+      "«adapter»": ""
+      "-provider": FakePaymentProvider
+      "+getAvailableMethods()": "List<PaymentMethod>"
+      "+charge(PaymentCommand)": GatewayResult
+    }
+
+    FakePaymentProvider: {
+      shape: class
+      "«adaptee» — fake provider": ""
+      "+availableMethods()": "List<PaymentMethod>"
+      "+makePayment(String, long, PaymentMethod, String, String)": ProviderTxn
+    }
+  }
+
+  GatewayResult: {
+    shape: class
+    "«record»": ""
+    "approved": boolean
+    "amountMinor": long
+    "currency": String
+    "message": String
+    "failureReason": PaymentError
+  }
+
+  strategy: "«pattern» Strategy — payment methods" {
+    style.stroke-dash: 5
+    style.stroke: "#174E5B"
+    style.fill: "#FDFDFB"
+    style.font-size: 14
+    style.font-color: "#174E5B"
+    style.bold: true
+
+    PaymentMethod: {
+      shape: class
+      "«interface» — Strategy": ""
+      "+code()": String
+      "+displayName()": String
+      "+feeRate()": double
+      "+validate(PaymentCommand)": void
+      "+tokenize(PaymentInstrument)": String
+      "+requiresToken()": boolean
+    }
+
+    CashPaymentMethod: { shape: class; "«concrete strategy» feeRate 0.000": "" }
+    CardPaymentMethod: { shape: class; "«concrete strategy» feeRate 0.0275 · Luhn-checked": "" }
+    WalletPaymentMethod: { shape: class; "«concrete strategy» feeRate 0.015": "" }
+
+    PaymentMethods: {
+      shape: class
+      "«registry» static factory": ""
+      "+fromCode(String)": PaymentMethod
+      "+all()": "List<PaymentMethod>"
+    }
+  }
+
+  PaymentInstrument: { shape: class; "«interface»": "" }
+
+  CardDetails: { shape: class; "«record»": ""; "holder": String; "number": String; "expiry": String; "cvv": String }
+  WalletDetails: { shape: class; "«record»": ""; "phone": String }
+
+  command: "«pattern» Command" {
+    style.stroke-dash: 5
+    style.stroke: "#174E5B"
+    style.fill: "#FDFDFB"
+    style.font-size: 14
+    style.font-color: "#174E5B"
+    style.bold: true
+
+    PaymentCommand: {
+      shape: class
+      "«command» — immutable request object": ""
+      "idempotencyKey": String
+      "amountMinor": long
+      "currency": String
+      "paymentMethod": PaymentMethod
+      "token": String
+      "description": String
+    }
+  }
+
+  PaymentRequest: {
+    shape: class
+    "«record»": ""
+    "idempotencyKey": String
+    "payerType": String
+    "payerId": long
+    "amountMinor": long
+    "currency": String
+    "paymentMethod": PaymentMethod
+    "paymentToken": String
+    "notes": String
+  }
+
+  PaymentOutcome: {
+    shape: class
+    "«record»": ""
+    "paymentId": long
+    "status": PaymentStatus
+    "referenceId": Long
+    "message": String
+    "error": PaymentError
+  }
+
+  PaymentRepository: {
+    shape: class
+    "«interface»": ""
+    "+save(Payment)": Payment
+    "+findById(long)": "Optional<Payment>"
+    "+findByIdempotencyKey(String)": "Optional<Payment>"
+    "+findByPayer(String, long)": "List<Payment>"
+    "+findByStatus(PaymentStatus)": "List<Payment>"
+    "+findAll()": "List<Payment>"
+  }
+
+  PaymentSettlement: {
+    shape: class
+    "«interface» — settle PAID payment to a domain record": ""
+    "+referenceType()": String
+    "+settle(Payment)": long
+    "+afterCommit(Payment, long)": void
+  }
+
+  PaymentService: {
+    shape: class
+    "-payments": PaymentRepository
+    "-gateway": PaymentGateway
+    "-tx": TransactionManager
+    "-settlement": "PaymentSettlement (optional)"
+    "+pay(PaymentRequest)": PaymentOutcome
+    "+availableMethods()": "List<PaymentMethod>"
+    "+history(String, long)": "List<Payment>"
+    "+get(long)": Payment
+    "+listPayments()": "List<Payment>"
+  }
+}
+
+sqlite: persistence.sqlite {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  SqlitePaymentRepository: {
+    shape: class
+    "-PAYMENT_MAPPER": "RowMapper<Payment>"
+    "+save(Payment)": Payment
+    "+findByIdempotencyKey(String)": "Optional<Payment>"
+    "+findByPayer(String, long)": "List<Payment>"
+  }
+}
+
+external: Collaborators {
+  style.fill: "#FDFDFB"
+  style.stroke: "#D8D5C9"
+  style.font-size: 14
+  style.bold: true
+
+  TransactionManager: { shape: class; "«core» TransactionManager": "" }
+  JdbcRepository: { shape: class; "«core abstract» JdbcRepository": "" }
+}
+
+payment.strategy.CashPaymentMethod -> payment.strategy.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+payment.strategy.CardPaymentMethod -> payment.strategy.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+payment.strategy.WalletPaymentMethod -> payment.strategy.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+
+payment.CardDetails -> payment.PaymentInstrument: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+payment.WalletDetails -> payment.PaymentInstrument: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+payment.strategy.CardPaymentMethod -> payment.CardDetails: "tokenizes" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+payment.strategy.WalletPaymentMethod -> payment.WalletDetails: "tokenizes" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+
+payment.strategy.PaymentMethods -> payment.strategy.PaymentMethod: "registry of" { style.font-size: 12; style.font-color: "#6B675C" }
+
+payment.adapter.FakePaymentGatewayAdapter -> payment.adapter.PaymentGateway: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+payment.adapter.FakePaymentGatewayAdapter -> payment.adapter.FakePaymentProvider: "wraps (Adapter)" { style.font-size: 12; style.font-color: "#6B675C" }
+
+payment.PaymentService -> payment.PaymentRepository: ""
+payment.PaymentService -> payment.adapter.PaymentGateway: ""
+payment.PaymentService -> external.TransactionManager: "atomic settle" { style.font-size: 12; style.font-color: "#6B675C" }
+payment.PaymentService -> payment.PaymentSettlement: "optional" { style.font-size: 12; style.font-color: "#6B675C" }
+payment.PaymentService -> payment.PaymentRequest: "" { style.stroke-dash: 4 }
+payment.PaymentService -> payment.PaymentOutcome: "returns" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+
+payment.Payment -> payment.state.PaymentStatus: ""
+payment.Payment -> payment.PaymentError: "failureReason" { style.font-size: 12; style.font-color: "#6B675C" }
+payment.PaymentException -> payment.PaymentError: ""
+
+payment.command.PaymentCommand -> payment.strategy.PaymentMethod: ""
+
+sqlite.SqlitePaymentRepository -> payment.PaymentRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqlitePaymentRepository -> external.JdbcRepository: extends { target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }

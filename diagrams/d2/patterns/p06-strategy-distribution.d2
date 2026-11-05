@@ -1,0 +1,48 @@
+# «pattern» Strategy — distribution policies
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Strategy — distribution policies" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  DistributionPolicy: {
+    shape: class
+    "«interface» strategy": ""
+    "+allocate(List<Beneficiary>, int)": "Map<Beneficiary, Integer>"
+    "+getName()": String
+  }
+  ByNeedDistributionPolicy: { shape: class; "«concrete strategy» proportional to household size": "" }
+  EqualDistributionPolicy: { shape: class; "«concrete strategy» even split": "" }
+  FifoDistributionPolicy: { shape: class; "«concrete strategy» by registration order · quota=N": "" }
+
+  BeneficiaryService: {
+    shape: class
+    "«context»": ""
+    "-distributionPolicy": DistributionPolicy
+    "+setDistributionPolicy(DistributionPolicy)": void
+    "+previewDistribution(int)": "Map<Beneficiary, Integer>"
+    "+distributeByPolicy(...)": "List<Distribution>"
+  }
+
+  caption: "intent — allocation algorithm is swappable at runtime\n(setDistributionPolicy); one contract for all three policies" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.ByNeedDistributionPolicy -> boundary.DistributionPolicy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.EqualDistributionPolicy -> boundary.DistributionPolicy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.FifoDistributionPolicy -> boundary.DistributionPolicy: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.BeneficiaryService -> boundary.DistributionPolicy: "delegates to"

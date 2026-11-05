@@ -1,0 +1,53 @@
+# «pattern» Factory Method — annotated participants
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+boundary: "«pattern» Factory Method — DonationFactory" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  Creator: DonationFactory {
+    shape: class
+    "«creator»": ""
+    "+create(DonationRequest)": Donation
+  }
+
+  Product: Donation {
+    shape: class
+    "«abstract product»": ""
+    "-donorId": long
+    "-type": DonationType
+    "-status": DonationStatus
+    "+getAmountMinor()": long
+  }
+  OnlineDonation: { shape: class; "«concrete product»": "ONLINE"; "-amountMinor": long }
+  CheckDonation: { shape: class; "«concrete product»": "CHECK"; "-amountMinor": long }
+  InKindDonation: { shape: class; "«concrete product»": "IN_KIND"; "-quantity": int }
+
+  DonationRequest: { shape: class; "«parameter»": ""; "type": DonationType; "amountMinor": Long; "quantity": Integer }
+
+  caption: "intent — Creator decides which product to instantiate,\nfrom the request's type discriminator, after validation" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+Caller: { shape: class; "«client» DonationService · SqliteDonationRepository": "record() → factory.create()" }
+
+boundary.OnlineDonation -> boundary.Product: extends { target-arrowhead: { shape: triangle } }
+boundary.CheckDonation -> boundary.Product: extends { target-arrowhead: { shape: triangle } }
+boundary.InKindDonation -> boundary.Product: extends { target-arrowhead: { shape: triangle } }
+boundary.Creator -> boundary.OnlineDonation: creates { style.stroke-dash: 4 }
+boundary.Creator -> boundary.CheckDonation: creates { style.stroke-dash: 4 }
+boundary.Creator -> boundary.InKindDonation: creates { style.stroke-dash: 4 }
+Caller -> boundary.Creator: ""

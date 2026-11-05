@@ -1,0 +1,154 @@
+# Resala Charity — Model (domain entities)
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+
+direction: right
+}
+
+Donor: {
+  shape: class
+  Type: "enum"
+  "-id": long
+  "-name": String
+  "-type": "Type"
+  "-email": String
+  "-phone": String
+  "-active": boolean
+  "getId()": long
+  "getName()": String
+  "getType()": Type
+  "isActive()": boolean
+}
+
+DonationType: {
+  shape: class
+  "«enum» ONLINE · CHECK · IN_KIND": ""
+}
+
+Event: {
+  shape: class
+  Status: "enum"
+  "-id": long
+  "-title": String
+  "-eventTypeId": int
+  "-date": LocalDate
+  "-capacity": int
+  "-hours": int
+  "-status": "Status"
+  "-description": String
+  "getId()": long
+  "getTitle()": String
+  "getDate()": LocalDate
+  "getCapacity()": int
+  "getHours()": int
+  "getStatus()": Status
+}
+
+EventType: {
+  shape: class
+  "-id": int
+  "-name": String
+  "getId()": int
+  "getName()": String
+}
+
+Beneficiary: {
+  shape: class
+  Status: "enum"
+  "-id": long
+  "-name": String
+  "-phone": String
+  "-householdSize": int
+  "-needTypeId": int
+  "-status": "Status"
+  "-notes": String
+  "-impactScore": int
+  "getId()": long
+  "getName()": String
+  "getHouseholdSize()": int
+  "getStatus()": Status
+  "getImpactScore()": int
+}
+
+NeedType: {
+  shape: class
+  "-id": int
+  "-name": String
+  "getId()": int
+  "getName()": String
+}
+
+Volunteer: {
+  shape: class
+  "-id": int
+  "-name": String
+  "-email": String
+  "-phone": String
+  "-available": boolean
+  "getId()": int
+  "getName()": String
+  "getEmail()": String
+  "isAvailable()": boolean
+}
+
+Skill: {
+  shape: class
+  "-id": int
+  "-name": String
+  "getId()": int
+  "getName()": String
+}
+
+VolunteerEventAssignment: {
+  shape: class
+  "-id": int
+  "-volunteerId": int
+  "-eventId": int
+  "-skillId": int
+  "-workDate": LocalDate
+  "-hours": int
+  "-eventTitle": String
+  "-skillName": String
+  "getVolunteerId()": int
+  "getEventId()": int
+  "getSkillId()": int
+  "getHours()": double
+}
+
+AuditLog: {
+  shape: class
+  "-id": long
+  "-timestamp": LocalDateTime
+  "-pattern": String
+  "-module": String
+  "-category": String
+  "-recipient": String
+  "-summary": String
+  "-details": String
+  "getId()": long
+  "getPattern()": String
+  "getModule()": String
+  "getSummary()": String
+}
+
+Permission: {
+  shape: class
+  "«enum»": "DONATION_MANAGE · VOLUNTEER_MANAGE · EVENT_MANAGE · BENEFICIARY_MANAGE · DISTRIBUTION_MANAGE · COMMUNICATION_SEND · REPORT_VIEW · LOOKUP_MANAGE · ACCOUNT_MANAGE · SELF_SERVICE_VIEW"
+}
+
+Role: {
+  shape: class
+  "«enum» ADMIN · STAFF · VOLUNTEER": ""
+  "-permissions": EnumSet\<Permission\>
+  "can(Permission)": boolean
+}
+
+Event -> EventType: "eventTypeId" { style.font-size: 13; style.font-color: "#6B675C" }
+Beneficiary -> NeedType: "needTypeId" { style.font-size: 13; style.font-color: "#6B675C" }
+VolunteerEventAssignment -> Volunteer: "volunteerId" { style.font-size: 13; style.font-color: "#6B675C" }
+VolunteerEventAssignment -> Event: "eventId" { style.font-size: 13; style.font-color: "#6B675C" }
+VolunteerEventAssignment -> Skill: "skillId" { style.font-size: 13; style.font-color: "#6B675C" }
+Role -> Permission: "grants" { style.font-size: 13; style.font-color: "#6B675C" }

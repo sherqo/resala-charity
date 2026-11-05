@@ -1,0 +1,79 @@
+# «pattern» Repository — contracts + SQLite implementations
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+boundary: "«pattern» Repository — persistence contracts" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  contracts: "Contracts (interfaces)" {
+    style.fill: "#F5F4F0"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    DonationRepository: { shape: class; "«interface»": "" }
+    DonorRepository: { shape: class; "«interface»": "" }
+    PaymentRepository: { shape: class; "«interface»": "" }
+    EventRepository: { shape: class; "«interface»": "" }
+    EventRegistrationRepository: { shape: class; "«interface»": "" }
+    EventTypeRepository: { shape: class; "«interface»": "" }
+    VolunteerRepository: { shape: class; "«interface»": "" }
+    BeneficiaryRepository: { shape: class; "«interface»": "" }
+  }
+
+  JdbcRepository: {
+    shape: class
+    "«abstract base» — conn, bind, RowMapper<T>": ""
+    "#execute(String, Object...)": int
+    "#query(String, RowMapper, Object...)": "List<T>"
+    "#insertReturnKey(String, Object...)": long
+  }
+
+  impls: "Implementations (one per contract)" {
+    style.fill: "#F5F4F0"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    SqliteDonationRepository: { shape: class }
+    SqliteDonorRepository: { shape: class }
+    SqlitePaymentRepository: { shape: class }
+    SqliteEventRepository: { shape: class }
+    SqliteEventRegistrationRepository: { shape: class }
+    SqliteEventTypeRepository: { shape: class }
+    SqliteVolunteerRepository: { shape: class }
+    SqliteBeneficiaryRepository: { shape: class }
+  }
+
+  caption: "intent — services depend on contracts, not SQL; swapping SQLite for another store means one new class per contract" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.impls.SqliteDonationRepository -> boundary.contracts.DonationRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteDonorRepository -> boundary.contracts.DonorRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqlitePaymentRepository -> boundary.contracts.PaymentRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventRepository -> boundary.contracts.EventRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventRegistrationRepository -> boundary.contracts.EventRegistrationRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventTypeRepository -> boundary.contracts.EventTypeRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteVolunteerRepository -> boundary.contracts.VolunteerRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteBeneficiaryRepository -> boundary.contracts.BeneficiaryRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+
+boundary.impls.SqliteDonationRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteDonorRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqlitePaymentRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventRegistrationRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteEventTypeRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteVolunteerRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }
+boundary.impls.SqliteBeneficiaryRepository -> boundary.JdbcRepository: extends { target-arrowhead: { shape: triangle } }

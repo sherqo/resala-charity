@@ -1,0 +1,48 @@
+# «pattern» State — enum-guarded payment lifecycle
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» State — enum-guarded lifecycle" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  PaymentStatus: {
+    shape: class
+    "«state enum» — behaviour per state": ""
+    "+PENDING / PAID / FAILED": ""
+    "+canTransitionTo(PaymentStatus)": boolean
+    "+isTerminal()": boolean
+    "+validate(Payment)": void
+  }
+  Payment: {
+    shape: class
+    "«context»": ""
+    "-status": PaymentStatus
+    "+markPaid(String, long)": void
+    "+markFailed(PaymentError, String)": void
+  }
+
+  pending: "PENDING" { shape: oval; style.fill: "#F5F4F0"; style.stroke: "#0A0F25"; style.font-size: 14; style.bold: true }
+  paid: "PAID" { shape: oval; style.fill: "#F5F4F0"; style.stroke: "#174E5B"; style.font-color: "#174E5B"; style.font-size: 14; style.bold: true }
+  failed: "FAILED" { shape: oval; style.fill: "#F5F4F0"; style.stroke: "#8A3030"; style.font-color: "#8A3030"; style.font-size: 14; style.bold: true }
+  pending -> paid: "markPaid()" { style.font-size: 12; style.font-color: "#4A463C" }
+  pending -> failed: "markFailed()" { style.font-size: 12; style.font-color: "#4A463C" }
+
+  caption: "intent — state-specific behaviour (validate, transitions) lives on the enum, not in if-chains;\nillegal transitions throw PAY-006. Same guarded-lifecycle style: Event DRAFT→OPEN→CLOSED" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.Payment -> boundary.PaymentStatus: "delegates state rules"

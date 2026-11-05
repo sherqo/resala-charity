@@ -1,0 +1,53 @@
+# «pattern» Command — payment request object
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Command — PaymentCommand" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  PaymentCommand: {
+    shape: class
+    "«command» — immutable request": ""
+    "idempotencyKey": String
+    "amountMinor": long
+    "currency": String
+    "paymentMethod": PaymentMethod
+    "token": String
+    "description": String
+  }
+  PaymentService: {
+    shape: class
+    "«invoker»": ""
+    "+pay(PaymentRequest)": PaymentOutcome
+  }
+  PaymentGateway: {
+    shape: class
+    "«receiver» interface": ""
+    "+charge(PaymentCommand)": GatewayResult
+  }
+  GatewayResult: { shape: class; "«result» record": ""; "approved": boolean; "failureReason": PaymentError }
+
+  caption: "intent — encapsulate the charge request as a value object; the idempotency key embedded\nin it is what makes retries safe (provider returns the original txn, not a double charge)" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+client: { shape: class; "«client» PaymentController.payDonation()": "" }
+
+client -> boundary.PaymentService: ""
+boundary.PaymentService -> boundary.PaymentGateway: "charge(command)"
+boundary.PaymentService -> boundary.PaymentCommand: "builds / executes" { style.stroke-dash: 4 }
+boundary.PaymentGateway -> boundary.GatewayResult: "returns" { style.stroke-dash: 4 }

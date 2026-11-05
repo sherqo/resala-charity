@@ -1,0 +1,171 @@
+# Resala Charity — Event module (Observer subject · lifecycle state machine)
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+direction: right
+
+event: com.resala.event {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  EventService: {
+    shape: class
+    "-events": EventRepository
+    "-registrations": EventRegistrationRepository
+    "-observers": "List<EventObserver>"
+    "+create(EventRequest)": Event
+    "+update(long, EventRequest)": Event
+    "+delete(long)": void
+    "+open(long)": Event
+    "+close(long)": Event
+    "+register(long, String, String)": EventRegistration
+    "+checkIn(long)": void
+    "+findAll()": "List<Event>"
+    "+getEvent(long)": Event
+    "+getRegistrations(long)": "List<EventRegistration>"
+    "+attendanceReport(long)": String
+    "+addObserver(EventObserver)": void
+    "+removeObserver(EventObserver)": void
+  }
+
+  EventRepository: {
+    shape: class
+    "«interface»": ""
+    "+save(Event)": Event
+    "+findById(long)": "Optional<Event>"
+    "+findAll()": "List<Event>"
+    "+delete(long)": void
+  }
+
+  EventRegistrationRepository: {
+    shape: class
+    "«interface»": ""
+    "+register(EventRegistration)": EventRegistration
+    "+findById(long)": "Optional<EventRegistration>"
+    "+findByEvent(long)": "List<EventRegistration>"
+    "+checkIn(long)": void
+    "+countRegistered(long)": int
+    "+findByVolunteerAndEvent(long, long)": "Optional<EventRegistration>"
+    "+deleteByVolunteerAndEvent(long, long)": void
+  }
+
+  EventTypeService: {
+    shape: class
+    "-repo": EventTypeRepository
+    "+findAll()": "List<EventType>"
+    "+getById(int)": EventType
+    "+create(String)": EventType
+    "+rename(int, String)": EventType
+    "+delete(int)": void
+  }
+
+  EventTypeRepository: {
+    shape: class
+    "«interface»": ""
+    "+findAll()": "List<EventType>"
+    "+findById(int)": "Optional<EventType>"
+    "+findByName(String)": "Optional<EventType>"
+    "+save(EventType)": EventType
+    "+rename(int, String)": void
+    "+delete(int)": void
+    "+isInUse(int)": boolean
+  }
+
+  EventRegistration: {
+    shape: class
+    "-id": long
+    "-eventId": long
+    "-attendeeName": String
+    "-attendeeEmail": String
+    "-ticketRef": String
+    "-checkedIn": boolean
+    "-volunteerId": Integer
+    "-skillId": Integer
+    "+isVolunteer()": boolean
+  }
+
+  EventRequest: {
+    shape: class
+    "«record»": ""
+    "title": String
+    "eventTypeId": int
+    "date": LocalDate
+    "capacity": int
+    "hours": int
+    "description": String
+  }
+
+  EventError: {
+    shape: class
+    "«enum»": "EVT-001…EVT-090"
+    "+code()": String
+    "+message()": String
+    "+retryable()": boolean
+  }
+
+  EventException: {
+    shape: class
+    "-error": EventError
+    "+error()": EventError
+    "+userMessage()": String
+    "+retryable()": boolean
+  }
+}
+
+sqlite: persistence.sqlite {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  SqliteEventRepository: { shape: class; "-EVENT_MAPPER": "RowMapper<Event>" }
+  SqliteEventRegistrationRepository: { shape: class; "-REG_MAPPER": "RowMapper<EventRegistration>" }
+  SqliteEventTypeRepository: { shape: class; "-EVENT_TYPE_MAPPER": "RowMapper<EventType>" }
+}
+
+external: Collaborators {
+  style.fill: "#FDFDFB"
+  style.stroke: "#D8D5C9"
+  style.font-size: 14
+  style.bold: true
+
+  Event: { shape: class; "«model» Event": "" }
+  EventType: { shape: class; "«model» EventType": "" }
+  EventSubject: { shape: class; "«notification» interface EventSubject": "" }
+  EventObserver: { shape: class; "«notification» interface EventObserver": "" }
+  JdbcRepository: { shape: class; "«core abstract» JdbcRepository": "" }
+}
+
+lifecycle: "Lifecycle\nDRAFT → OPEN → CLOSED" {
+  shape: text
+  style.font-size: 13
+  style.italic: true
+  style.font-color: "#6B675C"
+}
+
+event.EventService -> external.EventSubject: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+event.EventService -> event.EventRepository: ""
+event.EventService -> event.EventRegistrationRepository: ""
+event.EventService -> event.EventRequest: "" { style.stroke-dash: 4 }
+event.EventService -> external.Event: "creates / mutates" { style.font-size: 12; style.font-color: "#6B675C" }
+event.EventService -> external.EventObserver: "notifies" { style.font-size: 12; style.font-color: "#6B675C" }
+event.EventService -> event.EventException: "throws" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+event.EventException -> event.EventError: ""
+
+event.EventTypeService -> event.EventTypeRepository: ""
+event.EventTypeService -> external.EventType: ""
+
+event.EventRegistration -> external.Event: "eventId" { style.font-size: 12; style.font-color: "#6B675C" }
+
+sqlite.SqliteEventRepository -> event.EventRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteEventRegistrationRepository -> event.EventRegistrationRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteEventTypeRepository -> event.EventTypeRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteEventRepository -> external.JdbcRepository: extends { target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteEventRegistrationRepository -> external.JdbcRepository: extends { target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteEventTypeRepository -> external.JdbcRepository: extends { target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }

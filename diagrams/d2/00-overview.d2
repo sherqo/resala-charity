@@ -1,0 +1,102 @@
+# Resala Charity — system architecture overview
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+direction: down
+
+presentation: Presentation {
+  label: "PRESENTATION\nJavaFX (GuiMain / AppShell / views) · Console (Main / console views) · FxControllers"
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  controllers: Controllers {
+    style.fill: "#FFFFFF"
+    style.stroke: "#B9B5A8"
+    style.font-size: 13
+    DonationController; EventController; VolunteerController; PaymentController; BeneficiaryController
+  }
+}
+
+services: Application services {
+  label: "APPLICATION SERVICES"
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  DonationService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  PaymentService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  EventService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  VolunteerService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  BeneficiaryService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  EventTypeService { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8" }
+  style.font-size: 13
+}
+
+domain: Domain & design patterns {
+  label: "DOMAIN MODEL & DESIGN PATTERNS"
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  factory: "Factory\nDonationFactory → Donation (Online / Check / InKind)" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  strategy: "Strategy\nNotificationStrategy · PaymentMethod · DistributionPolicy" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  observer: "Observer\nDonationSubject/Observers · EventSubject/Observers" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  decorator: "Decorator\nReceipt → ThankYou / Tax receipt decorators" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  command: "Command\nPaymentCommand · request records (DonationRequest · EventRequest · PaymentRequest)" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+}
+
+persistence: Persistence {
+  label: "PERSISTENCE"
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  repos: "Repository interfaces\nDonationRepository · DonorRepository · PaymentRepository · EventRepository · EventRegistrationRepository · EventTypeRepository · VolunteerRepository · BeneficiaryRepository" {
+    style.fill: "#FFFFFF"
+    style.stroke: "#B9B5A8"
+    style.font-size: 13
+  }
+  jdbc: "JdbcRepository (abstract) + TransactionManager" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  sqlite: "Sqlite*Repository implementations" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+}
+
+db: SQLite — data/resala.db {
+  shape: cylinder
+  style.fill: "#E9E7DF"
+  style.stroke: "#174E5B"
+  style.font-color: "#174E5B"
+  style.bold: true
+  style.font-size: 14
+}
+
+crosscutting: Cross-cutting {
+  label: "CROSS-CUTTING CONCERNS"
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  notifier: "Notifier (Strategy) — Email / SMS / Social" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  audit: "AuditLogManager (Singleton) — in-memory audit trail (max 500)" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+  config: "ConfigManager (Singleton) — config.properties" { style.fill: "#FFFFFF"; style.stroke: "#B9B5A8"; style.font-size: 13 }
+}
+
+presentation.controllers -> services: "calls" { style.font-size: 12; style.font-color: "#6B675C" }
+services -> domain: "uses" { style.font-size: 12; style.font-color: "#6B675C" }
+services -> persistence.repos: "depends on" { style.font-size: 12; style.font-color: "#6B675C" }
+persistence.sqlite -> persistence.jdbc: "extends" { style.font-size: 12; style.font-color: "#6B675C" }
+persistence.repos -> persistence.sqlite: "implemented by" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+persistence.jdbc -> db: "JDBC" { style.font-size: 12; style.font-color: "#6B675C" }
+persistence.jdbc -> crosscutting.config: "reads" { style.font-size: 12; style.font-color: "#6B675C" }
+services -> crosscutting.notifier: "notifies / audits" { style.font-size: 12; style.font-color: "#6B675C" }
+services -> crosscutting.audit: "logs" { style.font-size: 12; style.font-color: "#6B675C" }
+domain.observer -> crosscutting.notifier: "dispatches via" { style.font-size: 12; style.font-color: "#6B675C" }

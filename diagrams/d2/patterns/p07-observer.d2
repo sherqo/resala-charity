@@ -1,0 +1,58 @@
+# «pattern» Observer — donation & event subjects
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+
+boundary: "«pattern» Observer — subjects & observers" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 17
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  donations: "Donation subject" {
+    style.fill: "#F5F4F0"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    DonationSubject: { shape: class; "«subject» interface": ""; "+addObserver(DonationObserver)": void; "+removeObserver(DonationObserver)": void }
+    DonationObserver: { shape: class; "«observer» interface": ""; "+onDonationRecorded(Donation, Donor)": void }
+    DonationService: { shape: class; "«concrete subject»": ""; "-observers": "List<DonationObserver>"; "+notifyObservers(...)": void }
+    ThankYouNotificationObserver: { shape: class; "«concrete observer»": ""; "-notifier": Notifier; "+onDonationRecorded(...)": void }
+  }
+
+  events: "Event subject" {
+    style.fill: "#F5F4F0"
+    style.stroke: "#D8D5C9"
+    style.font-size: 13
+
+    EventSubject: { shape: class; "«subject» interface": ""; "+addObserver(EventObserver)": void; "+removeObserver(EventObserver)": void }
+    EventObserver: { shape: class; "«observer» interface": ""; "+onEventUpdated(Event, String)": void }
+    EventService: { shape: class; "«concrete subject»": ""; "-observers": "List<EventObserver>"; "+notifyObservers(...)": void }
+    EventNotificationObserver: { shape: class; "«concrete observer»": ""; "-registrationRepository": EventRegistrationRepository; "-notifier": Notifier; "+onEventUpdated(...)": void }
+  }
+
+  FeedObserver: { shape: class; "«dual observer» — both channels": ""; "-feedList": "ListView<String>"; "+onDonationRecorded(...)": void; "+onEventUpdated(...)": void }
+
+  caption: "intent — subjects keep a list of observers and notify them\non domain events; wiring happens once at startup (Main / GuiMain);\nFeedObserver implements both observer interfaces" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.donations.DonationService -> boundary.donations.DonationSubject: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.donations.ThankYouNotificationObserver -> boundary.donations.DonationObserver: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.donations.DonationService -> boundary.donations.DonationObserver: "notifies" { style.font-size: 12; style.font-color: "#4A463C" }
+
+boundary.events.EventService -> boundary.events.EventSubject: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.events.EventNotificationObserver -> boundary.events.EventObserver: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.events.EventService -> boundary.events.EventObserver: "notifies" { style.font-size: 12; style.font-color: "#4A463C" }
+
+boundary.FeedObserver -> boundary.donations.DonationObserver: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.FeedObserver -> boundary.events.EventObserver: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }

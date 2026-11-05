@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+#
+# build-diagrams — compile every D2 source in diagrams/d2/ (recursively) to:
+#   diagrams/out/<name>.svg   (vector — the whole-diagram SVG deliverable)
+#   diagrams/out/<name>.png   (raster, $TARGET_WIDTH px wide, ≈330 DPI — slides/print)
+#   diagrams/out/<name>.pdf   (vector PDF — or a high-res poster page for the full map)
+#
+# Pipeline: .d2 --d2--> .svg  (layout + styles)
+#           .svg --post-process--> .svg (embedded fonts swapped for system fonts,
+#                                       light greys darkened for contrast)
+#           .svg --rsvg-convert--> .png / .pdf   (no 32768px / 67 MP d2raster limits)
+# 99-full.d2 is regenerated from the module diagrams by diagrams/assemble-full.py
+# before building, so the all-system map never drifts from the modules.
+#
+# Usage:
+#   ./build-diagrams            Build everything (svg + png + pdf)
+#   ./build-diagrams --svg      SVG only
+#   ./build-diagrams --png      PNG + SVG (skip vector PDF)
+#   TARGET_WIDTH=5000 ./build-diagrams   Rasterize PNG at 5000px wide (default: 4000)
+#   PAD=80 ./build-diagrams              Override canvas padding (default: 48)
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC_DIR="${SRC_DIR:-$ROOT/diagrams/d2}"
+OUT_DIR="${OUT_DIR:-$ROOT/diagrams/out}"
+TARGET_WIDTH="${TARGET_WIDTH:-4000}"  # PNG width in px (~330 DPI on a 12 in slide)
+PAD="${PAD:-48}"
+
+MODE="all"   # all | svg | png
+for arg in "$@"; do
+  case "$arg" in
+    --svg) MODE="svg" ;;
+    --png) MODE="png" ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    *) echo "error: unknown argument '$arg' (see --help)" >&2; exit 2 ;;
+  esac
+done
+
+if ! command -v d2 >/dev/null 2>&1; then
+  echo "error: 'd2' is not installed or not on PATH." >&2
+  echo "       Install it with:  brew install d2" >&2
+  exit 1
+fi
+
+if [ ! -d "$SRC_DIR" ]; then
+  echo "error: source directory '$SRC_DIR' does not exist." >&2
+  exit 1
+fi
+
+# Regenerate the all-system diagram from the module sources so it never drifts.
+if [ -f "$ROOT/diagrams/assemble-full.py" ]; then
+  python3 "$ROOT/diagrams/assemble-full.py" "$SRC_DIR/99-full.d2" || {
+    echo "error: failed to assemble 99-full.d2" >&2; exit 1; }
+fi
+
+SOURCES=()
+while IFS= read -r line; do
+  SOURCES+=("$line")
+done < <(find "$SRC_DIR" -name '*.d2' -print | sort)
+
+if [ "${#SOURCES[@]}" -eq 0 ]; then
+  echo "error: no .d2 files found in '$SRC_DIR'." >&2
+  exit 1
+fi
+
+mkdir -p "$OUT_DIR"
+# Clean only the artifacts this script produces — never touch .d2 sources.
+find "$OUT_DIR" -type f \( -name '*.svg' -o -name '*.png' -o -name '*.pdf' -o -name '.*.log' -o -name '.*-poster.png' \) -delete
+
+echo "d2 $(d2 --version 2>/dev/null || echo 'unknown') — building ${#SOURCES[@]} diagram(s)"
+echo "  src: $SRC_DIR"
+echo "  out: $OUT_DIR"
+echo
+
+failures=0
+
+for src in "${SOURCES[@]}"; do
+  rel="${src#"$SRC_DIR"/}"          # e.g. patterns/p01-singleton.d2
+  name="${rel%.d2}"                 # e.g. patterns/p01-singleton
+  mkdir -p "$OUT_DIR/$(dirname "$name")"
+  safe="$(echo "$name" | tr '/' '_')"
+  printf '  %-32s' "$name"
+
+  if d2 --pad "$PAD" "$src" "$OUT_DIR/$name.svg" >/dev/null 2>"$OUT_DIR/.$safe.svg.log"; then
+    # Post-process the vector output: D2 embeds its own fonts (poor readability
+    # at slide scale) and uses a light grey (#676C7E) for member types and edge
+    # markers. Swap to system fonts — Georgia italic for captions, Menlo for
+    # code/class members, Helvetica for diagram text — and darken the grey.
+    python3 - "$OUT_DIR/$name.svg" <<'PYEOF'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+# drop embedded base64 font definitions entirely
+s = re.sub(r'@font-face\s*\{[^}]*\}\s*', '', s, flags=re.S)
+# italic class: map to Georgia + force italic style (upright Georgia would lose the nuance)
+s = re.sub(r'(\.text-italic\s*\{\s*)font-family: "d2-[^"]*-font-italic";',
+           r'\1font-family: Georgia, "Times New Roman", serif; font-style: italic;', s)
+# code / class members / class headers: Menlo
+s = re.sub(r'font-family: "d2-[^"]*-font-mono";',
+           'font-family: Menlo, "SF Mono", Consolas, monospace;', s)
+# everything else (containers, edges, notes): Helvetica
+s = re.sub(r'font-family: "d2-[^"]*-font";',
+           'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;', s)
+# contrast: darken the light grey text markers and thin strokes
+s = s.replace('#676C7E', '#3F4656').replace('#9499AB', '#565D6E')
+s = s.replace('#6B675C', '#4A463C')
+s = s.replace('#FFFFFF', '#FBFAF7')
+open(p, 'w').write(s)
+PYEOF
+    printf 'svg '
+  else
+    printf 'SVG FAILED (see %s)\n' "$OUT_DIR/.$safe.svg.log"; failures=$((failures + 1)); continue
+  fi
+
+  if [ "$MODE" != "svg" ]; then
+    if command -v rsvg-convert >/dev/null 2>&1; then
+      if rsvg-convert -w "$TARGET_WIDTH" -o "$OUT_DIR/$name.png" "$OUT_DIR/$name.svg"; then
+        printf 'png(w=%s) ' "$TARGET_WIDTH"
+      else
+        printf 'PNG FAILED '; failures=$((failures + 1))
+      fi
+    else
+      if d2 --pad "$PAD" --scale 2 "$src" "$OUT_DIR/$name.png" >/dev/null 2>"$OUT_DIR/.$safe.png.log"; then
+        printf 'png(d2 2x) '
+      else
+        printf 'PNG FAILED (see %s) ' "$OUT_DIR/.$safe.png.log"; failures=$((failures + 1))
+      fi
+    fi
+  fi
+
+  if [ "$MODE" = "all" ]; then
+    # Vector PDF from the SVG when it is reasonably sized. For the huge
+    # all-system diagram, rasterize to a high-res one-page poster instead —
+    # vector outlines from a 17k-px canvas produce a 16 MB PDF that takes
+    # minutes to render.
+    vb_w=$(grep -oE 'viewBox="[^"]+"' "$OUT_DIR/$name.svg" | head -1 | sed -E 's/viewBox="[^"]* ([0-9.]+) [0-9.]+"/\1/' | awk '{print int($1)}')
+    if command -v rsvg-convert >/dev/null 2>&1 && [ "${vb_w:-0}" -lt 12000 ]; then
+      rsvg-convert -f pdf -o "$OUT_DIR/$name.pdf" "$OUT_DIR/$name.svg" && printf 'pdf' || { printf 'PDF FAILED '; failures=$((failures + 1)); }
+    elif command -v magick >/dev/null 2>&1; then
+      rsvg-convert -w 5000 -o "$OUT_DIR/.$safe-poster.png" "$OUT_DIR/$name.svg" \
+        && magick -density 300 "$OUT_DIR/.$safe-poster.png" "$OUT_DIR/$name.pdf" \
+        && rm -f "$OUT_DIR/.$safe-poster.png" && printf 'pdf(poster)' || { printf 'PDF FAILED '; failures=$((failures + 1)); }
+    else
+      printf 'PDF SKIPPED (no rsvg-convert/magick)'
+    fi
+  fi
+  echo
+done
+
+# On success there is nothing to inspect — drop the logs. On failure keep them.
+if [ "$failures" -eq 0 ]; then
+  find "$OUT_DIR" -name '.*.log' -delete
+fi
+
+# Normalize permissions (d2 writes 600, rsvg-convert 644)
+find "$OUT_DIR" -type f \( -name '*.svg' -o -name '*.png' -o -name '*.pdf' \) -exec chmod 644 {} +
+echo
+if [ "$failures" -gt 0 ]; then
+  echo "done with $failures failure(s) — see .*.log files in $OUT_DIR" >&2
+  exit 1
+fi
+echo "done. Outputs in $OUT_DIR"

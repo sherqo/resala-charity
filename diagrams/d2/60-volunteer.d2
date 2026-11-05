@@ -1,0 +1,128 @@
+# Resala Charity — Volunteer module
+vars: {
+  d2-config: {
+    layout-engine: tala
+    theme-id: 1
+  }
+}
+
+volunteer: com.resala.volunteer {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  VolunteerService: {
+    shape: class
+    "-volunteers": VolunteerRepository
+    "-events": EventRepository
+    "-eventRegistrations": EventRegistrationRepository
+    "-certificateGenerator": CertificateGenerator
+    "+create(Volunteer)": Volunteer
+    "+update(int, Volunteer)": Volunteer
+    "+delete(int)": void
+    "+setAvailability(int, boolean)": void
+    "+listVolunteers()": "List<Volunteer>"
+    "+listOpenEvents()": "List<Event>"
+    "+assign(int, int, int)": VolunteerEventAssignment
+    "+creditEventHours(Event)": int
+    "+summarize(int)": VolunteerSummary
+    "+generateCertificate(int)": String
+    "+listSkills()": "List<Skill>"
+    "+searchBySkill(int)": "List<Volunteer>"
+  }
+
+  VolunteerRepository: {
+    shape: class
+    "«interface»": ""
+    "+save(Volunteer)": Volunteer
+    "+findById(int)": Volunteer
+    "+findAll()": "List<Volunteer>"
+    "+delete(int)": void
+    "+setAvailability(int, boolean)": void
+    "+findBySkill(int)": "List<Volunteer>"
+    "+findAllSkills()": "List<Skill>"
+    "+saveSkill(Skill)": Skill
+    "+saveAssignment(VolunteerEventAssignment)": VolunteerEventAssignment
+    "+findAssignments(int)": "List<VolunteerEventAssignment>"
+    "+creditEventHours(int, int)": int
+  }
+
+  Volunteer: {
+    shape: class
+    "«unused duplicate of model.Volunteer»": ""
+    "-name": String
+    "-email": String
+    "-phone": String
+    "-available": boolean
+  }
+
+  helpers: helpers {
+    style.fill: "#FDFDFB"
+    style.stroke: "#D8D5C9"
+    style.font-size: 14
+
+    CertificateGenerator: {
+      shape: class
+      "+REQUIRED_HOURS": "20.0"
+      "+generate(Volunteer, VolunteerSummary)": String
+    }
+    VolunteerSummary: {
+      shape: class
+      "«value object»": ""
+      "-totalHours": double
+      "-hoursByEvent": "Map<String, Double>"
+      "+getTotalHours()": double
+      "+getHoursByEvent()": "Map<String, Double>"
+    }
+  }
+}
+
+sqlite: persistence.sqlite {
+  style.fill: "#F5F4F0"
+  style.stroke: "#C8C5BA"
+  style.font-size: 15
+  style.bold: true
+
+  SqliteVolunteerRepository: {
+    shape: class
+    "-VOLUNTEER_MAPPER": "RowMapper<Volunteer>"
+    "-SKILL_MAPPER": "RowMapper<Skill>"
+    "-ASSIGNMENT_MAPPER": "RowMapper<VolunteerEventAssignment>"
+  }
+}
+
+external: Collaborators {
+  style.fill: "#FDFDFB"
+  style.stroke: "#D8D5C9"
+  style.font-size: 14
+  style.bold: true
+
+  ModelVolunteer: { shape: class; "«model» Volunteer": "" }
+  Skill: { shape: class; "«model» Skill": "" }
+  Event: { shape: class; "«model» Event": "" }
+  VolunteerEventAssignment: { shape: class; "«model» VolunteerEventAssignment": "" }
+  EventRepository: { shape: class; "«event» interface EventRepository": "" }
+  EventRegistrationRepository: { shape: class; "«event» interface EventRegistrationRepository": "" }
+  EventRegistration: { shape: class; "«event» EventRegistration": "" }
+  JdbcRepository: { shape: class; "«core abstract» JdbcRepository": "" }
+}
+
+volunteer.VolunteerService -> volunteer.VolunteerRepository: ""
+volunteer.VolunteerService -> external.EventRepository: ""
+volunteer.VolunteerService -> external.EventRegistrationRepository: ""
+volunteer.VolunteerService -> volunteer.helpers.CertificateGenerator: "issues certificate" { style.font-size: 12; style.font-color: "#6B675C" }
+volunteer.VolunteerService -> external.ModelVolunteer: "CRUD" { style.font-size: 12; style.font-color: "#6B675C" }
+volunteer.VolunteerService -> external.Skill: ""
+volunteer.VolunteerService -> external.VolunteerEventAssignment: "assigns hours" { style.font-size: 12; style.font-color: "#6B675C" }
+volunteer.VolunteerService -> external.EventRegistration: "registers attendee" { style.stroke-dash: 4; style.font-size: 12; style.font-color: "#6B675C" }
+
+volunteer.helpers.CertificateGenerator -> volunteer.helpers.VolunteerSummary: ""
+volunteer.helpers.CertificateGenerator -> external.ModelVolunteer: ""
+
+volunteer.VolunteerRepository -> external.ModelVolunteer: "" { style.stroke-dash: 4 }
+volunteer.VolunteerRepository -> external.Skill: "" { style.stroke-dash: 4 }
+volunteer.VolunteerRepository -> external.VolunteerEventAssignment: "" { style.stroke-dash: 4 }
+
+sqlite.SqliteVolunteerRepository -> volunteer.VolunteerRepository: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }
+sqlite.SqliteVolunteerRepository -> external.JdbcRepository: extends { target-arrowhead: { shape: triangle }; style.font-size: 12; style.font-color: "#6B675C" }

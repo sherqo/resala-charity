@@ -1,0 +1,51 @@
+# «pattern» Decorator — receipt rendering chain
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Decorator — receipts" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  Receipt: {
+    shape: class
+    "«component» interface": ""
+    "+render()": String
+  }
+  BasicReceipt: {
+    shape: class
+    "«concrete component»": ""
+    "-donation": Donation
+    "-donor": Donor
+    "+render()": String
+  }
+  ReceiptDecorator: {
+    shape: class
+    "«abstract decorator»": ""
+    "#receipt": Receipt
+    "+render()": String
+  }
+  TaxReceiptDecorator: { shape: class; "«concrete decorator» appends tax line": ""; "+render()": String }
+  ThankYouReceiptDecorator: { shape: class; "«concrete decorator» prepends thank-you line": ""; "+render()": String }
+
+  caption: "intent — add behaviour by wrapping, not subclassing.\\nChain used: ThankYou(Tax(Basic(donation, donor))) — tax line skipped for IN_KIND" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.BasicReceipt -> boundary.Receipt: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.ReceiptDecorator -> boundary.Receipt: implements { style.stroke-dash: 4 }
+boundary.ReceiptDecorator -> boundary.Receipt: wraps { target-arrowhead: { shape: diamond } }
+boundary.TaxReceiptDecorator -> boundary.ReceiptDecorator: extends { target-arrowhead: { shape: triangle } }
+boundary.ThankYouReceiptDecorator -> boundary.ReceiptDecorator: extends { target-arrowhead: { shape: triangle } }

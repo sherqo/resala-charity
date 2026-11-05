@@ -1,0 +1,55 @@
+# «pattern» Singleton — annotated participants
+vars: {
+  d2-config: {
+    layout-engine: tala
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Singleton" {
+  direction: right
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 17
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  ConfigManager: {
+    shape: class
+    "«singleton»": ""
+    "-instance": ConfigManager
+    "-props": Properties
+    "+getInstance()": ConfigManager
+    "+get(String)": String
+  }
+  DatabaseManager: {
+    shape: class
+    "«singleton»": ""
+    "-instance": DatabaseManager
+    "-connection": Connection
+    "+getInstance()": DatabaseManager
+    "+getConnection()": Connection
+  }
+  AuditLogManager: {
+    shape: class
+    "«singleton»": ""
+    "-INSTANCE": AuditLogManager
+    "-logs": "ObservableList<AuditLog>"
+    "+getInstance()": AuditLogManager
+    "+log(...)": void
+  }
+  caption: "intent — exactly one instance per JVM, lazy/synchronized getInstance(), global access point" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+usage: "used by — JdbcRepository (default connection) · services & observers (audit) · entry points (wiring)" {
+  shape: text
+  style.font-size: 12
+  style.font-color: "#6B675C"
+}

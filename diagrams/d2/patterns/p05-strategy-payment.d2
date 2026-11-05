@@ -1,0 +1,57 @@
+# «pattern» Strategy — payment methods
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 1
+  }
+}
+direction: right
+
+boundary: "«pattern» Strategy — payment methods" {
+  style.stroke-dash: 6
+  style.stroke: "#174E5B"
+  style.fill: "#FDFDFB"
+  style.font-size: 16
+  style.font-color: "#174E5B"
+  style.bold: true
+
+  PaymentMethod: {
+    shape: class
+    "«interface» strategy": ""
+    "+code()": String
+    "+displayName()": String
+    "+feeRate()": double
+    "+validate(PaymentCommand)": void
+    "+tokenize(PaymentInstrument)": String
+    "+requiresToken()": boolean
+  }
+  CashPaymentMethod: { shape: class; "«concrete strategy» CASH · fee 0.0% · no token": "" }
+  CardPaymentMethod: { shape: class; "«concrete strategy» CARD · fee 2.75% · Luhn-checked": "" }
+  WalletPaymentMethod: { shape: class; "«concrete strategy» WALLET · fee 1.5%": "" }
+
+  PaymentMethods: {
+    shape: class
+    "«static factory / registry»": ""
+    "+fromCode(String)": PaymentMethod
+    "+all()": "List<PaymentMethod>"
+  }
+
+  PaymentService: {
+    shape: class
+    "«context»": ""
+    "+pay(PaymentRequest)": PaymentOutcome
+  }
+
+  caption: "intent — fee rate, tokenisation and validation vary per method;\nselected by the caller, not branched in code" {
+    shape: text
+    style.font-size: 13
+    style.italic: true
+    style.font-color: "#174E5B"
+  }
+}
+
+boundary.CashPaymentMethod -> boundary.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.CardPaymentMethod -> boundary.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.WalletPaymentMethod -> boundary.PaymentMethod: implements { style.stroke-dash: 4; target-arrowhead: { shape: triangle } }
+boundary.PaymentMethods -> boundary.PaymentMethod: "returns" { style.stroke-dash: 4 }
+boundary.PaymentService -> boundary.PaymentMethod: "uses"
